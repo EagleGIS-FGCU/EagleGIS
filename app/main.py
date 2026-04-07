@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.routers import export
+from app.routers import export, feature_service
 
 app = FastAPI(
     title=settings.app_name,
@@ -23,6 +23,7 @@ app.add_middleware(
 )
 
 app.include_router(export.router, prefix=settings.api_v1_prefix)
+app.include_router(feature_service.router)
 
 
 @app.get("/", tags=["System"], include_in_schema=False)
