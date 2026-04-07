@@ -17,7 +17,7 @@ from app.services.geojson import build_area_layer, build_point_layer, build_road
 
 router = APIRouter(prefix="/layers", tags=["GIS Layers"])
 
-_GEO_MEDIA = "application/geo+json"
+_GEO_MEDIA = "application/json"
 
 
 @router.get(
