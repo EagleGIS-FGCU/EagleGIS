@@ -20,7 +20,7 @@ def ultra_clean(text):
     return text.strip()
 
 def extract_date(fn, text):
-    """Sniffs out the date from text or filename."""
+    """Extracts the date from text or filename."""
     # Try text first (The [Month] [Day], [Year]...)
     match = re.search(r'(?:The\s+)?([A-Z][a-z]+)\s+(\d{1,2}),\s+(\d{4})', text, re.I)
     if match:
@@ -38,8 +38,8 @@ def extract_date(fn, text):
         except: pass
     return "Unknown"
 
-def sniff_end_time(text):
-    """A better hunter for adjournment times (catches 'at', 'pm', etc.)"""
+def extract_end_time(text):
+    """A better extractor for adjournment times (catches 'at', 'pm', etc.)"""
     patterns = [
         # Matches: "Adjourned at 10:30 am" or "Adjournment: 11:00 p.m."
         r'(?:Adjourned|Adjournment|Time Adjourned|Ended)(?:\s+at)?[:\s]+(\d{1,2}[:\.]\d{2}\s*[ap]\.?m\.?)',
@@ -89,9 +89,9 @@ def process_pdf(file_path):
             if start: data['Start Time'] = start.group(1).replace('.', '').lower()
 
             # End Time - Search the last page first! 
-            data['End Time'] = sniff_end_time(clean_last)
+            data['End Time'] = extract_end_time(clean_last)
             if data['End Time'] == "Unknown":
-                data['End Time'] = sniff_end_time(clean_full)
+                data['End Time'] = extract_end_time(clean_full)
 
             # Actions Taken
             segments = re.findall(r'Action:\s*(.*?)(?=\s*(?:Motion|Vote:|Staff|Council|Public|Adjourned:|$))', clean_full, re.I)
@@ -103,7 +103,7 @@ def process_pdf(file_path):
             if staff: data['Staff Code'] = staff.group(1)
 
     except Exception as e:
-        print(f"Meow! Problem with {fn}: {e}")
+        print(f"Error with {fn}: {e}")
     return data
 
 def main():
@@ -112,14 +112,14 @@ def main():
         print("I don't see any PDFs! Put me in the same folder as your papers.")
         return
 
-    print(f"Meow! Sniffing {len(pdfs)} files...")
+    print(f"Processing {len(pdfs)} files...")
     results = [process_pdf(f) for f in pdfs]
     
     with open('meeting_log_final.csv', 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=HEADERS)
         writer.writeheader()
         writer.writerows(results)
-    print("Purr-fect! 'meeting_log_final.csv' is ready for you.")
+    print("Success. 'meeting_log_final.csv' is ready.")
 
 if __name__ == "__main__":
     main()

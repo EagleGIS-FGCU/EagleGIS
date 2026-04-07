@@ -89,7 +89,7 @@ def process_pdf(file_path):
 
     
 
-    # 🐾 THE PDF LINKER: Combines the base URL with the filename
+    # THE PDF LINKER: Combines the base URL with the filename
 
     data['Document_Link'] = BASE_URL + fn
 
@@ -137,7 +137,7 @@ def process_pdf(file_path):
 
                 
 
-                # SENSITIVE Staff Code Sniffer
+                # SENSITIVE Staff Code Extractor
 
                 staff = re.search(r'\(?([a-z]{2}/[a-z]{2})\)?', " ".join(pages), re.I)
 
@@ -156,12 +156,17 @@ def process_pdf(file_path):
     return data
 
 def main():
-    pdfs = [f for f in os.listdir('.') if f.lower().endswith('.pdf')]
+    pdf_dir = 'pdfs'
+    if os.path.exists(pdf_dir):
+        pdfs = [os.path.join(pdf_dir, f) for f in os.listdir(pdf_dir) if f.lower().endswith('.pdf')]
+    else:
+        pdfs = [f for f in os.listdir('.') if f.lower().endswith('.pdf')]
+    
     results = [process_pdf(f) for f in pdfs]
     with open('estero_map_data.csv', 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=HEADERS, extrasaction='ignore')
         writer.writeheader()
         writer.writerows(results)
-    print("Purr-fect! Words stitched, locations found, and staff codes sniffed!")
+    print(f"Success. Processed {len(pdfs)} PDFs. Words stitched, locations found, and staff codes extracted.")
 
 if __name__ == "__main__": main()
