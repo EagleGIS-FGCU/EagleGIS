@@ -2,13 +2,21 @@ import os, re, csv, PyPDF2
 from datetime import datetime
 
 # --- CONFIGURATION ---
-HEADERS = ['Filename', 'Meeting Date', 'ArcGIS_Date', 'Meeting Type', 'Location', 'Start Time', 'End Time', 'Action Taken', 'Staff Code', 'Status']
+BASE_URL = "https://your-website.com/estero-pdfs/"
+HEADERS = ['Filename', 'Meeting Date', 'ArcGIS_Date', 'Meeting Type', 'Location', 'Start Time', 'End Time', 'Action Taken', 'Staff Code', 'Status', 'Document_Link']
 
-ESTERO_ROADS = [
-    'Corkscrew Road', 'Three Oaks Parkway', 'US 41', 'Williams Road', 
+ESTERO_LOCATIONS = [
+    'Corkscrew Road', 'Three Oaks Parkway', 'US 41', 'Tamiami Trail', 'Williams Road', 
     'Estero Parkway', 'Ben Hill Griffin Parkway', 'Via Coconut Point', 
     'Coconut Road', 'Broadway Avenue', 'River Ranch Road', 'Sandy Lane',
-    'Cypress Bend', 'Estero River', 'Bamboo Island', 'River Oaks Preserve'
+    'Cypress Bend', 'Estero River', 'Bamboo Island', 'River Oaks Preserve',
+    'Fountain Lakes', 'Vintage Parkway', 'Pelican Sound', 'Grandezza', 'Wildcat Run', 
+    'Shadow Wood', 'The Brooks', 'Copperleaf', 'Bella Terra', 'Stoneybrook', 
+    'Country Creek', 'Marsh Landing', 'Coconut Shores', 'Rapallo', 'Lighthouse Bay', 
+    'Breckenridge', 'Meadowbrook', 'Hertz Arena', 'Coconut Point', 'Miromar Outlets', 
+    'Koreshan State Park', 'Estero High School', 'Spring Run', 'Coconut Point Mall',
+    'Estero Bay Village', 'Sunny Grove', 'University Village', 'Genova', 'Tidewater',
+    'Wild Blue', 'West Bay', 'Estero Place', 'Loves', 'Cascades', 'Villages at Country Creek'
 ]
 
 def total_grooming(text):
@@ -42,51 +50,109 @@ def total_grooming(text):
     return re.sub(r'\s+', ' ', text).strip()
 
 def extract_project_location(action_text):
-    if not action_text or "No action found" in action_text:
+
+    if not action_text or "Meeting Cancelled" in action_text:
+
         return "9401 Corkscrew Palms Circle, Estero, FL 33928"
-    for road in ESTERO_ROADS:
-        match = re.search(fr'(\d+)\s+{re.escape(road)}', action_text, re.I)
-        if match: return f"{match.group(1)} {road}, Estero, FL"
-    for i, road_a in enumerate(ESTERO_ROADS):
-        for road_b in ESTERO_ROADS[i+1:]:
-            if road_a.lower() in action_text.lower() and road_b.lower() in action_text.lower():
-                return f"{road_a} and {road_b}, Estero, FL"
-    for road in ESTERO_ROADS:
-        if road.lower() in action_text.lower(): return f"{road}, Estero, FL"
+
+    clean_text = total_grooming(action_text)
+
+    for loc in ESTERO_LOCATIONS:
+
+        match = re.search(fr'(\d+)\s+{re.escape(loc)}', clean_text, re.I)
+
+        if match: return f"{match.group(1)} {loc}, Estero, FL"
+
+    for i, loc_a in enumerate(ESTERO_LOCATIONS):
+
+        for loc_b in ESTERO_LOCATIONS[i+1:]:
+
+            if re.search(fr'\b{re.escape(loc_a)}\b', clean_text, re.I) and re.search(fr'\b{re.escape(loc_b)}\b', clean_text, re.I):
+
+                return f"{loc_a} and {loc_b}, Estero, FL"
+
+    for loc in ESTERO_LOCATIONS:
+
+        if re.search(fr'\b{re.escape(loc)}\b', clean_text, re.I):
+
+            return f"{loc}, Estero, FL"
+
     return "9401 Corkscrew Palms Circle, Estero, FL 33928"
 
+
+
 def process_pdf(file_path):
+
     fn = os.path.basename(file_path)
+
     data = {'Filename': fn, 'Meeting Type': 'Village Council', 'Start Time': '9:30 am', 'Staff Code': 'N/A', 'Status': 'Accepted'}
+
+    
+
+    # 🐾 THE PDF LINKER: Combines the base URL with the filename
+
+    data['Document_Link'] = BASE_URL + fn
+
+
+
     try:
+
         with open(file_path, 'rb') as f:
+
             reader = PyPDF2.PdfReader(f)
+
             pages = [page.extract_text() or "" for page in reader.pages]
+
             full_text = total_grooming(" ".join(pages))
+
             
+
             # Date and ArcGIS Date
+
             d_match = re.search(r'(?:The\s+)?([A-Z][a-z]+)\s+(\d{1,2}),\s+(\d{4})', full_text, re.I)
+
             if d_match:
+
                 data['Meeting Date'] = f"{d_match.group(1)} {d_match.group(2)}, {d_match.group(3)}"
+
                 data['ArcGIS_Date'] = datetime.strptime(data['Meeting Date'], '%B %d, %Y').strftime('%Y-%m-%d')
+
             
+
             # Cancellations vs Regular
+
             if "cancelled" in full_text.lower():
+
                 data.update({'Status': 'Cancelled', 'End Time': 'N/A', 'Action Taken': 'Meeting Cancelled'})
+
             else:
+
                 end_match = re.search(r'(?:Adjourned|Adjournment|Time Adjourned)(?:\s+at)?[:\s]+(\d{1,2}[:\.]\d{2}\s*[ap]m)', full_text, re.I)
+
                 data['End Time'] = end_match.group(1).lower() if end_match else "Unknown"
+
                 segments = re.findall(r'Action:\s*(.*?)(?=\s*(?:Motion|Vote:|Staff|Council|Public|Adjourned:|$))', full_text, re.I)
+
                 data['Action Taken'] = total_grooming(" | ".join([s.strip() for s in segments if len(s.strip()) > 10]))[:700]
+
                 
+
                 # SENSITIVE Staff Code Sniffer
+
                 staff = re.search(r'\(?([a-z]{2}/[a-z]{2})\)?', " ".join(pages), re.I)
+
                 if staff: data['Staff Code'] = staff.group(1).upper()
+
                 elif "Sarkozy" in full_text: data['Staff Code'] = "SS"
+
                 elif "Gibbs" in full_text: data['Staff Code'] = "MG"
 
+
+
             data['Location'] = extract_project_location(data.get('Action Taken', ''))
+
     except: pass
+
     return data
 
 def main():
