@@ -1,4 +1,3 @@
-cat <<EOF > .github/workflows/Process_PDFs.yml
 name: EagleGIS Production Pipeline
 
 permissions:
@@ -44,4 +43,3 @@ jobs:
           git add estero_map_data_polished.csv
           git commit -m "auto: refine data and update professional links [skip ci]" || echo "No changes"
           git push origin script
-EOF
