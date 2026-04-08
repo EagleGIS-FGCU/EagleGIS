@@ -13,7 +13,7 @@ Endpoints:
 """
 import csv
 import io
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 from app.db import get_client
 
@@ -37,32 +37,38 @@ def _csv_response(rows: list[dict], filename: str) -> Response:
     )
 
 
+def _query(table: str, select: str = "*", order: str | None = None):
+    """Run a Supabase select and raise a clean 502 on failure."""
+    try:
+        q = get_client().table(table).select(select)
+        if order:
+            q = q.order(order)
+        return q.execute().data
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Supabase error: {exc}") from exc
+
+
 @router.get("/projects.csv", summary="Export projects table")
 def export_projects():
-    rows = get_client().table("projects").select("*").execute().data
-    return _csv_response(rows, "projects.csv")
+    return _csv_response(_query("projects"), "projects.csv")
 
 
 @router.get("/meeting_types.csv", summary="Export meeting_types table")
 def export_meeting_types():
-    rows = get_client().table("meeting_types").select("*").execute().data
-    return _csv_response(rows, "meeting_types.csv")
+    return _csv_response(_query("meeting_types"), "meeting_types.csv")
 
 
 @router.get("/meetings.csv", summary="Export meetings table")
 def export_meetings():
-    rows = get_client().table("meetings").select("*").execute().data
-    return _csv_response(rows, "meetings.csv")
+    return _csv_response(_query("meetings"), "meetings.csv")
 
 
 @router.get("/locations.csv", summary="Export locations table with project info")
 def export_locations():
-    raw = (
-        get_client()
-        .table("locations")
-        .select("location_id, location_name, location_type, address, description, latitude, longitude, projects(project_name, status)")
-        .execute()
-        .data
+    raw = _query(
+        "locations",
+        select="location_id, location_name, location_type, address, description, latitude, longitude, projects(project_name, status)",
+        order="location_id",
     )
     rows = []
     for row in raw:
@@ -77,5 +83,4 @@ def export_locations():
 
 @router.get("/documents.csv", summary="Export documents table")
 def export_documents():
-    rows = get_client().table("documents").select("*").execute().data
-    return _csv_response(rows, "documents.csv")
+    return _csv_response(_query("documents"), "documents.csv")

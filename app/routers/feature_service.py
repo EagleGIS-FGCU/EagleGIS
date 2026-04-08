@@ -9,7 +9,7 @@ To add in ArcGIS Pro:
 
 ArcGIS will connect live — any Supabase change is reflected on refresh.
 """
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from app.db import get_client
 
@@ -54,16 +54,20 @@ def layer_info():
 
 @router.get("/FeatureServer/0/query")
 def query_layer():
-    raw = (
-        get_client()
-        .table("locations")
-        .select("location_id, location_name, location_type, address, description, latitude, longitude, projects(project_name, status)")
-        .execute()
-        .data
-    )
+    try:
+        raw = (
+            get_client()
+            .table("locations")
+            .select("location_id, location_name, location_type, address, description, latitude, longitude, projects(project_name, status)")
+            .order("location_id")
+            .execute()
+            .data
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Supabase error: {exc}") from exc
 
     features = []
-    for i, row in enumerate(raw):
+    for row in raw:
         lat = row.get("latitude")
         lon = row.get("longitude")
         if lat is None or lon is None:
@@ -71,7 +75,7 @@ def query_layer():
         project = row.get("projects") or {}
         features.append({
             "attributes": {
-                "OBJECTID":       i + 1,
+                "OBJECTID":       row["location_id"],
                 "location_name":  row.get("location_name"),
                 "location_type":  row.get("location_type"),
                 "address":        row.get("address"),
