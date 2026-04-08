@@ -40,7 +40,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          # -f overrides .gitignore for the official deliverable
           git add -f estero_map_data_polished.csv
           git commit -m "auto: refine data and update professional links [skip ci]" || echo "No changes"
           git push origin script
