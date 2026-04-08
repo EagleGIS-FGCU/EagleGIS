@@ -1,15 +1,21 @@
-name: Process PDFs
+name: EagleGIS Production Pipeline
+
+permissions:
+  contents: write  # Explicitly gives the bot permission to push the polished CSV
 
 on:
   push:
-    branches: [ "script", "main", "master" ]
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch: 
+    branches:
+      - script
+    paths:
+      - 'pdfs/**'
+      - 'estero_map_data.csv'
+      - 'sanitizeData.py'
+  workflow_dispatch:
 
 jobs:
-  process-pdfs:
+  refine-and-push:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,13 +28,21 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install PyPDF2
+          pip install pandas PyPDF2
 
-      - name: Run PDF Processor
+      - name: Step 1: Extract Minutes (Legacy Processor)
+        # We keep fixminutes.py to handle the raw PDF-to-CSV extraction
         run: python fixminutes.py
 
-      - name: Upload CSV Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: estero_map_data
-          path: estero_map_data.csv
+      - name: Step 2: Professional Refinement (EagleGIS Script)
+        # This script fixes the 'your-website' links and grooms the text
+        run: python sanitizeData.py
+
+      - name: Step 3: Commit and Push Results
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add estero_map_data_polished.csv
+          # The [skip ci] tag prevents an infinite loop
+          git commit -m "auto: refine data and update professional links [skip ci]" || echo "No changes"
+          git push origin script
