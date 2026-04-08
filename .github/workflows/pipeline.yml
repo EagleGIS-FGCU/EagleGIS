@@ -1,5 +1,8 @@
 name: EagleGIS Data Pipeline
 
+permissions:
+  contents: write  # Explicitly allow the bot to push changes
+
 on:
   push:
     branches:
@@ -32,5 +35,5 @@ jobs:
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
           git add estero_map_data_polished.csv
-          git commit -m "auto: professional data refinement update [skip ci]" || echo "No changes"
+          git commit -m "auto: professional data refinement update [skip ci]" || echo "No changes to commit"
           git push origin script
