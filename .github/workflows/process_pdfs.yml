@@ -30,13 +30,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas PyPDF2
 
-      - name: Step 1: Extract Minutes (Legacy Processor)
+      - name: Step 1 - Extract Minutes (Legacy Processor)
         run: python fixminutes.py
 
-      - name: Step 2: Professional Refinement (EagleGIS Script)
+      - name: Step 2 - Professional Refinement (EagleGIS Script)
         run: python sanitizeData.py
 
-      - name: Step 3: Commit and Push Results
+      - name: Step 3 - Commit and Push Results
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
