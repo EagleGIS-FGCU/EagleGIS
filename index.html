@@ -1,22 +1,26 @@
 const CSV_URL = 'https://raw.githubusercontent.com/krocks9903/EagleGIS/script/estero_map_data_polished.csv';
 let allData = [];
 
-// Helper to turn any weird Estero date string into a sortable number
+// High-quality parser to handle "Month Day, Year" or "YYYY-MM-DD"
 function getSortableTime(row) {
-    const rawDate = row.ArcGIS_Date || row['Meeting Date'] || "";
-    const parsed = Date.parse(rawDate);
-    
-    // If standard parsing works, use it
-    if (!isNaN(parsed)) return parsed;
+    const rawDate = (row.ArcGIS_Date || row['Meeting Date'] || "").trim();
+    if (!rawDate) return 0;
 
-    // Manual fallback: Extract 4-digit year if standard parsing fails
+    // Try standard parse first
+    const timestamp = Date.parse(rawDate);
+    if (!isNaN(timestamp)) return timestamp;
+
+    // Fallback: If it's a "Month Day, Year" format that failed
+    // This regex looks for a 4-digit year at the end
     const yearMatch = rawDate.match(/\d{4}/);
     if (yearMatch) {
-        // Return the start of that year as a timestamp
-        return new Date(yearMatch[0], 0, 1).getTime();
+        const year = parseInt(yearMatch[0]);
+        // We create a date at the end of that year so it stays in its 'batch'
+        // until we can parse the month/day more accurately
+        return new Date(year, 11, 31).getTime();
     }
-    
-    return 0; // Absolute fallback for broken data
+
+    return 0;
 }
 
 async function init() {
@@ -25,18 +29,25 @@ async function init() {
         download: true,
         header: true,
         skipEmptyLines: true,
-        error: function(err) {
-            console.error("Hiss! PapaParse failed:", err);
-            document.getElementById('data-list').innerHTML = '<div class="p-8 text-indigo-400 font-bold text-center">Failed to load data. Check connection.</div>';
-        },
         complete: (results) => {
-            console.log("Data caught! Sorting now...");
-            // Filter out truly empty rows
+            console.log("Data caught! Sorting the minutes...");
+            
+            // 1. Clean the data
             allData = results.data.filter(row => row['Action Taken'] && row['Action Taken'].trim() !== "");
             
-            // ONE MASTER SORT: Most recent years first, then months
-            allData.sort((a, b) => getSortableTime(b) - getSortableTime(a));
-            
+            // 2. THE MASTER SORT
+            // We force a deep comparison. Most recent at the top.
+            allData.sort((a, b) => {
+                const timeA = getSortableTime(a);
+                const timeB = getSortableTime(b);
+                
+                if (timeA !== timeB) {
+                    return timeB - timeA; 
+                }
+                // Secondary sort: If dates are identical, keep CSV order
+                return 0;
+            });
+
             renderList(allData);
             setupSearch();
         }
@@ -48,7 +59,7 @@ function renderList(data) {
     list.innerHTML = '';
     
     if (data.length === 0) {
-        list.innerHTML = '<div class="p-8 text-center text-slate-500 italic">No matching events found. 🐾</div>';
+        list.innerHTML = '<div class="p-8 text-center text-slate-500 italic">No matching records. 🐾</div>';
         return;
     }
 
@@ -64,7 +75,7 @@ function renderList(data) {
                 "${row['Action Taken']}"
             </div>
             <div class="flex justify-between items-center">
-                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Expand Details 🐾</span>
+                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Details 🐾</span>
                 <a href="${row['Document_Link']}" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl font-bold text-xs shadow-lg transition-colors">View PDF</a>
             </div>
         `;
