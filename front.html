@@ -4,64 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EagleGIS | Estero Council Tracker</title>
-    <script type="module" src="https://js.arcgis.com/5.0/embeddable-components/"></script>
+    
+    <script type="module" src="https://js.arcgis.com/map-components/4.30/arcgis-map-components.esm.js"></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; background: #0f172a; font-family: system-ui, -apple-system, sans-serif; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: #0f172a; overflow: hidden; }
+        /* This forces the map to fill its container */
+        arcgis-map { 
+            display: block;
+            width: 100%; 
+            height: 100%;
+        }
         .gothic-scroll::-webkit-scrollbar { width: 8px; }
         .gothic-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-        /* Make sure the arcgis component fills its container */
-        arcgis-embedded-map { height: 100%; width: 100%; display: block; }
     </style>
 </head>
-<body class="flex flex-col md:flex-row h-screen overflow-hidden">
+<body class="flex flex-col md:flex-row h-screen">
 
     <aside class="w-full md:w-[450px] h-full bg-slate-950 border-r-4 border-indigo-900 flex flex-col z-50">
         <div class="p-6 bg-slate-900">
-            <h1 class="text-3xl font-black text-indigo-400 tracking-tight">🦅 EagleGIS</h1>
+            <h1 class="text-3xl font-black text-indigo-400">🦅 EagleGIS</h1>
             <p class="text-slate-400 text-sm font-bold">Estero Council Meeting Tracker</p>
         </div>
 
         <div class="p-4 border-b border-slate-800 space-y-3">
-            <label for="main-search" class="text-white font-bold block ml-1 text-lg">Find a Topic:</label>
+            <label for="main-search" class="text-white font-bold block text-lg">Find a Topic:</label>
             <input type="text" id="main-search" placeholder="Search keywords..." 
-                   class="w-full bg-slate-800 border-2 border-slate-600 rounded-xl px-4 py-4 text-white text-xl focus:border-indigo-400 outline-none transition-all">
-            
-            <div class="flex flex-col space-y-2">
-                <select id="attr-filter" class="w-full bg-slate-800 text-white p-3 rounded-xl border-2 border-slate-700 text-lg font-medium cursor-pointer">
-                    <option value="all">Search Everything</option>
-                    <option value="Action Taken">Topic / Action</option>
-                    <option value="Meeting Date">Meeting Date</option>
-                </select>
-            </div>
+                   class="w-full bg-slate-800 border-2 border-slate-600 rounded-xl px-4 py-4 text-white text-xl outline-none">
         </div>
 
         <div class="flex-grow overflow-y-auto gothic-scroll p-4 space-y-4">
-            <h2 class="text-indigo-400 font-black uppercase text-xs tracking-widest mb-2 flex items-center gap-2">
-                <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span> Latest Council Updates
+            <h2 class="text-indigo-400 font-black uppercase text-xs flex items-center gap-2">
+                <span class="w-3 h-3 bg-green-500 rounded-full"></span> Latest Council Updates
             </h2>
             <div id="data-list" class="space-y-4">
-                <div class="p-8 text-center text-slate-500 italic text-lg">Fetching latest records... 🐾</div>
+                <div class="p-8 text-center text-slate-500 italic">Sniffing data... 🐾</div>
             </div>
         </div>
 
-        <div class="p-4 bg-slate-950 border-t border-slate-800">
-            <a href="https://github.com/krocks9903/EagleGIS" target="_blank" class="block w-full text-center py-4 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 text-md font-bold transition-all border border-slate-700">
-                View Project on GitHub
-            </a>
+        <div class="p-4 bg-slate-950 border-t border-slate-800 text-center">
+            <a href="https://github.com/krocks9903/EagleGIS" target="_blank" class="text-slate-400 text-xs hover:underline">View Source on GitHub</a>
         </div>
     </aside>
 
-    <main class="flex-grow bg-slate-900 relative">
-        <arcgis-embedded-map 
+    <main class="flex-grow bg-slate-800">
+        <arcgis-map 
             item-id="586954199d83492896abf247343a33ee" 
-            theme="dark" 
-            share-enabled 
-            time-zone-label-enabled 
-            center="-81.79500362559124,26.425341455421766"
-            scale="18055.954822" 
-            portal-url="https://eccl-swfl-safety.maps.arcgis.com">
-        </arcgis-embedded-map>
+            theme="dark">
+        </arcgis-map>
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -75,8 +66,7 @@
                 header: true,
                 skipEmptyLines: true,
                 complete: (results) => {
-                    // Filter out rows that are just placeholders
-                    allData = results.data.filter(row => row['Action Taken'] && row['Action Taken'].trim() !== "");
+                    allData = results.data.filter(row => row['Action Taken']);
                     renderList(allData);
                     setupSearch();
                 }
@@ -86,18 +76,16 @@
         function renderList(data) {
             const list = document.getElementById('data-list');
             list.innerHTML = '';
-            
-            // Sort by Date
-            const sorted = [...data].sort((a, b) => new Date(b.ArcGIS_Date) - new Date(a.ArcGIS_Date));
+            const sorted = [...data].sort((a, b) => new Date(b.ArcGIS_Date) - new Date(a.ArcGIS_Date)).slice(0, 20);
 
             sorted.forEach(row => {
                 const card = document.createElement('div');
-                card.className = "p-5 bg-slate-900 rounded-2xl border-2 border-slate-800 hover:border-indigo-400 transition-all shadow-xl group";
+                card.className = "p-5 bg-slate-900 rounded-2xl border-2 border-slate-800 shadow-xl";
                 card.innerHTML = `
-                    <div class="text-indigo-400 font-black text-sm mb-2 uppercase tracking-tight">${row['Meeting Date']}</div>
+                    <div class="text-indigo-400 font-bold text-xs mb-1">${row['Meeting Date']}</div>
                     <div class="text-white text-lg font-bold leading-tight mb-4">${row['Action Taken']}</div>
                     <div class="flex justify-end">
-                        <a href="${row['Document_Link']}" target="_blank" class="text-sm bg-indigo-600 group-hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg">Open PDF</a>
+                        <a href="${row['Document_Link']}" target="_blank" class="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold text-sm">Open PDF</a>
                     </div>
                 `;
                 list.appendChild(card);
@@ -106,14 +94,11 @@
 
         function setupSearch() {
             const input = document.getElementById('main-search');
-            const filter = document.getElementById('attr-filter');
             input.addEventListener('input', (e) => {
                 const term = e.target.value.toLowerCase();
-                const attr = filter.value;
-                const filtered = allData.filter(row => {
-                    if (attr === 'all') return Object.values(row).some(v => String(v).toLowerCase().includes(term));
-                    return row[attr] && String(row[attr]).toLowerCase().includes(term);
-                });
+                const filtered = allData.filter(row => 
+                    Object.values(row).some(v => String(v).toLowerCase().includes(term))
+                );
                 renderList(filtered);
             });
         }
