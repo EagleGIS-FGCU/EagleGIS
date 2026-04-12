@@ -4,18 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EagleGIS | Estero Council Tracker</title>
-    
-    <script type="module" src="https://js.arcgis.com/map-components/4.30/arcgis-map-components.esm.js"></script>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: #0f172a; overflow: hidden; }
-        /* This forces the map to fill its container */
-        arcgis-map { 
-            display: block;
-            width: 100%; 
-            height: 100%;
-        }
+        /* Ensures the map takes up every bit of available space */
+        .map-frame { width: 100%; height: 100%; border: none; }
         .gothic-scroll::-webkit-scrollbar { width: 8px; }
         .gothic-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
     </style>
@@ -24,35 +17,37 @@
 
     <aside class="w-full md:w-[450px] h-full bg-slate-950 border-r-4 border-indigo-900 flex flex-col z-50">
         <div class="p-6 bg-slate-900">
-            <h1 class="text-3xl font-black text-indigo-400">🦅 EagleGIS</h1>
-            <p class="text-slate-400 text-sm font-bold">Estero Council Meeting Tracker</p>
+            <h1 class="text-3xl font-black text-indigo-400 tracking-tight">🦅 EagleGIS</h1>
+            <p class="text-slate-400 text-sm font-bold uppercase tracking-wider">Estero Meeting Tracker</p>
         </div>
 
         <div class="p-4 border-b border-slate-800 space-y-3">
-            <label for="main-search" class="text-white font-bold block text-lg">Find a Topic:</label>
-            <input type="text" id="main-search" placeholder="Search keywords..." 
-                   class="w-full bg-slate-800 border-2 border-slate-600 rounded-xl px-4 py-4 text-white text-xl outline-none">
+            <label for="main-search" class="text-white font-bold block text-lg">Search for a Topic:</label>
+            <input type="text" id="main-search" placeholder="Try 'Zoning' or 'Parks'..." 
+                   class="w-full bg-slate-800 border-2 border-slate-600 rounded-xl px-4 py-4 text-white text-xl outline-none focus:border-indigo-500 transition-all">
         </div>
 
         <div class="flex-grow overflow-y-auto gothic-scroll p-4 space-y-4">
             <h2 class="text-indigo-400 font-black uppercase text-xs flex items-center gap-2">
-                <span class="w-3 h-3 bg-green-500 rounded-full"></span> Latest Council Updates
+                <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span> Latest Council Updates
             </h2>
             <div id="data-list" class="space-y-4">
-                <div class="p-8 text-center text-slate-500 italic">Sniffing data... 🐾</div>
+                <div class="p-8 text-center text-slate-500 italic">Sniffing out the latest data... 🐾</div>
             </div>
         </div>
 
-        <div class="p-4 bg-slate-950 border-t border-slate-800 text-center">
-            <a href="https://github.com/krocks9903/EagleGIS" target="_blank" class="text-slate-400 text-xs hover:underline">View Source on GitHub</a>
+        <div class="p-4 bg-slate-950 border-t border-slate-800 flex justify-between items-center">
+            <a href="https://github.com/krocks9903/EagleGIS" target="_blank" class="text-slate-500 text-xs hover:text-white transition-colors">Source Code</a>
+            <span class="text-[10px] text-slate-600 font-mono italic">Built for Estero Community</span>
         </div>
     </aside>
 
-    <main class="flex-grow bg-slate-800">
-        <arcgis-map 
-            item-id="586954199d83492896abf247343a33ee" 
-            theme="dark">
-        </arcgis-map>
+    <main class="flex-grow bg-slate-900">
+        <iframe 
+            class="map-frame"
+            src="https://eccl-swfl-safety.maps.arcgis.com/apps/mapviewer/index.html?webmap=586954199d83492896abf247343a33ee"
+            allow="geolocation">
+        </iframe>
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -66,7 +61,7 @@
                 header: true,
                 skipEmptyLines: true,
                 complete: (results) => {
-                    allData = results.data.filter(row => row['Action Taken']);
+                    allData = results.data.filter(row => row['Action Taken'] && row['Action Taken'].trim() !== "");
                     renderList(allData);
                     setupSearch();
                 }
@@ -76,16 +71,18 @@
         function renderList(data) {
             const list = document.getElementById('data-list');
             list.innerHTML = '';
+            
+            // Show only the 20 most recent
             const sorted = [...data].sort((a, b) => new Date(b.ArcGIS_Date) - new Date(a.ArcGIS_Date)).slice(0, 20);
 
             sorted.forEach(row => {
                 const card = document.createElement('div');
-                card.className = "p-5 bg-slate-900 rounded-2xl border-2 border-slate-800 shadow-xl";
+                card.className = "p-5 bg-slate-900 rounded-2xl border-2 border-slate-800 shadow-xl hover:border-indigo-500 transition-all";
                 card.innerHTML = `
-                    <div class="text-indigo-400 font-bold text-xs mb-1">${row['Meeting Date']}</div>
+                    <div class="text-indigo-400 font-bold text-xs mb-1 uppercase tracking-tighter">${row['Meeting Date']}</div>
                     <div class="text-white text-lg font-bold leading-tight mb-4">${row['Action Taken']}</div>
                     <div class="flex justify-end">
-                        <a href="${row['Document_Link']}" target="_blank" class="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold text-sm">Open PDF</a>
+                        <a href="${row['Document_Link']}" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl font-bold text-sm transition-colors shadow-lg">View PDF</a>
                     </div>
                 `;
                 list.appendChild(card);
