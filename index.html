@@ -40,7 +40,6 @@
             #map-spot { left: 0; top: 45%; height: 55%; width: 100%; }
         }
 
-        /* Essential 2-line clamp for high-quality readability */
         .clamp-2-lines {
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -68,7 +67,7 @@
         </div>
 
         <div id="data-list" class="flex-grow overflow-y-auto gothic-scroll p-4 space-y-4">
-            <div class="p-8 text-center text-slate-500 italic font-bold">Grooming the records... 🐾</div>
+            <div class="p-8 text-center text-slate-500 italic font-bold text-lg">Grooming the records... 🐾</div>
         </div>
 
         <div class="p-4 bg-slate-950 border-t border-slate-800 text-center">
@@ -111,8 +110,13 @@
                 return;
             }
 
-            // Sort by Date (Most Recent First)
-            const sorted = [...data].sort((a, b) => new Date(b.ArcGIS_Date) - new Date(a.ArcGIS_Date));
+            // --- HIGH QUALITY SORTING LOGIC ---
+            // We use ArcGIS_Date because it's usually YYYY-MM-DD, which is easy for JS to parse.
+            const sorted = [...data].sort((a, b) => {
+                const dateA = new Date(a.ArcGIS_Date || a['Meeting Date']);
+                const dateB = new Date(b.ArcGIS_Date || b['Meeting Date']);
+                return dateB - dateA; // Most recent first
+            });
 
             sorted.forEach(row => {
                 const card = document.createElement('div');
