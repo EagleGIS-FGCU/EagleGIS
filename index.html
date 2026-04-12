@@ -30,15 +30,26 @@
             background: #0f172a;
         }
 
-        /* Essential for iframe visibility */
         iframe { width: 100%; height: 100%; border: none; display: block; }
         
         .gothic-scroll::-webkit-scrollbar { width: 8px; }
         .gothic-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
 
+        /* Mobile Fix */
         @media (max-width: 768px) {
             #sidebar { width: 100%; height: 45%; position: relative; border-right: none; border-bottom: 4px solid #1e1b4b; }
             #map-spot { left: 0; top: 45%; height: 55%; width: 100%; }
+        }
+
+        /* Clamping logic for cleaner cards */
+        .clamp-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .expanded .clamp-text {
+            -webkit-line-clamp: unset;
         }
     </style>
 </head>
@@ -57,21 +68,20 @@
         </div>
 
         <div id="data-list" class="flex-grow overflow-y-auto gothic-scroll p-4 space-y-4">
-            <div class="p-8 text-center text-slate-500 italic">Finding the latest actions... 🐾</div>
+            <div class="p-8 text-center text-slate-500 italic text-lg font-bold">Finding the latest actions... 🐾</div>
         </div>
 
         <div class="p-4 bg-slate-950 border-t border-slate-800 text-center text-[10px] text-slate-500 uppercase tracking-widest">
-            Community Project | <a href="https://github.com/krocks9903/EagleGIS" target="_blank" class="hover:text-indigo-400 transition-colors">View Source</a>
+            Community Project | <a href="https://github.com/krocks9903/EagleGIS" target="_blank" class="hover:text-indigo-400 transition-colors font-bold">View Source</a>
         </div>
     </aside>
 
     <main id="map-spot">
-    <iframe 
-        src="https://www.arcgis.com/apps/Embed/index.html?webmap=586954199d83492896abf247343a33ee&extent=-81.85,26.4,-81.75,26.45&home=true&zoom=true&previewImage=false&scale=true&search=true&searchextent=true&details=true&legend=true&active_panel=details&basemap_gallery=true&disable_scroll=true&theme=dark"
-        allow="geolocation"
-        title="EagleGIS Community Map">
-    </iframe>
-</main>
+        <iframe 
+            src="https://www.arcgis.com/apps/Embed/index.html?webmap=586954199d83492896abf247343a33ee&extent=-81.85,26.4,-81.75,26.45&home=true&zoom=true&previewImage=false&scale=true&search=true&searchextent=true&details=true&legend=true&active_panel=details&basemap_gallery=true&disable_scroll=true&theme=dark"
+            allow="geolocation"
+            title="EagleGIS Community Map">
+        </iframe>
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -95,19 +105,34 @@
         function renderList(data) {
             const list = document.getElementById('data-list');
             list.innerHTML = '';
-            // Show top 30 most recent for seniors to browse
+            
+            // Show top 30 most recent
             const sorted = [...data].sort((a, b) => new Date(b.ArcGIS_Date) - new Date(a.ArcGIS_Date)).slice(0, 30);
 
             sorted.forEach(row => {
                 const card = document.createElement('div');
-                card.className = "p-5 bg-slate-900 rounded-2xl border-2 border-slate-800 shadow-xl hover:border-indigo-500 transition-all";
+                card.className = "p-5 bg-slate-900 rounded-2xl border-2 border-slate-800 shadow-xl hover:border-indigo-500 transition-all cursor-pointer";
+                
                 card.innerHTML = `
                     <div class="text-indigo-400 font-bold text-xs mb-1 uppercase">${row['Meeting Date']}</div>
-                    <div class="text-white text-lg font-bold leading-tight mb-4">${row['Action Taken']}</div>
-                    <div class="flex justify-end">
+                    <div class="text-white text-lg font-bold leading-tight mb-2 clamp-text transition-all">${row['Action Taken']}</div>
+                    
+                    <div class="flex justify-between items-center mt-4">
+                        <button class="read-more-btn text-xs text-indigo-400 font-bold hover:text-white transition-colors">Read More 🐾</button>
                         <a href="${row['Document_Link']}" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl font-bold text-xs shadow-lg transition-colors">View PDF</a>
                     </div>
                 `;
+
+                // Toggle expanded state
+                card.onclick = (e) => {
+                    // Don't expand if they click the PDF link
+                    if (e.target.tagName === 'A') return;
+                    
+                    const isExpanded = card.classList.toggle('expanded');
+                    const btn = card.querySelector('.read-more-btn');
+                    btn.textContent = isExpanded ? 'Show Less' : 'Read More 🐾';
+                };
+
                 list.appendChild(card);
             });
         }
