@@ -7,49 +7,26 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: #0f172a; overflow: hidden; }
-        
         #sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            width: 400px;
-            background: #020617;
-            border-right: 4px solid #1e1b4b;
-            display: flex;
-            flex-direction: column;
-            z-index: 50;
+            position: fixed; top: 0; left: 0; bottom: 0; width: 400px;
+            background: #020617; border-right: 4px solid #1e1b4b;
+            display: flex; flex-direction: column; z-index: 50;
         }
-
         #map-spot {
-            position: absolute;
-            top: 0;
-            left: 400px;
-            right: 0;
-            bottom: 0;
-            background: #0f172a;
+            position: absolute; top: 0; left: 400px; right: 0; bottom: 0; background: #0f172a;
         }
-
         iframe { width: 100%; height: 100%; border: none; display: block; }
-        
         .gothic-scroll::-webkit-scrollbar { width: 8px; }
         .gothic-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .clamp-2-lines {
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden; text-overflow: ellipsis;
+        }
+        .expanded .clamp-2-lines { -webkit-line-clamp: unset; }
 
         @media (max-width: 768px) {
             #sidebar { width: 100%; height: 45%; position: relative; border-right: none; border-bottom: 4px solid #1e1b4b; }
             #map-spot { left: 0; top: 45%; height: 55%; width: 100%; }
-        }
-
-        .clamp-2-lines {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .expanded .clamp-2-lines {
-            -webkit-line-clamp: unset;
         }
     </style>
 </head>
@@ -67,7 +44,7 @@
         </div>
 
         <div id="data-list" class="flex-grow overflow-y-auto gothic-scroll p-4 space-y-4">
-            <div class="p-8 text-center text-slate-500 italic font-bold text-lg">Grooming the records... 🐾</div>
+            <div class="p-8 text-center text-slate-500 italic font-bold">Sorting the minutes... 🐾</div>
         </div>
 
         <div class="p-4 bg-slate-950 border-t border-slate-800 text-center">
@@ -110,12 +87,16 @@
                 return;
             }
 
-            // --- HIGH QUALITY SORTING LOGIC ---
-            // We use ArcGIS_Date because it's usually YYYY-MM-DD, which is easy for JS to parse.
+            // --- THE BULLETPROOF SORT ---
             const sorted = [...data].sort((a, b) => {
-                const dateA = new Date(a.ArcGIS_Date || a['Meeting Date']);
-                const dateB = new Date(b.ArcGIS_Date || b['Meeting Date']);
-                return dateB - dateA; // Most recent first
+                // Try parsing ArcGIS_Date first, then Meeting Date
+                const valA = a.ArcGIS_Date || a['Meeting Date'];
+                const valB = b.ArcGIS_Date || b['Meeting Date'];
+                
+                const timeA = Date.parse(valA) || 0;
+                const timeB = Date.parse(valB) || 0;
+                
+                return timeB - timeA; // Most recent (largest timestamp) at the top
             });
 
             sorted.forEach(row => {
@@ -129,7 +110,6 @@
                     <div class="text-slate-300 text-[1.05rem] leading-snug clamp-2-lines mb-4 font-medium italic">
                         "${row['Action Taken']}"
                     </div>
-                    
                     <div class="flex justify-between items-center">
                         <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Expand Details 🐾</span>
                         <a href="${row['Document_Link']}" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl font-bold text-xs shadow-lg transition-colors">View PDF</a>
@@ -152,13 +132,3 @@
                 const filtered = allData.filter(row => {
                     const action = (row['Action Taken'] || '').toLowerCase();
                     const date = (row['Meeting Date'] || '').toLowerCase();
-                    return action.includes(term) || date.includes(term);
-                });
-                renderList(filtered);
-            });
-        }
-
-        init();
-    </script>
-</body>
-</html>
