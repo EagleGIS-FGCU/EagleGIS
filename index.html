@@ -1,105 +1,140 @@
-const CSV_URL = 'https://raw.githubusercontent.com/krocks9903/EagleGIS/script/estero_map_data_polished.csv';
-let allData = [];
-
-// High-quality parser to handle "Month Day, Year" or "YYYY-MM-DD"
-function getSortableTime(row) {
-    const rawDate = (row.ArcGIS_Date || row['Meeting Date'] || "").trim();
-    if (!rawDate) return 0;
-
-    // Try standard parse first
-    const timestamp = Date.parse(rawDate);
-    if (!isNaN(timestamp)) return timestamp;
-
-    // Fallback: If it's a "Month Day, Year" format that failed
-    // This regex looks for a 4-digit year at the end
-    const yearMatch = rawDate.match(/\d{4}/);
-    if (yearMatch) {
-        const year = parseInt(yearMatch[0]);
-        // We create a date at the end of that year so it stays in its 'batch'
-        // until we can parse the month/day more accurately
-        return new Date(year, 11, 31).getTime();
-    }
-
-    return 0;
-}
-
-async function init() {
-    console.log("Sniffing out the CSV... 🐾");
-    Papa.parse(CSV_URL, {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-            console.log("Data caught! Sorting the minutes...");
-            
-            // 1. Clean the data
-            allData = results.data.filter(row => row['Action Taken'] && row['Action Taken'].trim() !== "");
-            
-            // 2. THE MASTER SORT
-            // We force a deep comparison. Most recent at the top.
-            allData.sort((a, b) => {
-                const timeA = getSortableTime(a);
-                const timeB = getSortableTime(b);
-                
-                if (timeA !== timeB) {
-                    return timeB - timeA; 
-                }
-                // Secondary sort: If dates are identical, keep CSV order
-                return 0;
-            });
-
-            renderList(allData);
-            setupSearch();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EagleGIS | Estero Council Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: #0f172a; overflow: hidden; }
+        #sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0; width: 400px;
+            background: #020617; border-right: 4px solid #1e1b4b;
+            display: flex; flex-direction: column; z-index: 50;
         }
-    });
-}
+        #map-spot {
+            position: absolute; top: 0; left: 400px; right: 0; bottom: 0; background: #0f172a;
+        }
+        iframe { width: 100%; height: 100%; border: none; display: block; }
+        .gothic-scroll::-webkit-scrollbar { width: 8px; }
+        .gothic-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .clamp-2-lines {
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden; text-overflow: ellipsis;
+        }
+        .expanded .clamp-2-lines { -webkit-line-clamp: unset; }
 
-function renderList(data) {
-    const list = document.getElementById('data-list');
-    list.innerHTML = '';
-    
-    if (data.length === 0) {
-        list.innerHTML = '<div class="p-8 text-center text-slate-500 italic">No matching records. 🐾</div>';
-        return;
-    }
+        @media (max-width: 768px) {
+            #sidebar { width: 100%; height: 45%; position: relative; border-right: none; border-bottom: 4px solid #1e1b4b; }
+            #map-spot { left: 0; top: 45%; height: 55%; width: 100%; }
+        }
+    </style>
+</head>
+<body>
 
-    data.forEach(row => {
-        const card = document.createElement('div');
-        card.className = "p-5 bg-slate-900 rounded-2xl border-2 border-slate-800 shadow-xl hover:border-indigo-500 transition-all cursor-pointer group mb-4";
-        
-        card.innerHTML = `
-            <div class="text-indigo-400 font-black text-2xl mb-2 tracking-tighter group-hover:text-white transition-colors">
-                ${row['Meeting Date']}
-            </div>
-            <div class="text-slate-300 text-[1.05rem] leading-snug clamp-2-lines mb-4 font-medium italic">
-                "${row['Action Taken']}"
-            </div>
-            <div class="flex justify-between items-center">
-                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Details 🐾</span>
-                <a href="${row['Document_Link']}" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl font-bold text-xs shadow-lg transition-colors">View PDF</a>
-            </div>
-        `;
+    <aside id="sidebar">
+        <div class="p-6 bg-slate-900 shadow-xl">
+            <h1 class="text-3xl font-black text-indigo-400 tracking-tighter">🦅 EagleGIS</h1>
+            <p class="text-slate-400 text-sm font-bold uppercase tracking-widest">Village of Estero Tracker</p>
+        </div>
 
-        card.onclick = (e) => {
-            if (e.target.tagName === 'A') return;
-            card.classList.toggle('expanded');
-        };
+        <div class="p-4 border-b border-slate-800">
+            <input type="text" id="main-search" placeholder="Search by Date or Topic..." 
+                   class="w-full bg-slate-800 border-2 border-slate-600 rounded-xl px-4 py-3 text-white text-lg focus:border-indigo-400 outline-none transition-all">
+        </div>
 
-        list.appendChild(card);
-    });
-}
+        <div id="data-list" class="flex-grow overflow-y-auto gothic-scroll p-4 space-y-4">
+            <div class="p-8 text-center text-slate-500 italic font-bold">Loading records...</div>
+        </div>
 
-function setupSearch() {
-    const input = document.getElementById('main-search');
-    input.addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase().trim();
-        const filtered = allData.filter(row => {
-            const action = (row['Action Taken'] || '').toLowerCase();
-            const date = (row['Meeting Date'] || '').toLowerCase();
-            return action.includes(term) || date.includes(term);
-        });
-        renderList(filtered);
-    });
-}
+        <div class="p-4 bg-slate-950 border-t border-slate-800 text-center">
+            <a href="https://github.com/krocks9903/EagleGIS" target="_blank" class="text-[10px] text-slate-500 uppercase hover:text-indigo-400 transition-colors font-bold tracking-widest">View Source Code</a>
+        </div>
+    </aside>
 
-init();
+    <main id="map-spot">
+        <iframe 
+            src="https://www.arcgis.com/apps/Embed/index.html?webmap=586954199d83492896abf247343a33ee&extent=-81.85,26.4,-81.75,26.45&home=true&zoom=true&previewImage=false&scale=true&search=true&searchextent=true&details=true&legend=true&active_panel=details&basemap_gallery=true&disable_scroll=true&theme=dark"
+            allow="geolocation"
+            title="EagleGIS Community Map">
+        </iframe>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script>
+        const CSV_URL = 'https://raw.githubusercontent.com/krocks9903/EagleGIS/script/estero_map_data_polished.csv';
+        let allData = [];
+
+        function getSortableTime(row) {
+            const rawDate = (row.ArcGIS_Date || row['Meeting Date'] || "").trim();
+            if (!rawDate) return 0;
+            const timestamp = Date.parse(rawDate);
+            if (!isNaN(timestamp)) return timestamp;
+            const yearMatch = rawDate.match(/\d{4}/);
+            if (yearMatch) {
+                const year = parseInt(yearMatch[0]);
+                return new Date(year, 11, 31).getTime();
+            }
+            return 0;
+        }
+
+        async function init() {
+            Papa.parse(CSV_URL, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: (results) => {
+                    allData = results.data.filter(row => row['Action Taken'] && row['Action Taken'].trim() !== "");
+                    allData.sort((a, b) => getSortableTime(b) - getSortableTime(a));
+                    renderList(allData);
+                    setupSearch();
+                }
+            });
+        }
+
+        function renderList(data) {
+            const list = document.getElementById('data-list');
+            list.innerHTML = '';
+            if (data.length === 0) {
+                list.innerHTML = '<div class="p-8 text-center text-slate-500 italic">No matching records found.</div>';
+                return;
+            }
+            data.forEach(row => {
+                const card = document.createElement('div');
+                card.className = "p-5 bg-slate-900 rounded-2xl border-2 border-slate-800 shadow-xl hover:border-indigo-500 transition-all cursor-pointer group mb-4";
+                card.innerHTML = `
+                    <div class="text-indigo-400 font-black text-2xl mb-2 tracking-tighter group-hover:text-white transition-colors">
+                        ${row['Meeting Date']}
+                    </div>
+                    <div class="text-slate-300 text-[1.05rem] leading-snug clamp-2-lines mb-4 font-medium italic">
+                        "${row['Action Taken']}"
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Details</span>
+                        <a href="${row['Document_Link']}" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl font-bold text-xs shadow-lg transition-colors">View PDF</a>
+                    </div>
+                `;
+                card.onclick = (e) => {
+                    if (e.target.tagName === 'A') return;
+                    card.classList.toggle('expanded');
+                };
+                list.appendChild(card);
+            });
+        }
+
+        function setupSearch() {
+            const input = document.getElementById('main-search');
+            input.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase().trim();
+                const filtered = allData.filter(row => {
+                    const action = (row['Action Taken'] || '').toLowerCase();
+                    const date = (row['Meeting Date'] || '').toLowerCase();
+                    return action.includes(term) || date.includes(term);
+                });
+                renderList(filtered);
+            });
+        }
+        init();
+    </script>
+</body>
+</html>
