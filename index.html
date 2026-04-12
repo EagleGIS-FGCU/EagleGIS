@@ -44,7 +44,7 @@
         </div>
 
         <div id="data-list" class="flex-grow overflow-y-auto gothic-scroll p-4 space-y-4">
-            <div class="p-8 text-center text-slate-500 italic font-bold">Sorting the minutes... 🐾</div>
+            <div class="p-8 text-center text-slate-500 italic font-bold text-lg">Grooming the records... 🐾</div>
         </div>
 
         <div class="p-4 bg-slate-950 border-t border-slate-800 text-center">
@@ -87,16 +87,18 @@
                 return;
             }
 
-            // --- THE BULLETPROOF SORT ---
+            // --- THE MASTER CHRONOLOGY SORT ---
             const sorted = [...data].sort((a, b) => {
-                // Try parsing ArcGIS_Date first, then Meeting Date
-                const valA = a.ArcGIS_Date || a['Meeting Date'];
-                const valB = b.ArcGIS_Date || b['Meeting Date'];
+                // We prioritize ArcGIS_Date because it is ISO (YYYY-MM-DD)
+                // If it's missing, we fall back to Meeting Date
+                const dateA = new Date(a.ArcGIS_Date || a['Meeting Date']);
+                const dateB = new Date(b.ArcGIS_Date || b['Meeting Date']);
+
+                // If parsing failed (NaN), move those items to the absolute bottom
+                const timeA = isNaN(dateA.getTime()) ? 0 : dateA.getTime();
+                const timeB = isNaN(dateB.getTime()) ? 0 : dateB.getTime();
                 
-                const timeA = Date.parse(valA) || 0;
-                const timeB = Date.parse(valB) || 0;
-                
-                return timeB - timeA; // Most recent (largest timestamp) at the top
+                return timeB - timeA; // High to Low (Newest to Oldest)
             });
 
             sorted.forEach(row => {
@@ -132,3 +134,13 @@
                 const filtered = allData.filter(row => {
                     const action = (row['Action Taken'] || '').toLowerCase();
                     const date = (row['Meeting Date'] || '').toLowerCase();
+                    return action.includes(term) || date.includes(term);
+                });
+                renderList(filtered);
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
