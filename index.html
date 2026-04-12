@@ -40,23 +40,15 @@
             #map-spot { left: 0; top: 45%; height: 55%; width: 100%; }
         }
 
-        /* Essential Clamping for Senior Accessibility */
-        .clamp-1-line {
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        
+        /* Essential 2-line clamp for high-quality readability */
         .clamp-2-lines {
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        /* Expansion state */
-        .expanded .clamp-1-line,
         .expanded .clamp-2-lines {
             -webkit-line-clamp: unset;
         }
@@ -71,16 +63,16 @@
         </div>
 
         <div class="p-4 border-b border-slate-800">
-            <input type="text" id="main-search" placeholder="Search by Topic or Keyword..." 
+            <input type="text" id="main-search" placeholder="Search by Date or Topic..." 
                    class="w-full bg-slate-800 border-2 border-slate-600 rounded-xl px-4 py-3 text-white text-lg focus:border-indigo-400 outline-none transition-all">
         </div>
 
         <div id="data-list" class="flex-grow overflow-y-auto gothic-scroll p-4 space-y-4">
-            <div class="p-8 text-center text-slate-500 italic font-bold">Grooming the latest topics... 🐾</div>
+            <div class="p-8 text-center text-slate-500 italic font-bold">Grooming the records... 🐾</div>
         </div>
 
         <div class="p-4 bg-slate-950 border-t border-slate-800 text-center">
-            <a href="https://github.com/krocks9903/EagleGIS" target="_blank" class="text-[10px] text-slate-500 hover:text-indigo-400 transition-colors font-bold uppercase tracking-widest">Open Source Code</a>
+            <a href="https://github.com/krocks9903/EagleGIS" target="_blank" class="text-[10px] text-slate-500 uppercase hover:text-indigo-400 transition-colors font-bold tracking-widest">View Source Code</a>
         </div>
     </aside>
 
@@ -115,7 +107,7 @@
             list.innerHTML = '';
             
             if (data.length === 0) {
-                list.innerHTML = '<div class="p-8 text-center text-slate-500 italic">No matching topics found. 🐾</div>';
+                list.innerHTML = '<div class="p-8 text-center text-slate-500 italic">No matching events found. 🐾</div>';
                 return;
             }
 
@@ -126,17 +118,17 @@
                 const card = document.createElement('div');
                 card.className = "p-5 bg-slate-900 rounded-2xl border-2 border-slate-800 shadow-xl hover:border-indigo-500 transition-all cursor-pointer group";
                 
-                // Using the first part of 'Action Taken' as the Topic Name/Title
-                const topicTitle = row['Action Taken'];
-
                 card.innerHTML = `
-                    <div class="text-indigo-400 font-bold text-[10px] mb-1 uppercase tracking-wider">${row['Meeting Date']}</div>
-                    <div class="text-white text-lg font-black leading-tight mb-2 clamp-1-line group-hover:text-indigo-200 transition-colors">${topicTitle}</div>
-                    <div class="text-slate-400 text-sm leading-snug clamp-2-lines mb-4 font-medium italic">"${row['Action Taken']}"</div>
+                    <div class="text-indigo-400 font-black text-2xl mb-2 tracking-tighter group-hover:text-white transition-colors">
+                        ${row['Meeting Date']}
+                    </div>
+                    <div class="text-slate-300 text-[1.05rem] leading-snug clamp-2-lines mb-4 font-medium italic">
+                        "${row['Action Taken']}"
+                    </div>
                     
                     <div class="flex justify-between items-center">
-                        <span class="text-[10px] text-slate-600 font-bold group-hover:text-slate-400 transition-colors uppercase">Details 🐾</span>
-                        <a href="${row['Document_Link']}" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg transition-colors">View PDF</a>
+                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Expand Details 🐾</span>
+                        <a href="${row['Document_Link']}" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl font-bold text-xs shadow-lg transition-colors">View PDF</a>
                     </div>
                 `;
 
@@ -154,9 +146,9 @@
             input.addEventListener('input', (e) => {
                 const term = e.target.value.toLowerCase().trim();
                 const filtered = allData.filter(row => {
-                    const topic = (row['Action Taken'] || '').toLowerCase();
+                    const action = (row['Action Taken'] || '').toLowerCase();
                     const date = (row['Meeting Date'] || '').toLowerCase();
-                    return topic.includes(term) || date.includes(term);
+                    return action.includes(term) || date.includes(term);
                 });
                 renderList(filtered);
             });
