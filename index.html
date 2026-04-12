@@ -35,13 +35,11 @@
         .gothic-scroll::-webkit-scrollbar { width: 8px; }
         .gothic-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
 
-        /* Mobile Fix */
         @media (max-width: 768px) {
             #sidebar { width: 100%; height: 45%; position: relative; border-right: none; border-bottom: 4px solid #1e1b4b; }
             #map-spot { left: 0; top: 45%; height: 55%; width: 100%; }
         }
 
-        /* Clamping logic for cleaner cards */
         .clamp-text {
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -63,12 +61,12 @@
 
         <div class="p-4 border-b border-slate-800">
             <label class="text-white font-bold block mb-2">Search Records:</label>
-            <input type="text" id="main-search" placeholder="Search topics..." 
-                   class="w-full bg-slate-800 border-2 border-slate-600 rounded-xl px-4 py-3 text-white text-lg focus:border-indigo-500 outline-none">
+            <input type="text" id="main-search" placeholder="Try 'Zoning' or 'Parks'..." 
+                   class="w-full bg-slate-800 border-2 border-slate-600 rounded-xl px-4 py-3 text-white text-lg focus:border-indigo-500 outline-none transition-all">
         </div>
 
         <div id="data-list" class="flex-grow overflow-y-auto gothic-scroll p-4 space-y-4">
-            <div class="p-8 text-center text-slate-500 italic text-lg font-bold">Finding the latest actions... 🐾</div>
+            <div class="p-8 text-center text-slate-500 italic text-lg font-bold">Grooming the latest actions... 🐾</div>
         </div>
 
         <div class="p-4 bg-slate-950 border-t border-slate-800 text-center text-[10px] text-slate-500 uppercase tracking-widest">
@@ -95,8 +93,9 @@
                 header: true,
                 skipEmptyLines: true,
                 complete: (results) => {
+                    // Clean the data to ensure we have valid entries
                     allData = results.data.filter(row => row['Action Taken'] && row['Action Taken'].trim() !== "");
-                    renderList(allData);
+                    renderList(allData); // Initial display
                     setupSearch();
                 }
             });
@@ -106,8 +105,13 @@
             const list = document.getElementById('data-list');
             list.innerHTML = '';
             
-            // Show top 30 most recent
-            const sorted = [...data].sort((a, b) => new Date(b.ArcGIS_Date) - new Date(a.ArcGIS_Date)).slice(0, 30);
+            if (data.length === 0) {
+                list.innerHTML = '<div class="p-8 text-center text-slate-500 italic">No matching events found. Try another search! 🐾</div>';
+                return;
+            }
+
+            // Sort by Date (Most Recent First)
+            const sorted = [...data].sort((a, b) => new Date(b.ArcGIS_Date) - new Date(a.ArcGIS_Date));
 
             sorted.forEach(row => {
                 const card = document.createElement('div');
@@ -115,22 +119,19 @@
                 
                 card.innerHTML = `
                     <div class="text-indigo-400 font-bold text-xs mb-1 uppercase">${row['Meeting Date']}</div>
-                    <div class="text-white text-lg font-bold leading-tight mb-2 clamp-text transition-all">${row['Action Taken']}</div>
+                    <div class="text-white text-lg font-bold leading-tight mb-2 clamp-text">${row['Action Taken']}</div>
                     
                     <div class="flex justify-between items-center mt-4">
-                        <button class="read-more-btn text-xs text-indigo-400 font-bold hover:text-white transition-colors">Read More 🐾</button>
-                        <a href="${row['Document_Link']}" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl font-bold text-xs shadow-lg transition-colors">View PDF</a>
+                        <button class="read-more-btn text-xs text-indigo-400 font-bold hover:text-white transition-colors uppercase tracking-widest">Details 🐾</button>
+                        <a href="${row['Document_Link']}" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl font-bold text-xs shadow-lg transition-colors">PDF</a>
                     </div>
                 `;
 
-                // Toggle expanded state
                 card.onclick = (e) => {
-                    // Don't expand if they click the PDF link
                     if (e.target.tagName === 'A') return;
-                    
                     const isExpanded = card.classList.toggle('expanded');
                     const btn = card.querySelector('.read-more-btn');
-                    btn.textContent = isExpanded ? 'Show Less' : 'Read More 🐾';
+                    btn.textContent = isExpanded ? 'Collapse' : 'Details 🐾';
                 };
 
                 list.appendChild(card);
@@ -140,10 +141,17 @@
         function setupSearch() {
             const input = document.getElementById('main-search');
             input.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                const filtered = allData.filter(row => 
-                    Object.values(row).some(v => String(v).toLowerCase().includes(term))
-                );
+                const term = e.target.value.toLowerCase().trim();
+                
+                // Search across multiple relevant attributes
+                const filtered = allData.filter(row => {
+                    const action = (row['Action Taken'] || '').toLowerCase();
+                    const date = (row['Meeting Date'] || '').toLowerCase();
+                    const status = (row['Status'] || '').toLowerCase();
+                    
+                    return action.includes(term) || date.includes(term) || status.includes(term);
+                });
+
                 renderList(filtered);
             });
         }
