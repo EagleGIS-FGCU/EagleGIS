@@ -346,13 +346,110 @@
 
         /* Scrollbar reset */
         * { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+
+        /* Year + Sort row */
+        .controls-row {
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .ctrl-select {
+            flex: 1;
+            padding: 5px 10px;
+            border: 1px solid var(--border2);
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            background: var(--surface);
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+        .ctrl-select:focus { border-color: var(--accent); }
+
+        /* Record count on filter chips */
+        .chip-count {
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+            padding: 0 5px;
+            font-size: 9px;
+            font-weight: 700;
+        }
+
+        /* Keyword highlight */
+        .hl { background: #fef08a; border-radius: 2px; padding: 0 1px; }
+
+        /* Skeleton loading */
+        .skeleton-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 7px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        .skel-line {
+            background: var(--border);
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Back to top */
+        #back-top {
+            position: fixed;
+            bottom: 20px;
+            left: calc(var(--sidebar-w) - 48px);
+            width: 36px; height: 36px;
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,82,165,0.3);
+            z-index: 20;
+            transition: opacity 0.2s;
+            font-size: 14px;
+        }
+        #back-top.visible { display: flex; }
+        #back-top:hover { opacity: 0.85; }
+
+        /* About panel */
+        #about-panel {
+            position: absolute;
+            bottom: 0; left: 0;
+            width: var(--sidebar-w);
+            background: var(--surface);
+            border-top: 2px solid var(--accent);
+            padding: 16px;
+            z-index: 30;
+            box-shadow: 0 -4px 16px rgba(0,0,0,0.1);
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+        #about-panel.open { transform: translateY(0); }
+        .about-title { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .about-text { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+        .about-close { font-size: 11px; color: var(--accent); cursor: pointer; font-weight: 600; text-decoration: underline; }
+
+
     </style>
 </head>
 <body>
 
 <!-- TOP HEADER -->
 <header id="top-header">
-    <div style="background:white;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:800;color:#0052a5;letter-spacing:-0.2px;line-height:1.3;text-align:center;">VILLAGE<br>OF ESTERO</div>
+    <img src="engage-estero-logo.png" alt="Engage Estero" style="height:38px;width:auto;background:white;border-radius:6px;padding:4px 8px;" onerror="this.outerHTML='<div style=&quot;background:white;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:800;color:#0052a5;letter-spacing:-0.2px;line-height:1.3;text-align:center;&quot;>ENGAGE<br>ESTERO</div>'">
     <div class="header-divider"></div>
     <div class="header-titles">
         <div class="header-title">EagleGIS &mdash; Meeting Document Tracker</div>
@@ -400,6 +497,22 @@
             </div>
         </div>
 
+        <!-- Year + Sort controls -->
+        <div class="controls-row">
+            <select id="year-filter" class="ctrl-select">
+                <option value="all">All Years</option>
+            </select>
+            <select id="sort-select" class="ctrl-select">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="project">By Project</option>
+            </select>
+            <button onclick="document.getElementById('about-panel').classList.toggle('open')"
+                style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:4px;">
+                <i class="fa-solid fa-circle-info"></i>About
+            </button>
+        </div>
+
         <!-- Stats -->
         <div class="stats-section">
             <div class="stat-box"><div class="stat-num" id="s-count">—</div><div class="stat-lbl"><i class="fa-solid fa-file-lines"></i> Records</div></div>
@@ -440,10 +553,28 @@
     <!-- MAP -->
     <main id="map-spot">
         <iframe
-            src="https://eccl-swfl-safety.maps.arcgis.com/apps/mapviewer/index.html?webmap=586954199d83492896abf247343a33ee&ui=min"
-            allow="geolocation" title="EagleGIS Community Map">
+            src="https://eccl-swfl-safety.maps.arcgis.com/apps/mapviewer/index.html?webmap=586954199d83492896abf247343a33ee&ui=min&chrome=false&logo=false&scale=false&search=false&basemap=false&overview=false&legend=false"
+            allow="geolocation" title="EagleGIS Community Map"
+            style="width:100%;height:100%;border:none;display:block;">
         </iframe>
     </main>
+
+    <!-- Back to top -->
+    <button id="back-top" title="Back to top"><i class="fa-solid fa-chevron-up"></i></button>
+
+    <!-- About Panel -->
+    <div id="about-panel">
+        <div class="about-title"><i class="fa-solid fa-circle-info"></i>About EagleGIS</div>
+        <div class="about-text">
+            EagleGIS is a municipal meeting document tracker built for the Village of Estero, Florida.
+            It provides searchable access to Village Council and Planning Board meeting minutes from 2015–2026,
+            covering infrastructure projects including the BERT Rail Trail, Septic to Sewer conversions,
+            and Corkscrew Road improvements.<br><br>
+            Built by <strong>FGCU Team 4</strong> as part of COP 3710 Database Systems, Spring 2026.
+            Community partner: <strong>Engage Estero</strong>.
+        </div>
+        <span class="about-close" onclick="document.getElementById('about-panel').classList.remove('open')">Close</span>
+    </div>
 
 </div><!-- end main-layout -->
 
@@ -460,7 +591,7 @@ const PROJ = {
 };
 const p = proj => PROJ[proj] || {color:"#0052a5",bg:"#eff6ff",bd:"#93c5fd",short:proj,icon:"fa-file"};
 
-let allData=[], active=new Set(['all']), term='', current=[];
+let allData=[], active=new Set(['all']), term='', sortMode='newest', yearFilter='all', current=[];
 
 const fmtDate = d => {
     if (!d) return '—';
@@ -474,32 +605,89 @@ const sCls = s => {
 };
 const noAct = t => !t||['No action found','Meeting Cancelled','No action extracted - verify PDF'].includes(t);
 
+function highlight(text, term) {
+    if (!term || !text) return text;
+    const re = new RegExp('(' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+    return text.replace(re, '<span class="hl">$1</span>');
+}
+
+function showSkeleton() {
+    document.getElementById('data-list').innerHTML = Array(5).fill('').map(()=>`
+        <div class="skeleton-card">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                <div class="skel-line" style="height:20px;width:30%;border-radius:5px;"></div>
+                <div class="skel-line" style="height:14px;width:20%;border-radius:4px;"></div>
+            </div>
+            <div class="skel-line" style="height:12px;width:95%;"></div>
+            <div class="skel-line" style="height:12px;width:75%;margin-bottom:10px;"></div>
+            <div style="display:flex;justify-content:space-between;">
+                <div class="skel-line" style="height:12px;width:40%;"></div>
+                <div class="skel-line" style="height:24px;width:25%;border-radius:5px;"></div>
+            </div>
+        </div>`).join('');
+}
+
 async function init() {
+    showSkeleton();
     Papa.parse(CSV_URL, {
         download:true, header:true, skipEmptyLines:true,
         complete:({data}) => {
-            allData = data.sort((a,b)=>new Date(b.MeetingDate)-new Date(a.MeetingDate));
-            run(); setupSearch(); setupFilters();
+            allData = data;
+            populateYears();
+            updateFilterCounts();
+            run();
+            setupSearch();
+            setupFilters();
+            setupControls();
+            setupBackTop();
         },
         error:()=>{
             document.getElementById('data-list').innerHTML=
-                `<div class="empty"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i><p style="color:#ef4444;">Could not load data.<br>Ensure CSV is on the script/pdfs branch.</p></div>`;
+                `<div class="empty"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i><p style="color:#ef4444;">Could not load data.<br>Ensure CSV is pushed to the script/pdfs branch.</p></div>`;
         }
+    });
+}
+
+function populateYears() {
+    const years = [...new Set(allData.map(r=>r.MeetingYear).filter(Boolean))].sort((a,b)=>b-a);
+    const sel = document.getElementById('year-filter');
+    years.forEach(y => {
+        const opt = document.createElement('option');
+        opt.value = y; opt.textContent = y;
+        sel.appendChild(opt);
+    });
+}
+
+function updateFilterCounts() {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        const proj = btn.dataset.project;
+        const count = proj === 'all' ? allData.length : allData.filter(r=>r.ProjectName===proj).length;
+        const countEl = btn.querySelector('.chip-count');
+        if (countEl) countEl.textContent = count;
+        else btn.innerHTML += `<span class="chip-count">${count}</span>`;
     });
 }
 
 function run() {
     current = allData.filter(r => {
         const mp = active.has('all') || active.has(r.ProjectName);
+        const my = yearFilter === 'all' || r.MeetingYear === yearFilter;
         const mt = !term ||
             (r.ActionTaken||'').toLowerCase().includes(term) ||
             (r.MeetingDate||'').toLowerCase().includes(term) ||
             (r.ProjectName||'').toLowerCase().includes(term) ||
             (r.LocationName||'').toLowerCase().includes(term) ||
             (r.StaffCode||'').toLowerCase().includes(term);
-        return mp && mt;
+        return mp && my && mt;
     });
-    stats(current); render(current);
+
+    // Sort
+    if (sortMode === 'newest') current.sort((a,b)=>new Date(b.MeetingDate)-new Date(a.MeetingDate));
+    else if (sortMode === 'oldest') current.sort((a,b)=>new Date(a.MeetingDate)-new Date(b.MeetingDate));
+    else if (sortMode === 'project') current.sort((a,b)=>(a.ProjectName||'').localeCompare(b.ProjectName||''));
+
+    stats(current);
+    render(current);
 }
 
 function stats(d) {
@@ -512,25 +700,26 @@ function stats(d) {
 function render(data) {
     const list = document.getElementById('data-list');
     if (!data.length) {
-        list.innerHTML=`<div class="empty"><i class="fa-solid fa-magnifying-glass"></i><p>No matching records found.</p></div>`;
+        list.innerHTML=`<div class="empty"><i class="fa-solid fa-magnifying-glass"></i><p>No matching records found.<br>Try adjusting your filters.</p></div>`;
         return;
     }
     list.innerHTML = data.map((row,i)=>{
         const {color,bg,bd,short,icon}=p(row.ProjectName);
-        const action = noAct(row.ActionTaken)
-            ? `<span style="font-style:italic;color:#9ca3af;">View PDF for full meeting details.</span>`
-            : (row.ActionTaken.length>130?row.ActionTaken.slice(0,130)+'...':row.ActionTaken);
+        const rawAction = noAct(row.ActionTaken) ? null : row.ActionTaken;
+        const displayAction = rawAction
+            ? highlight(rawAction.length>130?rawAction.slice(0,130)+'...':rawAction, term)
+            : `<span style="font-style:italic;color:#9ca3af;">View PDF for full meeting details.</span>`;
         return `
         <div class="record-card" data-idx="${i}">
             <div class="card-top">
                 <span class="project-pill" style="background:${bg};color:${color};border-color:${bd};">
                     <i class="fa-solid ${icon}"></i>${short}
                 </span>
-                <span class="card-date">${row.MeetingDate||'—'}</span>
+                <span class="card-date">${highlight(row.MeetingDate||'—', term)}</span>
             </div>
-            <div class="card-action">${action}</div>
+            <div class="card-action">${displayAction}</div>
             <div class="card-footer">
-                <span class="card-loc"><i class="fa-solid fa-location-dot" style="color:${color};font-size:10px;"></i>${row.LocationName||'—'}</span>
+                <span class="card-loc"><i class="fa-solid fa-location-dot" style="color:${color};font-size:10px;"></i>${highlight(row.LocationName||'—', term)}</span>
                 <div class="card-btns">
                     <button class="btn-sm btn-outline detail-btn" data-idx="${i}">
                         <i class="fa-solid fa-circle-info"></i>Details
@@ -570,7 +759,7 @@ function openDetail(idx) {
 
     const actions = noAct(row.ActionTaken)
         ? `<div class="action-empty"><i class="fa-solid fa-circle-info" style="margin-right:5px;"></i>No action text available — view the PDF for full meeting details.</div>`
-        : row.ActionTaken.split(' | ').filter(Boolean).map(a=>`<div class="action-item">${a.trim()}</div>`).join('');
+        : row.ActionTaken.split(' | ').filter(Boolean).map(a=>`<div class="action-item">${highlight(a.trim(), term)}</div>`).join('');
 
     document.getElementById('detail-content').innerHTML=`
         <div class="detail-banner" style="background:${bg};border-color:${bd};">
@@ -650,6 +839,26 @@ function setupFilters() {
             }
             run();
         });
+    });
+}
+
+function setupControls() {
+    document.getElementById('year-filter').addEventListener('change', e=>{
+        yearFilter = e.target.value; run();
+    });
+    document.getElementById('sort-select').addEventListener('change', e=>{
+        sortMode = e.target.value; run();
+    });
+}
+
+function setupBackTop() {
+    const list = document.getElementById('data-list');
+    const btn = document.getElementById('back-top');
+    list.addEventListener('scroll', ()=>{
+        btn.classList.toggle('visible', list.scrollTop > 200);
+    });
+    btn.addEventListener('click', ()=>{
+        list.scrollTo({top:0, behavior:'smooth'});
     });
 }
 
