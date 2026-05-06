@@ -383,6 +383,35 @@
         /* Keyword highlight */
         .hl { background: #fef08a; border-radius: 2px; padding: 0 1px; }
 
+        /* Group header shown when "By Meeting Type" sort is active */
+        .group-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 6px 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border-bottom: 1px solid var(--border);
+            margin: 6px 0 8px;
+            position: sticky;
+            top: 0;
+            background: var(--surface);
+            z-index: 1;
+        }
+        .group-header .gh-count {
+            margin-left: auto;
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(0,0,0,0.06);
+            padding: 2px 7px;
+            border-radius: 10px;
+            color: var(--muted);
+        }
+        .group-header i { font-size: 12px; }
+        .group-header:first-child { margin-top: 0; }
+
         /* Skeleton loading */
         .skeleton-card {
             background: var(--surface);
@@ -702,7 +731,13 @@ function run() {
 
     if (sortMode === 'newest') current.sort((a,b)=>new Date(b.MeetingDate)-new Date(a.MeetingDate));
     else if (sortMode === 'oldest') current.sort((a,b)=>new Date(a.MeetingDate)-new Date(b.MeetingDate));
-    else if (sortMode === 'type') current.sort((a,b)=>(a.MeetingType||'').localeCompare(b.MeetingType||''));
+    else if (sortMode === 'type') current.sort((a,b)=>{
+        // Primary: meeting type alphabetical. Secondary: newest first within
+        // each type group so the most-recent record per type rises to the top.
+        const typeCmp = (a.MeetingType||'').localeCompare(b.MeetingType||'');
+        if (typeCmp !== 0) return typeCmp;
+        return new Date(b.MeetingDate) - new Date(a.MeetingDate);
+    });
 
     stats(current);
     render(current);
@@ -715,42 +750,71 @@ function stats(d) {
     document.getElementById('s-pdfs').textContent  = d.filter(r=>r.MinutesURL).length;
 }
 
+function renderCard(row, i) {
+    const {color,bg,bd,short,icon}=t(row.MeetingType);
+    const rawAction = noAct(row.ActionTaken) ? null : row.ActionTaken;
+    const displayAction = rawAction
+        ? highlight(rawAction.length>130?rawAction.slice(0,130)+'...':rawAction, term)
+        : `<span style="font-style:italic;color:#9ca3af;">View PDF for full meeting details.</span>`;
+    return `
+    <div class="record-card" data-idx="${i}">
+        <div class="card-top">
+            <span class="project-pill" style="background:${bg};color:${color};border-color:${bd};" title="${row.MeetingType||''}">
+                <i class="fa-solid ${icon}"></i>${short}
+            </span>
+            <span class="card-date">${highlight(row.MeetingDate||'—', term)}</span>
+        </div>
+        <div class="card-action">${displayAction}</div>
+        <div class="card-footer">
+            <span class="card-loc"><i class="fa-solid fa-location-dot" style="color:${color};font-size:10px;"></i>${highlight(row.LocationName||'—', term)}</span>
+            <div class="card-btns">
+                <button class="btn-sm btn-outline detail-btn" data-idx="${i}">
+                    <i class="fa-solid fa-circle-info"></i>Details
+                </button>
+                ${row.MinutesURL
+                    ?`<a class="btn-sm btn-solid" href="${row.MinutesURL}" target="_blank" style="background:${color};">
+                        <i class="fa-solid fa-file-pdf"></i>PDF
+                      </a>`
+                    :''}
+            </div>
+        </div>
+    </div>`;
+}
+
 function render(data) {
     const list = document.getElementById('data-list');
     if (!data.length) {
         list.innerHTML=`<div class="empty"><i class="fa-solid fa-magnifying-glass"></i><p>No matching records found.<br>Try adjusting your filters.</p></div>`;
         return;
     }
-    list.innerHTML = data.map((row,i)=>{
-        const {color,bg,bd,short,icon}=t(row.MeetingType);
-        const rawAction = noAct(row.ActionTaken) ? null : row.ActionTaken;
-        const displayAction = rawAction
-            ? highlight(rawAction.length>130?rawAction.slice(0,130)+'...':rawAction, term)
-            : `<span style="font-style:italic;color:#9ca3af;">View PDF for full meeting details.</span>`;
-        return `
-        <div class="record-card" data-idx="${i}">
-            <div class="card-top">
-                <span class="project-pill" style="background:${bg};color:${color};border-color:${bd};" title="${row.MeetingType||''}">
-                    <i class="fa-solid ${icon}"></i>${short}
-                </span>
-                <span class="card-date">${highlight(row.MeetingDate||'—', term)}</span>
-            </div>
-            <div class="card-action">${displayAction}</div>
-            <div class="card-footer">
-                <span class="card-loc"><i class="fa-solid fa-location-dot" style="color:${color};font-size:10px;"></i>${highlight(row.LocationName||'—', term)}</span>
-                <div class="card-btns">
-                    <button class="btn-sm btn-outline detail-btn" data-idx="${i}">
-                        <i class="fa-solid fa-circle-info"></i>Details
-                    </button>
-                    ${row.MinutesURL
-                        ?`<a class="btn-sm btn-solid" href="${row.MinutesURL}" target="_blank" style="background:${color};">
-                            <i class="fa-solid fa-file-pdf"></i>PDF
-                          </a>`
-                        :''}
-                </div>
-            </div>
-        </div>`;
-    }).join('');
+
+    // When sorted "By Meeting Type", emit a sticky header before each new
+    // type group so the grouping is visually obvious.
+    if (sortMode === 'type') {
+        let html = '';
+        let lastType = null;
+        const groupCounts = data.reduce((acc, r) => {
+            const k = r.MeetingType || 'Other';
+            acc[k] = (acc[k] || 0) + 1;
+            return acc;
+        }, {});
+        data.forEach((row, i) => {
+            const type = row.MeetingType || 'Other';
+            if (type !== lastType) {
+                const meta = t(type);
+                html += `
+                <div class="group-header" style="color:${meta.color};">
+                    <i class="fa-solid ${meta.icon}"></i>${type}
+                    <span class="gh-count">${groupCounts[type]}</span>
+                </div>`;
+                lastType = type;
+            }
+            html += renderCard(row, i);
+        });
+        list.innerHTML = html;
+    } else {
+        list.innerHTML = data.map(renderCard).join('');
+    }
 
     list.querySelectorAll('.record-card').forEach(card=>{
         card.addEventListener('click', e=>{
