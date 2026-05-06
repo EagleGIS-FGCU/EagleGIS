@@ -12,11 +12,14 @@ We deliberately keep the manually curated columns intact:
 We only refresh:
 
   - ActionTaken    (cleaner cleaning + better Action: extraction)
+  - MeetingType    (categorized from filename + document title line)
   - StartTime      (when missing or "null")
   - StaffCode      (when missing or "null")
   - Status         (Cancelled detection)
 
-If a PDF can't be located the row is left untouched.
+If a PDF can't be located the row's MeetingType is still classified from the
+URL/filename (good enough for PZDB rows where the PDFs live elsewhere) and
+the rest of the row is left as-is.
 """
 from __future__ import annotations
 
@@ -25,7 +28,7 @@ import os
 import re
 from urllib.parse import unquote
 
-from pdf_pipeline import process_pdf
+from pdf_pipeline import extract_meeting_type, process_pdf
 
 CSV_PATH = os.path.join("pdfs", "Estero_Meetings_Final.csv")
 PDF_DIR = "pdfs"
@@ -90,14 +93,21 @@ def main() -> None:
         fieldnames = reader.fieldnames or []
         rows = list(reader)
 
-    refreshed = blanks_filled = missing_pdfs = 0
+    refreshed = blanks_filled = missing_pdfs = retyped = 0
     for row in rows:
         fn = filename_from_url(row.get("MinutesURL", ""))
         if not fn:
             continue
         pdf_path = resolve_pdf(fn)
+
         if not pdf_path:
+            # PDF not available locally (e.g. PZDB rows whose source lives on
+            # estero-fl.gov). We can still classify it from its filename.
             missing_pdfs += 1
+            new_type = extract_meeting_type(fn, "")
+            if new_type and row.get("MeetingType") != new_type:
+                row["MeetingType"] = new_type
+                retyped += 1
             continue
 
         try:
@@ -122,6 +132,11 @@ def main() -> None:
             if is_blank(old_action):
                 blanks_filled += 1
 
+        new_type = result["meeting_type"]
+        if new_type and row.get("MeetingType") != new_type:
+            row["MeetingType"] = new_type
+            retyped += 1
+
         if is_blank(row.get("StartTime", "")) and result["start_time"]:
             row["StartTime"] = result["start_time"]
         if is_blank(row.get("StaffCode", "")) and result["staff_code"]:
@@ -137,8 +152,10 @@ def main() -> None:
     print(f"[refine] {len(rows)} rows processed")
     print(f"[refine]   {refreshed} ActionTaken values refreshed")
     print(f"[refine]   {blanks_filled} previously-blank cells filled")
+    print(f"[refine]   {retyped} MeetingType values updated")
     if missing_pdfs:
-        print(f"[refine]   {missing_pdfs} rows skipped (PDF not found)")
+        print(f"[refine]   {missing_pdfs} rows had no local PDF "
+              f"(filename-only classification applied)")
 
 
 if __name__ == "__main__":

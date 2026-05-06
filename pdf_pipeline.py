@@ -406,6 +406,133 @@ def detect_status(clean_full_text: str, filename: str) -> str:
     return "Accepted"
 
 
+# Canonical meeting-type labels. Match the categories supplied by the team.
+MEETING_TYPES = {
+    "REGULAR_COUNCIL":   "Regular Council Meeting",
+    "COUNCIL_WORKSHOP":  "Council Workshop",
+    "SPECIAL_CALLED":    "Special Called Meeting",
+    "JOINT":             "Joint Meeting",
+    "PUBLIC_HEARING":    "Public Hearing",
+    "QUASI_JUDICIAL":    "Quasi-judicial Hearing",
+    "STRATEGIC":         "Goal-setting / Strategic Planning Session",
+    "PZDB_INFO":         "PZDB Public Information Meeting",
+    "PZDB_HEARING":      "PZDB Public Hearing",
+    "PZDB_WORKSHOP":     "PZDB Workshop",
+    "PZDB_REGULAR":      "PZDB Meeting",
+}
+
+
+_PZDB_PAT = re.compile(
+    r"pz(?:db|b)\b|planning[,\s]+zoning(?:[,\s]+(?:and|&)[,\s]+design"
+    r"\s+board)?|design\s+board",
+    re.IGNORECASE,
+)
+
+
+def _classify_label(label: str) -> Optional[str]:
+    """Map a single short label string (filename hint or title line) to a
+    canonical meeting type, or ``None`` if it doesn't match any."""
+    if not label:
+        return None
+    low = label.lower()
+
+    is_pzdb = bool(_PZDB_PAT.search(low))
+    if is_pzdb:
+        if "public information" in low:
+            return MEETING_TYPES["PZDB_INFO"]
+        if "public hearing" in low:
+            return MEETING_TYPES["PZDB_HEARING"]
+        if "workshop" in low:
+            return MEETING_TYPES["PZDB_WORKSHOP"]
+        return MEETING_TYPES["PZDB_REGULAR"]
+
+    if re.search(r"goal[\s-]*setting|strategic\s+planning", low):
+        return MEETING_TYPES["STRATEGIC"]
+    if "quasi" in low and ("judicial" in low or "hearing" in low):
+        return MEETING_TYPES["QUASI_JUDICIAL"]
+    if re.search(r"\bjoint\s+(?:meeting|workshop|session)\b", low):
+        return MEETING_TYPES["JOINT"]
+    if re.search(r"\bspecial\b.*\b(?:meeting|hearing|emergency)\b"
+                 r"|\borganizational\b|\bbudget\s+hearing\b"
+                 r"|\bemergency\s+meeting\b", low):
+        return MEETING_TYPES["SPECIAL_CALLED"]
+    if "workshop" in low:
+        return MEETING_TYPES["COUNCIL_WORKSHOP"]
+    if re.search(r"public\s+hearing|zoning\s+hearing|dri\s+development", low):
+        return MEETING_TYPES["PUBLIC_HEARING"]
+    if re.search(r"regular\s+meeting|council\s+meeting", low):
+        return MEETING_TYPES["REGULAR_COUNCIL"]
+    return None
+
+
+_TITLE_TRIGGERS = (
+    # Strong, uppercase/title-cased headings used in the documents
+    r"VILLAGE\s+COUNCIL[^\n]*",
+    r"Village\s+Council[^\n]*",
+    r"PLANNING[,\s]+ZONING[^\n]*",
+    r"Planning[,\s]+Zoning[^\n]*",
+    r"PZDB[^\n]*",
+    r"PZB[^\n]*",
+)
+
+
+def _candidate_title_lines(raw_text: str) -> List[str]:
+    """Pull lines that look like the document's *type* heading.
+
+    These appear early in the body, on their own line, and follow words like
+    "FINAL ACTION AGENDA/MINUTES". They do **not** appear inside a numbered
+    agenda item (e.g. "5. PUBLIC HEARING: (A) ..."), so we only consider
+    early lines and skip ones that start with a digit + dot.
+    """
+    out: List[str] = []
+    if not raw_text:
+        return out
+    head = raw_text[:2500]
+    for line in head.splitlines():
+        s = line.strip()
+        if not s or len(s) > 120:
+            continue
+        if re.match(r"^\d+[.)]\s", s):  # numbered agenda item
+            continue
+        if re.search(r"|".join(_TITLE_TRIGGERS), s):
+            out.append(s)
+    return out
+
+
+def extract_meeting_type(filename: str, clean_full_text: str,
+                         raw_text: Optional[str] = None) -> str:
+    """Classify the meeting from filename hint + document title line.
+
+    Order of precedence:
+      1. Filename keywords (clerks type these explicitly: "Workshop",
+         "Special Meeting", "Joint Workshop", "Zoning Hearing", ...).
+      2. The first matching title line near the top of the body
+         ("Village Council Special Meeting", "Village Council Workshop",
+         "Planning, Zoning & Design Board Public Hearing", ...).
+      3. Fallback: Regular Council Meeting.
+
+    We deliberately do **not** scan the entire body, since regular meetings
+    routinely contain agenda items labelled "PUBLIC HEARING:" or
+    "Quasi-judicial" that would otherwise hijack the classification.
+    """
+    fn = filename or ""
+    fn_label = re.sub(r"\.pdf$", "", fn, flags=re.I)
+    fn_label = re.sub(r"\bcancel(?:led)?\b", "", fn_label, flags=re.I)
+    fn_label = re.sub(r"\bapproved\b|\bminutes?\b", "", fn_label, flags=re.I)
+    fn_label = re.sub(r"[\d_/-]+", " ", fn_label).strip()
+    fn_hit = _classify_label(fn_label)
+    if fn_hit:
+        return fn_hit
+
+    source = raw_text if raw_text else clean_full_text
+    for line in _candidate_title_lines(source or ""):
+        title_hit = _classify_label(line)
+        if title_hit:
+            return title_hit
+
+    return MEETING_TYPES["REGULAR_COUNCIL"]
+
+
 def extract_staff_code(raw_full_text: str, clean_full_text: str) -> Optional[str]:
     """Pull the 'td/CS' style author code from the trailer."""
     m = re.search(r"\(([A-Za-z]{2}/[A-Za-z]{2})\)", raw_full_text)
@@ -441,6 +568,7 @@ def process_pdf(pdf_path: str) -> dict:
         "raw_text": raw,
         "clean_text": clean,
         "meeting_date": extract_meeting_date(fn, clean),
+        "meeting_type": extract_meeting_type(fn, clean, raw),
         "start_time": extract_start_time(clean) or "9:30 am",
         "end_time": end_time,
         "status": status,

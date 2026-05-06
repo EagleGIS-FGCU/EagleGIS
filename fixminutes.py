@@ -20,6 +20,7 @@ HEADERS = [
     "Start Time", "End Time", "Action Taken", "Staff Code", "Status",
     "Document_Link",
 ]
+# 'Meeting Type' values come from pdf_pipeline.MEETING_TYPES.
 
 # Streets and developments referenced in Estero minutes; used to guess a
 # project location from the action text.
@@ -68,7 +69,8 @@ def row_for_pdf(pdf_path: str) -> dict:
         print(f"[fixminutes] {fn}: {e}")
         return {
             "Filename": fn, "Meeting Date": "Unknown", "ArcGIS_Date": "",
-            "Meeting Type": "Village Council", "Location": DEFAULT_LOCATION,
+            "Meeting Type": "Regular Council Meeting",
+            "Location": DEFAULT_LOCATION,
             "Start Time": "9:30 am", "End Time": "Unknown",
             "Action Taken": "No action found", "Staff Code": "N/A",
             "Status": "Accepted", "Document_Link": BASE_URL + fn,
@@ -86,7 +88,7 @@ def row_for_pdf(pdf_path: str) -> dict:
         "Filename": fn,
         "Meeting Date": pretty,
         "ArcGIS_Date": arc,
-        "Meeting Type": "Village Council",
+        "Meeting Type": result["meeting_type"],
         "Location": extract_project_location(action_text),
         "Start Time": result["start_time"] or "9:30 am",
         "End Time": result["end_time"] or "Unknown",

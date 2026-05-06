@@ -23,13 +23,39 @@ refine_final_csv.py          -> pdfs/Estero_Meetings_Final.csv (the dataset
 
 `pdf_pipeline.py` is the single source of truth. It exposes:
 
-- `extract_pages(path)`     – per-page text via pdfplumber/PyPDF2
-- `clean_text(raw)`         – fixes mid-word breaks, stray leading capitals,
-                              `\ufffd` apostrophes, page-footer bleed
-- `extract_actions(clean)`  – pulls every `Action:` block, lazy-stops at the
-                              next `Vote:` / `Motion:` / `Aye:` etc.
-- `process_pdf(path)`       – full structured result (date, times, status,
-                              staff code, action list)
+- `extract_pages(path)`         – per-page text via pdfplumber/PyPDF2
+- `clean_text(raw)`             – fixes mid-word breaks, stray leading capitals,
+                                  `\ufffd` apostrophes, page-footer bleed
+- `extract_actions(clean)`      – pulls every `Action:` block, lazy-stops at the
+                                  next `Vote:` / `Motion:` / `Aye:` etc.
+- `extract_meeting_type(...)`   – classifies the document using the filename
+                                  hint and the title line near the top of the
+                                  body (does **not** scan the agenda body, so
+                                  agenda-item words like "PUBLIC HEARING:" or
+                                  "Quasi-judicial" never hijack the type)
+- `process_pdf(path)`           – full structured result (date, type, times,
+                                  status, staff code, action list)
+
+### Meeting types
+
+Canonical labels emitted by `extract_meeting_type` (see
+`pdf_pipeline.MEETING_TYPES`):
+
+Council:
+- `Regular Council Meeting`
+- `Council Workshop`           *(budget, CIP, comprehensive plan, etc.)*
+- `Special Called Meeting`     *(special, organizational, emergency,
+                                 budget-hearing)*
+- `Joint Meeting`              *(with Lee County MPO, Bonita Springs, …)*
+- `Public Hearing`             *(zoning hearing, DRI development order)*
+- `Quasi-judicial Hearing`
+- `Goal-setting / Strategic Planning Session`
+
+Planning, Zoning & Design Board (PZDB / PZB):
+- `PZDB Public Information Meeting`
+- `PZDB Public Hearing`
+- `PZDB Workshop`
+- `PZDB Meeting` *(default when no PZDB sub-type can be determined)*
 
 ## CI
 
