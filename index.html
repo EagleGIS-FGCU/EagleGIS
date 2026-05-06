@@ -474,26 +474,12 @@
 
         <!-- Filters -->
         <div class="filter-section">
-            <div class="filter-label"><i class="fa-solid fa-filter" style="margin-right:4px;"></i>Filter by Project</div>
-            <div class="filter-row">
-                <button class="filter-btn" data-project="all" style="background:#eff6ff;color:#1d4ed8;border-color:#93c5fd;">
+            <div class="filter-label"><i class="fa-solid fa-filter" style="margin-right:4px;"></i>Filter by Meeting Type</div>
+            <div class="filter-row" id="filter-row">
+                <button class="filter-btn" data-type="all" style="background:#eff6ff;color:#1d4ed8;border-color:#93c5fd;">
                     <i class="fa-solid fa-layer-group"></i> All
                 </button>
-                <button class="filter-btn" data-project="BERT Rail Trail" style="background:var(--bert-bg);color:var(--bert);border-color:var(--bert-bd);">
-                    <i class="fa-solid fa-train"></i> BERT Trail
-                </button>
-                <button class="filter-btn" data-project="Septic to Sewer" style="background:var(--septic-bg);color:var(--septic);border-color:var(--septic-bd);">
-                    <i class="fa-solid fa-droplet"></i> Septic
-                </button>
-                <button class="filter-btn" data-project="Corkscrew Road" style="background:var(--cork-bg);color:var(--cork);border-color:var(--cork-bd);">
-                    <i class="fa-solid fa-road"></i> Corkscrew
-                </button>
-                <button class="filter-btn" data-project="General Planning & Zoning" style="background:var(--pzdb-bg);color:var(--pzdb);border-color:var(--pzdb-bd);">
-                    <i class="fa-solid fa-building-columns"></i> PZ&amp;DB
-                </button>
-                <button class="filter-btn" data-project="General Council Business" style="background:var(--council-bg);color:var(--council);border-color:var(--council-bd);">
-                    <i class="fa-solid fa-gavel"></i> Council
-                </button>
+                <!-- Type buttons populated from CSV data at runtime -->
             </div>
         </div>
 
@@ -505,7 +491,7 @@
             <select id="sort-select" class="ctrl-select">
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
-                <option value="project">By Project</option>
+                <option value="type">By Meeting Type</option>
             </select>
             <button onclick="document.getElementById('about-panel').classList.toggle('open')"
                 style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:4px;">
@@ -517,7 +503,7 @@
         <div class="stats-section">
             <div class="stat-box"><div class="stat-num" id="s-count">—</div><div class="stat-lbl"><i class="fa-solid fa-file-lines"></i> Records</div></div>
             <div class="stat-box"><div class="stat-num" id="s-years">—</div><div class="stat-lbl"><i class="fa-regular fa-calendar"></i> Years</div></div>
-            <div class="stat-box"><div class="stat-num" id="s-proj">—</div><div class="stat-lbl"><i class="fa-solid fa-diagram-project"></i> Projects</div></div>
+            <div class="stat-box"><div class="stat-num" id="s-types">—</div><div class="stat-lbl"><i class="fa-solid fa-tags"></i> Types</div></div>
             <div class="stat-box"><div class="stat-num" id="s-pdfs">—</div><div class="stat-lbl"><i class="fa-solid fa-file-pdf"></i> PDFs</div></div>
         </div>
 
@@ -567,9 +553,11 @@
         <div class="about-title"><i class="fa-solid fa-circle-info"></i>About EagleGIS</div>
         <div class="about-text">
             EagleGIS is a municipal meeting document tracker built for the Village of Estero, Florida.
-            It provides searchable access to Village Council and Planning Board meeting minutes from 2015–2026,
-            covering infrastructure projects including the BERT Rail Trail, Septic to Sewer conversions,
-            and Corkscrew Road improvements.<br><br>
+            It provides searchable access to Village Council and Planning, Zoning &amp; Design Board
+            meeting minutes from 2015–2026, organized by <strong>meeting type</strong>:
+            Regular Council Meeting, Council Workshop, Special Called, Joint, Public Hearing,
+            Quasi-judicial Hearing, and the PZDB sub-types.<br><br>
+            Each record retains its location and lat/long for ArcGIS integration.<br><br>
             Built by <strong>FGCU Team 4</strong> as part of COP 3710 Database Systems, Spring 2026.
             Community partner: <strong>Engage Estero</strong>.
         </div>
@@ -582,14 +570,23 @@
 <script>
 const CSV_URL = 'https://raw.githubusercontent.com/EagleGIS-FGCU/EagleGIS/script/pdfs/Estero_Meetings_Final.csv';
 
-const PROJ = {
-    "BERT Rail Trail":           {color:"#15803d",bg:"#f0fdf4",bd:"#86efac",short:"BERT",icon:"fa-train"},
-    "Septic to Sewer":           {color:"#1d4ed8",bg:"#eff6ff",bd:"#93c5fd",short:"Septic",icon:"fa-droplet"},
-    "Corkscrew Road":            {color:"#c2410c",bg:"#fff7ed",bd:"#fdba74",short:"Corkscrew",icon:"fa-road"},
-    "General Planning & Zoning": {color:"#6d28d9",bg:"#f5f3ff",bd:"#c4b5fd",short:"PZ&DB",icon:"fa-building-columns"},
-    "General Council Business":  {color:"#374151",bg:"#f9fafb",bd:"#d1d5db",short:"Council",icon:"fa-gavel"},
+// Meeting types are the primary categorization. Location is preserved in the
+// row data for ArcGIS but is no longer the basis for filtering.
+const TYPES = {
+    "Regular Council Meeting":                    {color:"#0052a5",bg:"#eff6ff",bd:"#93c5fd",short:"Regular Council",icon:"fa-gavel"},
+    "Council Workshop":                           {color:"#c2410c",bg:"#fff7ed",bd:"#fdba74",short:"Workshop",icon:"fa-screwdriver-wrench"},
+    "Special Called Meeting":                     {color:"#b91c1c",bg:"#fef2f2",bd:"#fca5a5",short:"Special Called",icon:"fa-bullhorn"},
+    "Joint Meeting":                              {color:"#15803d",bg:"#f0fdf4",bd:"#86efac",short:"Joint",icon:"fa-handshake"},
+    "Public Hearing":                             {color:"#6d28d9",bg:"#f5f3ff",bd:"#c4b5fd",short:"Public Hearing",icon:"fa-scale-balanced"},
+    "Quasi-judicial Hearing":                     {color:"#4338ca",bg:"#eef2ff",bd:"#a5b4fc",short:"Quasi-judicial",icon:"fa-scale-balanced"},
+    "Goal-setting / Strategic Planning Session":  {color:"#0f766e",bg:"#f0fdfa",bd:"#5eead4",short:"Strategic",icon:"fa-bullseye"},
+    "PZDB Meeting":                               {color:"#374151",bg:"#f9fafb",bd:"#d1d5db",short:"PZDB",icon:"fa-building-columns"},
+    "PZDB Public Information Meeting":            {color:"#0369a1",bg:"#f0f9ff",bd:"#7dd3fc",short:"PZDB Info",icon:"fa-circle-info"},
+    "PZDB Public Hearing":                        {color:"#7e22ce",bg:"#faf5ff",bd:"#d8b4fe",short:"PZDB Hearing",icon:"fa-scale-balanced"},
+    "PZDB Workshop":                              {color:"#854d0e",bg:"#fefce8",bd:"#fde68a",short:"PZDB Wkshp",icon:"fa-screwdriver-wrench"},
 };
-const p = proj => PROJ[proj] || {color:"#0052a5",bg:"#eff6ff",bd:"#93c5fd",short:proj,icon:"fa-file"};
+const FALLBACK_TYPE = {color:"#0052a5",bg:"#eff6ff",bd:"#93c5fd",short:"Other",icon:"fa-file"};
+const t = type => TYPES[type] || FALLBACK_TYPE;
 
 let allData=[], active=new Set(['all']), term='', sortMode='newest', yearFilter='all', current=[];
 
@@ -634,7 +631,7 @@ async function init() {
         complete:({data}) => {
             allData = data;
             populateYears();
-            updateFilterCounts();
+            buildTypeFilters();
             run();
             setupSearch();
             setupFilters();
@@ -658,33 +655,54 @@ function populateYears() {
     });
 }
 
-function updateFilterCounts() {
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        const proj = btn.dataset.project;
-        const count = proj === 'all' ? allData.length : allData.filter(r=>r.ProjectName===proj).length;
-        const countEl = btn.querySelector('.chip-count');
-        if (countEl) countEl.textContent = count;
-        else btn.innerHTML += `<span class="chip-count">${count}</span>`;
+// Build a filter chip for every meeting type that actually appears in the
+// loaded data. Types are sorted by frequency (most-common first) so the
+// sidebar isn't dominated by rare categories.
+function buildTypeFilters() {
+    const counts = new Map();
+    allData.forEach(r => {
+        const k = (r.MeetingType || '').trim() || 'Other';
+        counts.set(k, (counts.get(k) || 0) + 1);
+    });
+    const ordered = [...counts.entries()].sort((a,b) => b[1]-a[1]);
+    const row = document.getElementById('filter-row');
+
+    // The "All" button keeps the sticky behaviour of the original UI.
+    const allBtn = row.querySelector('[data-type="all"]');
+    if (allBtn) {
+        const existing = allBtn.querySelector('.chip-count');
+        const html = `<span class="chip-count">${allData.length}</span>`;
+        if (existing) existing.outerHTML = html; else allBtn.insertAdjacentHTML('beforeend', html);
+    }
+
+    ordered.forEach(([type, n]) => {
+        const meta = t(type);
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn';
+        btn.dataset.type = type;
+        btn.style.cssText = `background:${meta.bg};color:${meta.color};border-color:${meta.bd};`;
+        btn.innerHTML = `<i class="fa-solid ${meta.icon}"></i> ${meta.short}<span class="chip-count">${n}</span>`;
+        row.appendChild(btn);
     });
 }
 
 function run() {
     current = allData.filter(r => {
-        const mp = active.has('all') || active.has(r.ProjectName);
-        const my = yearFilter === 'all' || r.MeetingYear === yearFilter;
-        const mt = !term ||
+        const matchesType = active.has('all') || active.has((r.MeetingType||'').trim() || 'Other');
+        const matchesYear = yearFilter === 'all' || r.MeetingYear === yearFilter;
+        const matchesText = !term ||
             (r.ActionTaken||'').toLowerCase().includes(term) ||
             (r.MeetingDate||'').toLowerCase().includes(term) ||
+            (r.MeetingType||'').toLowerCase().includes(term) ||
             (r.ProjectName||'').toLowerCase().includes(term) ||
             (r.LocationName||'').toLowerCase().includes(term) ||
             (r.StaffCode||'').toLowerCase().includes(term);
-        return mp && my && mt;
+        return matchesType && matchesYear && matchesText;
     });
 
-    // Sort
     if (sortMode === 'newest') current.sort((a,b)=>new Date(b.MeetingDate)-new Date(a.MeetingDate));
     else if (sortMode === 'oldest') current.sort((a,b)=>new Date(a.MeetingDate)-new Date(b.MeetingDate));
-    else if (sortMode === 'project') current.sort((a,b)=>(a.ProjectName||'').localeCompare(b.ProjectName||''));
+    else if (sortMode === 'type') current.sort((a,b)=>(a.MeetingType||'').localeCompare(b.MeetingType||''));
 
     stats(current);
     render(current);
@@ -693,7 +711,7 @@ function run() {
 function stats(d) {
     document.getElementById('s-count').textContent = d.length;
     document.getElementById('s-years').textContent = new Set(d.map(r=>r.MeetingYear).filter(Boolean)).size||'—';
-    document.getElementById('s-proj').textContent  = new Set(d.map(r=>r.ProjectName).filter(Boolean)).size||'—';
+    document.getElementById('s-types').textContent = new Set(d.map(r=>r.MeetingType).filter(Boolean)).size||'—';
     document.getElementById('s-pdfs').textContent  = d.filter(r=>r.MinutesURL).length;
 }
 
@@ -704,7 +722,7 @@ function render(data) {
         return;
     }
     list.innerHTML = data.map((row,i)=>{
-        const {color,bg,bd,short,icon}=p(row.ProjectName);
+        const {color,bg,bd,short,icon}=t(row.MeetingType);
         const rawAction = noAct(row.ActionTaken) ? null : row.ActionTaken;
         const displayAction = rawAction
             ? highlight(rawAction.length>130?rawAction.slice(0,130)+'...':rawAction, term)
@@ -712,7 +730,7 @@ function render(data) {
         return `
         <div class="record-card" data-idx="${i}">
             <div class="card-top">
-                <span class="project-pill" style="background:${bg};color:${color};border-color:${bd};">
+                <span class="project-pill" style="background:${bg};color:${color};border-color:${bd};" title="${row.MeetingType||''}">
                     <i class="fa-solid ${icon}"></i>${short}
                 </span>
                 <span class="card-date">${highlight(row.MeetingDate||'—', term)}</span>
@@ -755,7 +773,7 @@ function openDetail(idx) {
     const card = document.querySelector(`.record-card[data-idx="${idx}"]`);
     if (card) { card.classList.add('active'); card.scrollIntoView({behavior:'smooth',block:'nearest'}); }
 
-    const {color,bg,bd,icon} = p(row.ProjectName);
+    const {color,bg,bd,icon} = t(row.MeetingType);
 
     const actions = noAct(row.ActionTaken)
         ? `<div class="action-empty"><i class="fa-solid fa-circle-info" style="margin-right:5px;"></i>No action text available — view the PDF for full meeting details.</div>`
@@ -764,9 +782,9 @@ function openDetail(idx) {
     document.getElementById('detail-content').innerHTML=`
         <div class="detail-banner" style="background:${bg};border-color:${bd};">
             <div class="detail-banner-name" style="color:${color};">
-                <i class="fa-solid ${icon}"></i>${row.ProjectName}
+                <i class="fa-solid ${icon}"></i>${row.MeetingType||'Meeting'}
             </div>
-            <div class="detail-banner-meta" style="color:${color};">${fmtDate(row.MeetingDate)} &nbsp;·&nbsp; ${row.MeetingType||''}</div>
+            <div class="detail-banner-meta" style="color:${color};">${fmtDate(row.MeetingDate)}${row.ProjectName?` &nbsp;·&nbsp; ${row.ProjectName}`:''}</div>
         </div>
 
         <div class="detail-grid">
@@ -779,8 +797,11 @@ function openDetail(idx) {
                 <div class="dcv" style="font-family:'IBM Plex Mono',monospace;font-size:12px;">${row.StaffCode||'—'}</div>
             </div>
             <div class="detail-cell full">
-                <div class="dcl"><i class="fa-solid fa-location-dot"></i>Location</div>
+                <div class="dcl"><i class="fa-solid fa-location-dot"></i>Location <span style="color:#9ca3af;font-weight:500;">(ArcGIS)</span></div>
                 <div class="dcv" style="font-weight:500;font-size:12px;">${row.LocationName||'—'}</div>
+                ${(row.Latitude && row.Longitude)
+                    ? `<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9ca3af;margin-top:3px;">${row.Latitude}, ${row.Longitude}</div>`
+                    : ''}
             </div>
             <div class="detail-cell">
                 <div class="dcl"><i class="fa-regular fa-calendar"></i>Meeting Year</div>
@@ -821,24 +842,26 @@ function setupSearch() {
 }
 
 function setupFilters() {
-    document.querySelectorAll('.filter-btn').forEach(btn=>{
-        btn.addEventListener('click',()=>{
-            const proj=btn.dataset.project;
-            if (proj==='all') {
-                active=new Set(['all']);
+    // Use event delegation: type chips are added dynamically after the CSV
+    // loads, so static querySelectorAll wouldn't see them.
+    document.getElementById('filter-row').addEventListener('click', ev => {
+        const btn = ev.target.closest('.filter-btn');
+        if (!btn) return;
+        const type = btn.dataset.type;
+        if (type === 'all') {
+            active = new Set(['all']);
+            document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('inactive'));
+        } else {
+            active.delete('all');
+            document.querySelector('[data-type="all"]').classList.add('inactive');
+            if (active.has(type)) { active.delete(type); btn.classList.add('inactive'); }
+            else { active.add(type); btn.classList.remove('inactive'); }
+            if (active.size === 0) {
+                active = new Set(['all']);
                 document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('inactive'));
-            } else {
-                active.delete('all');
-                document.querySelector('[data-project="all"]').classList.add('inactive');
-                if (active.has(proj)) { active.delete(proj); btn.classList.add('inactive'); }
-                else { active.add(proj); btn.classList.remove('inactive'); }
-                if (active.size===0) {
-                    active=new Set(['all']);
-                    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('inactive'));
-                }
             }
-            run();
-        });
+        }
+        run();
     });
 }
 
