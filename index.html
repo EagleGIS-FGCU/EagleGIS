@@ -784,10 +784,19 @@ function openDetail(idx) {
             <div class="detail-banner-name" style="color:${color};">
                 <i class="fa-solid ${icon}"></i>${row.MeetingType||'Meeting'}
             </div>
-            <div class="detail-banner-meta" style="color:${color};">${fmtDate(row.MeetingDate)}${row.ProjectName?` &nbsp;·&nbsp; ${row.ProjectName}`:''}</div>
+            ${row.ProjectName
+                ? `<div style="margin-top:6px;font-size:13px;font-weight:600;color:${color};display:flex;align-items:center;gap:6px;">
+                       <i class="fa-solid fa-diagram-project" style="font-size:11px;opacity:0.8;"></i>${row.ProjectName}
+                   </div>`
+                : ''}
+            <div class="detail-banner-meta" style="color:${color};margin-top:4px;">${fmtDate(row.MeetingDate)}</div>
         </div>
 
         <div class="detail-grid">
+            <div class="detail-cell full">
+                <div class="dcl"><i class="fa-solid fa-diagram-project"></i>Project</div>
+                <div class="dcv" style="font-weight:600;font-size:13px;">${row.ProjectName||'—'}</div>
+            </div>
             <div class="detail-cell">
                 <div class="dcl"><i class="fa-solid fa-circle-check"></i>Status</div>
                 <span class="status-chip ${sCls(row.Status)}">${row.Status||'—'}</span>
