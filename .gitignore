@@ -1,1 +1,3 @@
 estero_map_data_polished.csv
+__pycache__/
+*.pyc

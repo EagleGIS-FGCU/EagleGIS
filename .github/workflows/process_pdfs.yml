@@ -10,7 +10,10 @@ on:
     paths:
       - 'pdfs/**'
       - 'estero_map_data.csv'
+      - 'fixminutes.py'
       - 'sanitizeData.py'
+      - 'pdf_pipeline.py'
+      - 'refine_final_csv.py'
   workflow_dispatch:
 
 jobs:
@@ -28,18 +31,21 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pandas PyPDF2
+          pip install pandas PyPDF2 pdfplumber
 
       - name: Step 1 - Extract Minutes (Legacy Processor)
         run: python fixminutes.py
 
-      - name: Step 2 - Professional Refinement (EagleGIS Script)
+      - name: Step 2 - Professional Refinement (Sanitize CSV)
         run: python sanitizeData.py
 
-      - name: Step 3 - Commit and Push Results
+      - name: Step 3 - Refresh Frontend Dataset (Estero_Meetings_Final.csv)
+        run: python refine_final_csv.py
+
+      - name: Step 4 - Commit and Push Results
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f estero_map_data_polished.csv
-          git commit -m "auto: refine data and update professional links [skip ci]" || echo "No changes"
+          git add -f estero_map_data.csv estero_map_data_polished.csv pdfs/Estero_Meetings_Final.csv
+          git commit -m "auto: refine PDF extraction and refresh frontend dataset [skip ci]" || echo "No changes"
           git push origin script
