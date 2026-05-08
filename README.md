@@ -45,6 +45,70 @@ The data flows through the following stages:
 4. **Storage**: Data is loaded into five BCNF-normalized tables on Supabase PostgreSQL
 5. **Output**: SQL queries for analysis and CSV exports with geospatial coordinates for ArcGIS
 
+#### Refinement pipeline (bronze → silver)
+
+Raw CSVs in `app/data/` are treated as the **bronze** layer. A small Python
+pipeline validates and cleans them into a **silver** layer that the API serves.
+
+```
+bronze:    app/data/meetings.csv, app/data/documents.csv
+reference: app/data/reference/*.yaml  (projects, meeting_types, locations, geometries)
+silver:    app/data/silver/meetings.csv, documents.csv, documents_planned.csv, _rejects.json
+runs:      app/data/runs/<UTC-timestamp>/manifest.json
+```
+
+Run it with:
+
+```bash
+python -m app.pipeline.run                       # build silver only (offline)
+python -m app.pipeline.run --publish             # silver + upsert into Supabase
+python -m app.pipeline.run --verify              # silver + diff vs Supabase
+python -m app.pipeline.run --publish --verify    # publish then redundancy check (recommended)
+python -m app.pipeline.run --publish --dry-run   # print what would be sent, no calls
+python -m app.pipeline.run --strict              # exit !=0 on any rejects (2) or drift (3)
+```
+
+What the pipeline does:
+
+- Validates every row against Pydantic schemas (`app/pipeline/validate/schemas.py`)
+  with FK checks against reference data (project_id, type_id, location_id).
+- Cleans OCR artifacts in `action_taken` (e.g. "Approve d" → "Approved",
+  "A ccept ed" → "Accepted", non-breaking hyphens, smart quotes — see
+  `app/pipeline/clean/text.py`).
+- Splits `documents_planned.csv` (future placeholder rows) out of the real
+  `documents.csv` so analytics never mixes planned with published.
+- Writes a run manifest with input/output row counts per stage, reject counts,
+  output file SHA-256 hashes, and the git SHA — making each run reproducible.
+
+#### Publishing to Supabase (silver → gold)
+
+Supabase is the gold/serving layer. The publish stage upserts silver +
+reference data into the corresponding tables (`projects`, `meeting_types`,
+`locations`, `meetings`, `documents`):
+
+- **Idempotent**: repeated runs produce the same end state.
+- **Non-destructive**: never deletes rows from Supabase; drift is reported.
+- **FK-safe**: parents (projects, meeting_types, locations) are upserted
+  before children (meetings, documents).
+- **Field-sliced**: silver helpers like `documents.meeting_year` are
+  dropped before write so only Supabase-schema columns are sent.
+- Requires `SUPABASE_URL` and `SUPABASE_KEY` (or `SUPABASE_SERVICE_KEY`)
+  in the environment. If unset, the stage logs a warning and skips.
+
+#### Verifying against Supabase (redundancy check)
+
+The verify stage reads each Supabase table back and diffs against
+silver+reference. The drift report (per table) goes into the run manifest:
+
+- `in_local_only` — silver has rows Supabase doesn't (need a publish)
+- `in_remote_only` — Supabase has rows silver doesn't (manual edits / drift)
+- `mismatched` — same primary key, different field values
+
+Combine with `--strict` to fail CI on any drift.
+
+Tests live under `tests/`; run with `pytest -q`. The Supabase tests use an
+in-process fake client and do not require credentials.
+
 Some records were also entered manually by the team where web data was incomplete or unavailable. Requirements and feedback from community partner Terry Flanagan guided the database design and query development throughout the project.
 
 ---
