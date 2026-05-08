@@ -8,3 +8,8 @@ __pycache__/
 dist/
 build/
 .DS_Store
+
+# Pipeline run manifests are local artifacts; commit silver/ outputs
+# only intentionally (they're regeneratable from bronze + reference).
+app/data/runs/
+.cursor/debug-*.log

@@ -1,0 +1,23 @@
+# Vector geometries keyed by location_id.
+# - road_geometries: list of [lon, lat] pairs (LineString).
+# - area_geometries: list of polygon rings; each ring is a list of [lon, lat] pairs.
+# Coordinates are WGS-84 (EPSG:4326).
+road_geometries:
+  # BERT Trail centerline: south -> north through Estero
+  1:
+    - [-81.8200, 26.4200]
+    - [-81.8185, 26.4250]
+    - [-81.8170, 26.4300]
+    - [-81.8157, 26.4339]
+    - [-81.8145, 26.4380]
+    - [-81.8130, 26.4420]
+
+  # Corkscrew Road: east-west corridor
+  5:
+    - [-81.8300, 26.4386]
+    - [-81.8200, 26.4386]
+    - [-81.8100, 26.4386]
+    - [-81.8000, 26.4386]
+    - [-81.7900, 26.4386]
+
+area_geometries: {}

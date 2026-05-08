@@ -1,0 +1,1298 @@
+{
+  "meetings": [],
+  "documents": [],
+  "document_fk_warnings": [
+    {
+      "row": {
+        "document_id": 169,
+        "meeting_id": 169,
+        "title": "PZ&DB Meeting Minutes \u2014 2026-12-08",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2026%20Minutes/PZDB/12082026%20PZDB%20Minutes.pdf",
+        "doc_date": "2026-12-08",
+        "meeting_date": "2026-12-08",
+        "meeting_year": 2026,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Future Placeholder"
+      },
+      "errors": [
+        "unknown meeting_id=169 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 168,
+        "meeting_id": 168,
+        "title": "PZ&DB Meeting Minutes \u2014 2026-11-10",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2026%20Minutes/PZDB/11102026%20PZDB%20Minutes.pdf",
+        "doc_date": "2026-11-10",
+        "meeting_date": "2026-11-10",
+        "meeting_year": 2026,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Future Placeholder"
+      },
+      "errors": [
+        "unknown meeting_id=168 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 167,
+        "meeting_id": 167,
+        "title": "PZ&DB Meeting Minutes \u2014 2026-10-13",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2026%20Minutes/PZDB/10132026%20PZDB%20Minutes.pdf",
+        "doc_date": "2026-10-13",
+        "meeting_date": "2026-10-13",
+        "meeting_year": 2026,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Future Placeholder"
+      },
+      "errors": [
+        "unknown meeting_id=167 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 166,
+        "meeting_id": 166,
+        "title": "PZ&DB Meeting Minutes \u2014 2026-09-08",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2026%20Minutes/PZDB/09082026%20PZDB%20Minutes.pdf",
+        "doc_date": "2026-09-08",
+        "meeting_date": "2026-09-08",
+        "meeting_year": 2026,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Future Placeholder"
+      },
+      "errors": [
+        "unknown meeting_id=166 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 165,
+        "meeting_id": 165,
+        "title": "PZ&DB Meeting Minutes \u2014 2026-08-11",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2026%20Minutes/PZDB/08112026%20PZDB%20Minutes.pdf",
+        "doc_date": "2026-08-11",
+        "meeting_date": "2026-08-11",
+        "meeting_year": 2026,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Future Placeholder"
+      },
+      "errors": [
+        "unknown meeting_id=165 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 164,
+        "meeting_id": 164,
+        "title": "PZ&DB Meeting Minutes \u2014 2026-07-14",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2026%20Minutes/PZDB/07142026%20PZDB%20Minutes.pdf",
+        "doc_date": "2026-07-14",
+        "meeting_date": "2026-07-14",
+        "meeting_year": 2026,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Future Placeholder"
+      },
+      "errors": [
+        "unknown meeting_id=164 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 163,
+        "meeting_id": 163,
+        "title": "PZ&DB Meeting Minutes \u2014 2026-06-09",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2026%20Minutes/PZDB/06092026%20PZDB%20Minutes.pdf",
+        "doc_date": "2026-06-09",
+        "meeting_date": "2026-06-09",
+        "meeting_year": 2026,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Future Placeholder"
+      },
+      "errors": [
+        "unknown meeting_id=163 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 162,
+        "meeting_id": 162,
+        "title": "PZ&DB Meeting Minutes \u2014 2026-05-12",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2026%20Minutes/PZDB/05122026%20PZDB%20Minutes.pdf",
+        "doc_date": "2026-05-12",
+        "meeting_date": "2026-05-12",
+        "meeting_year": 2026,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Future Placeholder"
+      },
+      "errors": [
+        "unknown meeting_id=162 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 161,
+        "meeting_id": 161,
+        "title": "PZ&DB Meeting Minutes \u2014 2026-04-14",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2026%20Minutes/PZDB/04142026%20PZDB%20Minutes.pdf",
+        "doc_date": "2026-04-14",
+        "meeting_date": "2026-04-14",
+        "meeting_year": 2026,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Future Placeholder"
+      },
+      "errors": [
+        "unknown meeting_id=161 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 160,
+        "meeting_id": 160,
+        "title": "PZ&DB Meeting Minutes \u2014 2026-03-10",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2026%20Minutes/PZDB/03102026%20PZDB%20Minutes.pdf",
+        "doc_date": "2026-03-10",
+        "meeting_date": "2026-03-10",
+        "meeting_year": 2026,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Future Placeholder"
+      },
+      "errors": [
+        "unknown meeting_id=160 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 159,
+        "meeting_id": 159,
+        "title": "PZ&DB Meeting Minutes \u2014 2026-02-10",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2026%20Minutes/PZDB/02102026%20PZDB%20Minutes.pdf",
+        "doc_date": "2026-02-10",
+        "meeting_date": "2026-02-10",
+        "meeting_year": 2026,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Future Placeholder"
+      },
+      "errors": [
+        "unknown meeting_id=159 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 158,
+        "meeting_id": 158,
+        "title": "PZ&DB Meeting Minutes \u2014 2026-01-13",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2026%20Minutes/PZDB/01132026%20PZDB%20Minutes.pdf",
+        "doc_date": "2026-01-13",
+        "meeting_date": "2026-01-13",
+        "meeting_year": 2026,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Future Placeholder"
+      },
+      "errors": [
+        "unknown meeting_id=158 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 181,
+        "meeting_id": 181,
+        "title": "PZ&DB Meeting Minutes \u2014 2025-12-09",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2025%20Minutes/PZDB/12092025%20PZDB%20Minutes.pdf",
+        "doc_date": "2025-12-09",
+        "meeting_date": "2025-12-09",
+        "meeting_year": 2025,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Missing / Not Uploaded"
+      },
+      "errors": [
+        "unknown meeting_id=181 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 180,
+        "meeting_id": 180,
+        "title": "PZ&DB Meeting Minutes \u2014 2025-11-18",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2025%20Minutes/PZDB/11182025%20PZDB%20Minutes.pdf",
+        "doc_date": "2025-11-18",
+        "meeting_date": "2025-11-18",
+        "meeting_year": 2025,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Missing / Not Uploaded"
+      },
+      "errors": [
+        "unknown meeting_id=180 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 179,
+        "meeting_id": 179,
+        "title": "PZ&DB Meeting Minutes \u2014 2025-10-14",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2025%20Minutes/PZDB/10142025%20PZDB%20Minutes.pdf",
+        "doc_date": "2025-10-14",
+        "meeting_date": "2025-10-14",
+        "meeting_year": 2025,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Missing / Not Uploaded"
+      },
+      "errors": [
+        "unknown meeting_id=179 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 178,
+        "meeting_id": 178,
+        "title": "PZ&DB Meeting Minutes \u2014 2025-09-09",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2025%20Minutes/PZDB/09092025%20PZDB%20Minutes.pdf",
+        "doc_date": "2025-09-09",
+        "meeting_date": "2025-09-09",
+        "meeting_year": 2025,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Missing / Not Uploaded"
+      },
+      "errors": [
+        "unknown meeting_id=178 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 177,
+        "meeting_id": 177,
+        "title": "PZ&DB Meeting Minutes \u2014 2025-08-12",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2025%20Minutes/PZDB/08122025%20PZDB%20Minutes.pdf",
+        "doc_date": "2025-08-12",
+        "meeting_date": "2025-08-12",
+        "meeting_year": 2025,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Missing / Not Uploaded"
+      },
+      "errors": [
+        "unknown meeting_id=177 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 176,
+        "meeting_id": 176,
+        "title": "PZ&DB Meeting Minutes \u2014 2025-07-08",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2025%20Minutes/PZDB/07082025%20PZDB%20Minutes.pdf",
+        "doc_date": "2025-07-08",
+        "meeting_date": "2025-07-08",
+        "meeting_year": 2025,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Missing / Not Uploaded"
+      },
+      "errors": [
+        "unknown meeting_id=176 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 175,
+        "meeting_id": 175,
+        "title": "PZ&DB Meeting Minutes \u2014 2025-06-10",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2025%20Minutes/PZDB/06102025%20PZDB%20Minutes.pdf",
+        "doc_date": "2025-06-10",
+        "meeting_date": "2025-06-10",
+        "meeting_year": 2025,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Missing / Not Uploaded"
+      },
+      "errors": [
+        "unknown meeting_id=175 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 174,
+        "meeting_id": 174,
+        "title": "PZ&DB Meeting Minutes \u2014 2025-05-13",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2025%20Minutes/PZDB/05132025%20PZDB%20Minutes.pdf",
+        "doc_date": "2025-05-13",
+        "meeting_date": "2025-05-13",
+        "meeting_year": 2025,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Missing / Not Uploaded"
+      },
+      "errors": [
+        "unknown meeting_id=174 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 173,
+        "meeting_id": 173,
+        "title": "PZ&DB Meeting Minutes \u2014 2025-04-08",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2025%20Minutes/PZDB/04082025%20PZDB%20Minutes.pdf",
+        "doc_date": "2025-04-08",
+        "meeting_date": "2025-04-08",
+        "meeting_year": 2025,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Missing / Not Uploaded"
+      },
+      "errors": [
+        "unknown meeting_id=173 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 172,
+        "meeting_id": 172,
+        "title": "PZ&DB Meeting Minutes \u2014 2025-03-11",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2025%20Minutes/PZDB/03112025%20PZDB%20Minutes.pdf",
+        "doc_date": "2025-03-11",
+        "meeting_date": "2025-03-11",
+        "meeting_year": 2025,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Missing / Not Uploaded"
+      },
+      "errors": [
+        "unknown meeting_id=172 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 171,
+        "meeting_id": 171,
+        "title": "PZ&DB Meeting Minutes \u2014 2025-02-11",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2025%20Minutes/PZDB/02112025%20PZDB%20Minutes.pdf",
+        "doc_date": "2025-02-11",
+        "meeting_date": "2025-02-11",
+        "meeting_year": 2025,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Missing / Not Uploaded"
+      },
+      "errors": [
+        "unknown meeting_id=171 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 170,
+        "meeting_id": 170,
+        "title": "PZ&DB Meeting Minutes \u2014 2025-01-14",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2025%20Minutes/PZDB/01142025%20PZDB%20Minutes.pdf",
+        "doc_date": "2025-01-14",
+        "meeting_date": "2025-01-14",
+        "meeting_year": 2025,
+        "status": "Pending",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Missing / Not Uploaded"
+      },
+      "errors": [
+        "unknown meeting_id=170 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 194,
+        "meeting_id": 194,
+        "title": "PZ&DB Meeting Minutes \u2014 2024-12-10",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2024%20Minutes/PZDB/12102024%20PZDB%20Minutes.pdf",
+        "doc_date": "2024-12-10",
+        "meeting_date": "2024-12-10",
+        "meeting_year": 2024,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=194 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 193,
+        "meeting_id": 193,
+        "title": "PZ&DB Meeting Minutes \u2014 2024-11-12",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2024%20Minutes/PZDB/11122024%20PZDB%20Minutes.pdf",
+        "doc_date": "2024-11-12",
+        "meeting_date": "2024-11-12",
+        "meeting_year": 2024,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=193 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 192,
+        "meeting_id": 192,
+        "title": "PZ&DB Meeting Minutes \u2014 2024-10-29",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2024%20Minutes/PZDB/10292024%20PZDB%20Minutes.pdf",
+        "doc_date": "2024-10-29",
+        "meeting_date": "2024-10-29",
+        "meeting_year": 2024,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=192 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 191,
+        "meeting_id": 191,
+        "title": "PZ&DB Meeting Minutes \u2014 2024-10-08",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2024%20Minutes/PZDB/10082024%20PZDB%20Minutes.pdf",
+        "doc_date": "2024-10-08",
+        "meeting_date": "2024-10-08",
+        "meeting_year": 2024,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=191 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 190,
+        "meeting_id": 190,
+        "title": "PZ&DB Meeting Minutes \u2014 2024-09-10",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2024%20Minutes/PZDB/09102024%20PZDB%20Minutes.pdf",
+        "doc_date": "2024-09-10",
+        "meeting_date": "2024-09-10",
+        "meeting_year": 2024,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=190 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 189,
+        "meeting_id": 189,
+        "title": "PZ&DB Meeting Minutes \u2014 2024-08-13",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2024%20Minutes/PZDB/08132024%20PZDB%20Minutes.pdf",
+        "doc_date": "2024-08-13",
+        "meeting_date": "2024-08-13",
+        "meeting_year": 2024,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=189 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 188,
+        "meeting_id": 188,
+        "title": "PZ&DB Meeting Minutes \u2014 2024-07-09",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2024%20Minutes/PZDB/07092024%20PZDB%20Minutes.pdf",
+        "doc_date": "2024-07-09",
+        "meeting_date": "2024-07-09",
+        "meeting_year": 2024,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=188 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 187,
+        "meeting_id": 187,
+        "title": "PZ&DB Meeting Minutes \u2014 2024-06-11",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2024%20Minutes/PZDB/06112024%20PZDB%20Minutes.pdf",
+        "doc_date": "2024-06-11",
+        "meeting_date": "2024-06-11",
+        "meeting_year": 2024,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=187 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 186,
+        "meeting_id": 186,
+        "title": "PZ&DB Meeting Minutes \u2014 2024-05-14",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2024%20Minutes/PZDB/05142024%20PZDB%20Minutes.pdf",
+        "doc_date": "2024-05-14",
+        "meeting_date": "2024-05-14",
+        "meeting_year": 2024,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=186 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 185,
+        "meeting_id": 185,
+        "title": "PZ&DB Meeting Minutes \u2014 2024-04-09",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2024%20Minutes/PZDB/04092024%20PZDB%20Minutes.pdf",
+        "doc_date": "2024-04-09",
+        "meeting_date": "2024-04-09",
+        "meeting_year": 2024,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=185 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 184,
+        "meeting_id": 184,
+        "title": "PZ&DB Meeting Minutes \u2014 2024-03-12",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2024%20Minutes/PZDB/03122024%20PZDB%20Minutes.pdf",
+        "doc_date": "2024-03-12",
+        "meeting_date": "2024-03-12",
+        "meeting_year": 2024,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=184 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 183,
+        "meeting_id": 183,
+        "title": "PZ&DB Meeting Minutes \u2014 2024-02-13",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2024%20Minutes/PZDB/02132024%20PZDB%20Minutes.pdf",
+        "doc_date": "2024-02-13",
+        "meeting_date": "2024-02-13",
+        "meeting_year": 2024,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=183 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 182,
+        "meeting_id": 182,
+        "title": "PZ&DB Meeting Minutes \u2014 2024-01-09",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2024%20Minutes/PZDB/01092024%20PZDB%20Minutes.pdf",
+        "doc_date": "2024-01-09",
+        "meeting_date": "2024-01-09",
+        "meeting_year": 2024,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=182 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 208,
+        "meeting_id": 208,
+        "title": "PZ&DB Meeting Minutes \u2014 2023-12-12",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2023%20MINUTES/PZDB/12122023%20%20%20PZDB%20Minutes.pdf",
+        "doc_date": "2023-12-12",
+        "meeting_date": "2023-12-12",
+        "meeting_year": 2023,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Broken (Spacing Issue)"
+      },
+      "errors": [
+        "unknown meeting_id=208 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 207,
+        "meeting_id": 207,
+        "title": "PZ&DB Meeting Minutes \u2014 2023-11-14",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2023%20MINUTES/PZDB/11142023%20%20%20PZDB%20Minutes.pdf",
+        "doc_date": "2023-11-14",
+        "meeting_date": "2023-11-14",
+        "meeting_year": 2023,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Broken (Spacing Issue)"
+      },
+      "errors": [
+        "unknown meeting_id=207 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 206,
+        "meeting_id": 206,
+        "title": "PZ&DB Meeting Minutes \u2014 2023-10-10",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2023%20MINUTES/PZDB/10102023%20%20%20PZDB%20Minutes.pdf",
+        "doc_date": "2023-10-10",
+        "meeting_date": "2023-10-10",
+        "meeting_year": 2023,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Broken (Spacing Issue)"
+      },
+      "errors": [
+        "unknown meeting_id=206 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 205,
+        "meeting_id": 205,
+        "title": "PZ&DB Meeting Minutes \u2014 2023-09-12",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2023%20MINUTES/PZDB/09122023%20%20%20PZDB%20Minutes.pdf",
+        "doc_date": "2023-09-12",
+        "meeting_date": "2023-09-12",
+        "meeting_year": 2023,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Broken (Spacing Issue)"
+      },
+      "errors": [
+        "unknown meeting_id=205 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 204,
+        "meeting_id": 204,
+        "title": "PZ&DB Meeting Minutes \u2014 2023-08-22",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2023%20MINUTES/PZDB/08222023%20%20%20PZDB%20Minutes.pdf",
+        "doc_date": "2023-08-22",
+        "meeting_date": "2023-08-22",
+        "meeting_year": 2023,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Broken (Spacing Issue)"
+      },
+      "errors": [
+        "unknown meeting_id=204 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 203,
+        "meeting_id": 203,
+        "title": "PZ&DB Meeting Minutes \u2014 2023-08-08",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2023%20MINUTES/PZDB/08082023%20%20%20PZDB%20Minutes.pdf",
+        "doc_date": "2023-08-08",
+        "meeting_date": "2023-08-08",
+        "meeting_year": 2023,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Broken (Spacing Issue)"
+      },
+      "errors": [
+        "unknown meeting_id=203 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 202,
+        "meeting_id": 202,
+        "title": "PZ&DB Meeting Minutes \u2014 2023-07-25",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2023%20MINUTES/PZDB/07252023%20%20%20PZDB%20Minutes.pdf",
+        "doc_date": "2023-07-25",
+        "meeting_date": "2023-07-25",
+        "meeting_year": 2023,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Broken (Spacing Issue)"
+      },
+      "errors": [
+        "unknown meeting_id=202 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 201,
+        "meeting_id": 201,
+        "title": "PZ&DB Meeting Minutes \u2014 2023-07-11",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2023%20MINUTES/PZDB/07112023%20%20%20PZDB%20Minutes.pdf",
+        "doc_date": "2023-07-11",
+        "meeting_date": "2023-07-11",
+        "meeting_year": 2023,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Broken (Spacing Issue)"
+      },
+      "errors": [
+        "unknown meeting_id=201 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 200,
+        "meeting_id": 200,
+        "title": "PZ&DB Meeting Minutes \u2014 2023-06-13",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2023%20MINUTES/PZDB/06132023%20%20%20PZDB%20Minutes.pdf",
+        "doc_date": "2023-06-13",
+        "meeting_date": "2023-06-13",
+        "meeting_year": 2023,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Broken (Spacing Issue)"
+      },
+      "errors": [
+        "unknown meeting_id=200 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 199,
+        "meeting_id": 199,
+        "title": "PZ&DB Meeting Minutes \u2014 2023-05-09",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2023%20MINUTES/PZDB/05092023%20%20%20PZDB%20Minutes.pdf",
+        "doc_date": "2023-05-09",
+        "meeting_date": "2023-05-09",
+        "meeting_year": 2023,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Broken (Spacing Issue)"
+      },
+      "errors": [
+        "unknown meeting_id=199 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 198,
+        "meeting_id": 198,
+        "title": "PZ&DB Meeting Minutes \u2014 2023-04-11",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2023%20MINUTES/PZDB/04112023%20%20%20PZDB%20Minutes.pdf",
+        "doc_date": "2023-04-11",
+        "meeting_date": "2023-04-11",
+        "meeting_year": 2023,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Broken (Spacing Issue)"
+      },
+      "errors": [
+        "unknown meeting_id=198 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 197,
+        "meeting_id": 197,
+        "title": "PZ&DB Meeting Minutes \u2014 2023-03-14",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2023%20MINUTES/PZDB/03142023%20%20%20PZDB%20Minutes.pdf",
+        "doc_date": "2023-03-14",
+        "meeting_date": "2023-03-14",
+        "meeting_year": 2023,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Broken (Spacing Issue)"
+      },
+      "errors": [
+        "unknown meeting_id=197 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 196,
+        "meeting_id": 196,
+        "title": "PZ&DB Meeting Minutes \u2014 2023-02-21",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2023%20MINUTES/PZDB/02212023%20%20%20PZDB%20Minutes.pdf",
+        "doc_date": "2023-02-21",
+        "meeting_date": "2023-02-21",
+        "meeting_year": 2023,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Broken (Spacing Issue)"
+      },
+      "errors": [
+        "unknown meeting_id=196 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 195,
+        "meeting_id": 195,
+        "title": "PZ&DB Meeting Minutes \u2014 2023-01-11",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2023%20MINUTES/PZDB/01112023%20%20%20PZDB%20Minutes.pdf",
+        "doc_date": "2023-01-11",
+        "meeting_date": "2023-01-11",
+        "meeting_year": 2023,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Broken (Spacing Issue)"
+      },
+      "errors": [
+        "unknown meeting_id=195 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 222,
+        "meeting_id": 222,
+        "title": "PZ&DB Meeting Minutes \u2014 2022-12-13",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2022%20MINUTES/PZD%20BOARD/12132022%20PZDB%20Minutes.pdf",
+        "doc_date": "2022-12-13",
+        "meeting_date": "2022-12-13",
+        "meeting_year": 2022,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=222 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 221,
+        "meeting_id": 221,
+        "title": "PZ&DB Meeting Minutes \u2014 2022-11-08",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2022%20MINUTES/PZD%20BOARD/11082022%20PZDB%20Minutes.pdf",
+        "doc_date": "2022-11-08",
+        "meeting_date": "2022-11-08",
+        "meeting_year": 2022,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=221 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 220,
+        "meeting_id": 220,
+        "title": "PZ&DB Meeting Minutes \u2014 2022-10-25",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2022%20MINUTES/PZD%20BOARD/10252022%20PZDB%20Minutes.pdf",
+        "doc_date": "2022-10-25",
+        "meeting_date": "2022-10-25",
+        "meeting_year": 2022,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=220 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 219,
+        "meeting_id": 219,
+        "title": "PZ&DB Meeting Minutes \u2014 2022-10-11",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2022%20MINUTES/PZD%20BOARD/10112022%20PZDB%20Minutes.pdf",
+        "doc_date": "2022-10-11",
+        "meeting_date": "2022-10-11",
+        "meeting_year": 2022,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=219 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 218,
+        "meeting_id": 218,
+        "title": "PZ&DB Meeting Minutes \u2014 2022-09-27",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2022%20MINUTES/PZD%20BOARD/09272022%20PZDB%20Minutes.pdf",
+        "doc_date": "2022-09-27",
+        "meeting_date": "2022-09-27",
+        "meeting_year": 2022,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=218 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 217,
+        "meeting_id": 217,
+        "title": "PZ&DB Meeting Minutes \u2014 2022-09-13",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2022%20MINUTES/PZD%20BOARD/09132022%20PZDB%20Minutes.pdf",
+        "doc_date": "2022-09-13",
+        "meeting_date": "2022-09-13",
+        "meeting_year": 2022,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=217 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 216,
+        "meeting_id": 216,
+        "title": "PZ&DB Meeting Minutes \u2014 2022-08-09",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2022%20MINUTES/PZD%20BOARD/08092022%20PZDB%20Minutes.pdf",
+        "doc_date": "2022-08-09",
+        "meeting_date": "2022-08-09",
+        "meeting_year": 2022,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=216 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 215,
+        "meeting_id": 215,
+        "title": "PZ&DB Meeting Minutes \u2014 2022-07-12",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2022%20MINUTES/PZD%20BOARD/07122022%20PZDB%20Minutes.pdf",
+        "doc_date": "2022-07-12",
+        "meeting_date": "2022-07-12",
+        "meeting_year": 2022,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=215 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 214,
+        "meeting_id": 214,
+        "title": "PZ&DB Meeting Minutes \u2014 2022-06-14",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2022%20MINUTES/PZD%20BOARD/06142022%20PZDB%20Minutes.pdf",
+        "doc_date": "2022-06-14",
+        "meeting_date": "2022-06-14",
+        "meeting_year": 2022,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=214 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 213,
+        "meeting_id": 213,
+        "title": "PZ&DB Meeting Minutes \u2014 2022-05-10",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2022%20MINUTES/PZD%20BOARD/05102022%20PZDB%20Minutes.pdf",
+        "doc_date": "2022-05-10",
+        "meeting_date": "2022-05-10",
+        "meeting_year": 2022,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=213 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 212,
+        "meeting_id": 212,
+        "title": "PZ&DB Meeting Minutes \u2014 2022-04-12",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2022%20MINUTES/PZD%20BOARD/04122022%20PZDB%20Minutes.pdf",
+        "doc_date": "2022-04-12",
+        "meeting_date": "2022-04-12",
+        "meeting_year": 2022,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=212 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 211,
+        "meeting_id": 211,
+        "title": "PZ&DB Meeting Minutes \u2014 2022-03-08",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2022%20MINUTES/PZD%20BOARD/03082022%20PZDB%20Minutes.pdf",
+        "doc_date": "2022-03-08",
+        "meeting_date": "2022-03-08",
+        "meeting_year": 2022,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=211 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 210,
+        "meeting_id": 210,
+        "title": "PZ&DB Meeting Minutes \u2014 2022-02-08",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2022%20MINUTES/PZD%20BOARD/02082022%20PZDB%20Minutes.pdf",
+        "doc_date": "2022-02-08",
+        "meeting_date": "2022-02-08",
+        "meeting_year": 2022,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=210 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 209,
+        "meeting_id": 209,
+        "title": "PZ&DB Meeting Minutes \u2014 2022-01-11",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2022%20MINUTES/PZD%20BOARD/01112022%20PZDB%20Minutes.pdf",
+        "doc_date": "2022-01-11",
+        "meeting_date": "2022-01-11",
+        "meeting_year": 2022,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=209 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 233,
+        "meeting_id": 233,
+        "title": "PZ&DB Meeting Minutes \u2014 2021-12-14",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2021%20Minutes/PZDB%20Minutes/12142021%20PZDB%20Minutes.pdf",
+        "doc_date": "2021-12-14",
+        "meeting_date": "2021-12-14",
+        "meeting_year": 2021,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=233 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 232,
+        "meeting_id": 232,
+        "title": "PZ&DB Meeting Minutes \u2014 2021-11-09",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2021%20Minutes/PZDB%20Minutes/11092021%20PZDB%20Minutes.pdf",
+        "doc_date": "2021-11-09",
+        "meeting_date": "2021-11-09",
+        "meeting_year": 2021,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=232 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 231,
+        "meeting_id": 231,
+        "title": "PZ&DB Meeting Minutes \u2014 2021-10-12",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2021%20Minutes/PZDB%20Minutes/10122021%20PZDB%20Minutes.pdf",
+        "doc_date": "2021-10-12",
+        "meeting_date": "2021-10-12",
+        "meeting_year": 2021,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=231 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 230,
+        "meeting_id": 230,
+        "title": "PZ&DB Meeting Minutes \u2014 2021-09-28",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2021%20Minutes/PZDB%20Minutes/09282021%20PZDB%20Minutes.pdf",
+        "doc_date": "2021-09-28",
+        "meeting_date": "2021-09-28",
+        "meeting_year": 2021,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=230 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 229,
+        "meeting_id": 229,
+        "title": "PZ&DB Meeting Minutes \u2014 2021-09-14",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2021%20Minutes/PZDB%20Minutes/09142021%20PZDB%20Minutes.pdf",
+        "doc_date": "2021-09-14",
+        "meeting_date": "2021-09-14",
+        "meeting_year": 2021,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=229 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 228,
+        "meeting_id": 228,
+        "title": "PZ&DB Meeting Minutes \u2014 2021-08-24",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2021%20Minutes/PZDB%20Minutes/08242021%20PZDB%20Minutes.pdf",
+        "doc_date": "2021-08-24",
+        "meeting_date": "2021-08-24",
+        "meeting_year": 2021,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=228 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 227,
+        "meeting_id": 227,
+        "title": "PZ&DB Meeting Minutes \u2014 2021-08-10",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2021%20Minutes/PZDB%20Minutes/08102021%20PZDB%20Minutes.pdf",
+        "doc_date": "2021-08-10",
+        "meeting_date": "2021-08-10",
+        "meeting_year": 2021,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=227 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 226,
+        "meeting_id": 226,
+        "title": "PZ&DB Meeting Minutes \u2014 2021-07-13",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2021%20Minutes/PZDB%20Minutes/07132021%20PZDB%20Minutes.pdf",
+        "doc_date": "2021-07-13",
+        "meeting_date": "2021-07-13",
+        "meeting_year": 2021,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=226 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 225,
+        "meeting_id": 225,
+        "title": "PZ&DB Meeting Minutes \u2014 2021-06-08",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2021%20Minutes/PZDB%20Minutes/06082021%20PZDB%20Minutes.pdf",
+        "doc_date": "2021-06-08",
+        "meeting_date": "2021-06-08",
+        "meeting_year": 2021,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=225 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 224,
+        "meeting_id": 224,
+        "title": "PZ&DB Meeting Minutes \u2014 2021-05-11",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2021%20Minutes/PZDB%20Minutes/05112021%20PZDB%20Minutes.pdf",
+        "doc_date": "2021-05-11",
+        "meeting_date": "2021-05-11",
+        "meeting_year": 2021,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=224 (kept anyway)"
+      ]
+    },
+    {
+      "row": {
+        "document_id": 223,
+        "meeting_id": 223,
+        "title": "PZ&DB Meeting Minutes \u2014 2021-04-20",
+        "file_url": "https://estero-fl.gov/wp-content/uploads/library-ada/minutes/2021%20Minutes/PZDB%20Minutes/04202021%20PZDB%20Minutes.pdf",
+        "doc_date": "2021-04-20",
+        "meeting_date": "2021-04-20",
+        "meeting_year": 2021,
+        "status": "Accepted",
+        "type_name": "Planning Zoning & Design Board",
+        "link_status": "Working / Expected"
+      },
+      "errors": [
+        "unknown meeting_id=223 (kept anyway)"
+      ]
+    }
+  ]
+}
