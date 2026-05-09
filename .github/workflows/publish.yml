@@ -8,7 +8,10 @@ name: Publish to Supabase
 #                              and re-asserts the canonical state on the
 #                              serving copy.
 #   - On manual dispatch:      operator can trigger a publish from the UI,
-#                              optionally with --dry-run to preview.
+#                              optionally with --dry-run to preview, or with
+#                              --reset-reference to wipe + reseed the small
+#                              reference tables when remote IDs have drifted
+#                              out of alignment with the YAML.
 #
 # Required repo secrets: SUPABASE_URL, SUPABASE_KEY (or SUPABASE_SERVICE_KEY).
 # If the secrets aren't set, the pipeline gracefully skips publish/verify
@@ -32,6 +35,16 @@ on:
     inputs:
       dry_run:
         description: "Run --dry-run (no remote writes)"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+      reset_reference:
+        description: >-
+          DESTRUCTIVE: delete all rows from projects/meeting_types/locations
+          on the remote before publish, then reseed from YAML. Use to recover
+          when remote IDs have drifted out of alignment with the YAML. Strongly
+          recommended to first run with dry_run=true.
         required: false
         default: "false"
         type: choice
@@ -65,7 +78,12 @@ jobs:
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
             DRY_RUN_FLAG="--dry-run"
           fi
-          python -m app.pipeline.run --publish --verify --strict $DRY_RUN_FLAG
+          RESET_FLAG=""
+          if [ "${{ github.event.inputs.reset_reference }}" = "true" ]; then
+            echo "::warning::reset_reference=true — projects/meeting_types/locations will be DELETED on the remote before publish."
+            RESET_FLAG="--reset-reference"
+          fi
+          python -m app.pipeline.run --publish --verify --strict $RESET_FLAG $DRY_RUN_FLAG
 
       - name: Upload run manifest
         if: always()

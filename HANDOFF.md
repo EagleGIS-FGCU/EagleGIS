@@ -9,6 +9,34 @@ If you only read one section, read **"Mental model"** and **"Daily commands"**.
 
 ---
 
+## Status (last updated 2026-05-09)
+
+The pipeline is **up to date and fully wired**. Everything described below
+is live on `main` and operational:
+
+- **Bronze → silver refinement**: validation, cleaning, FK checks, atomic
+  writes, run manifest, rejects file. ✅
+- **Silver → Supabase publish**: idempotent, non-destructive, FK-safe,
+  field-sliced upsert. Now also resilient to per-table failures and to
+  secondary `UNIQUE(name)` collisions on reference tables (see "Recovering
+  from drift" below). ✅
+- **Supabase verify (redundancy check)**: read-back, diff vs silver,
+  per-table drift report. ✅
+- **31 tests passing** (cleaner, validator, end-to-end, fake Supabase
+  including unique-constraint + reset-reference paths). ✅
+- **Automation**: GitHub Actions CI on every push/PR, scheduled publish
+  to Supabase nightly + on push to `main`, drift-watch every 6 hours,
+  manual dispatch, local pre-commit hooks, Dependabot. ✅
+
+What's **not** done is in the "Open issues" section near the bottom — those
+are intentionally deferred for follow-up work, not bugs.
+
+> If you re-run `python -m app.pipeline.run --strict` right now you should
+> see `meetings: in=100 out=100 rejects=0` and the committed silver should
+> match byte-for-byte (`git diff --exit-code app/data/silver/`).
+
+---
+
 ## Mental model
 
 The repo follows a **medallion architecture**:
@@ -114,6 +142,22 @@ pytest -q                                                               # tests
 uvicorn app.main:app --reload                                           # FastAPI dev server
 ```
 
+### Strict-mode exit codes
+
+`--strict` is what CI uses; it makes the pipeline turn warning-level
+findings into a non-zero exit so the workflow fails loudly. The codes are
+distinct so you can tell at a glance what kind of failure happened:
+
+| Code | Meaning |
+|------|---------|
+| `0`  | Success |
+| `2`  | Silver build had rejected rows (validation failures) |
+| `3`  | Verify reported drift between silver+reference and Supabase |
+| `4`  | Publish recorded a per-table error (e.g. PostgREST `23505` on a unique constraint) |
+
+The code is the *highest* one that applied — so a run with both rejects
+and drift reports `2`, but a run with only drift reports `3`.
+
 ## Automation
 
 Pipeline runs in five different ways without anyone clicking a button:
@@ -132,6 +176,97 @@ Pipeline runs in five different ways without anyone clicking a button:
 If you want the API health check to run in CI, also set the repo variable `RUN_API_HEALTH=true` in *Settings → Secrets and variables → Actions → Variables*.
 
 **Dependabot** (`.github/dependabot.yml`) watches Python deps and GitHub Actions weekly; you'll see grouped PRs ("patches" / "minors") to review.
+
+---
+
+## Recovering from drift
+
+Two failure modes show up regularly and are worth understanding:
+
+### A) Per-table publish error (e.g. `PostgREST 23505`)
+
+Symptom in the workflow log:
+
+```
+duplicate key value violates unique constraint "meeting_types_type_name_key"
+Key (type_name)=(...) already exists.
+```
+
+What happens now:
+
+1. The publish step **does not abort** anymore. The offending table's
+   report records `"error": "..."` and the rest of `publish` (other
+   tables) plus `verify` still run.
+2. For reference tables (`projects`, `meeting_types`, `locations`) the
+   publish also pre-flights against remote rows that already use a
+   row's stable name (`project_name` / `type_name` / `location_name`)
+   with a different primary key. Those rows are **skipped** and recorded
+   under `"name_conflicts"` / `"name_conflict_count"` in the per-table
+   report, so `--strict` flags them via the new exit code `4`.
+
+The next person looks at the manifest's `stages.publish.<table>` and
+sees exactly which rows couldn't land and why.
+
+### B) Remote IDs disagree with the YAML (`--reset-reference`)
+
+Sometimes the Supabase project was seeded by an earlier import with a
+different `type_id ↔ type_name` mapping (or a different `project_id`,
+`location_id` mapping) than the canonical YAML. Plain upserts can't
+fix this, because they can't change a row's primary key without breaking
+foreign keys, and we never delete remote data implicitly.
+
+For this case there is now an **explicit, opt-in** escape hatch:
+
+```bash
+# Always preview first.
+SUPABASE_URL=... SUPABASE_KEY=... python -m app.pipeline.run \
+  --reset-reference --publish --verify --dry-run
+
+# When you're confident, run for real.
+SUPABASE_URL=... SUPABASE_KEY=... python -m app.pipeline.run \
+  --reset-reference --publish --verify --strict
+```
+
+`--reset-reference` deletes every row from `projects`, `meeting_types`,
+and `locations` on the remote, then `--publish` reseeds them from YAML
+with the correct IDs. **It does not touch `meetings` or `documents`.**
+Those are larger, FK-bearing, and may contain user-curated state, so
+they're cleaned up out of band in the Supabase dashboard if at all.
+
+Operator checklist when you reach for `--reset-reference`:
+
+1. Confirm there are no human edits to `projects` / `meeting_types` /
+   `locations` on the remote you'd lose. (These tables are
+   YAML-canonical, so this should be a non-event.)
+2. Run with `--dry-run` first; the manifest's `stages.reset_reference`
+   block tells you `would_delete` per table.
+3. Run for real. The `delete` happens before the `publish`, so a single
+   command takes the remote from "drifted" to "matches YAML."
+4. `--verify --strict` at the end of the same command confirms
+   everything is `in_sync`. CI's drift-watch will pass on the next tick.
+
+### What `--reset-reference` will **not** fix
+
+The 133 extra `meetings` and 169 extra `documents` rows shown by
+drift-watch are remote rows the pipeline never published. Those need to
+be triaged manually:
+
+```sql
+-- In the Supabase SQL editor, identify which PKs are remote-only:
+select meeting_id from public.meetings
+where meeting_id not in (<the IDs your silver publishes>);
+```
+
+Your options are:
+
+- **Keep them** (and accept that drift-watch will keep flagging them).
+- **Delete them** if they're stale: a one-time `delete from meetings
+  where meeting_id in (...)`. Same for `documents`.
+- **Promote them** into the canonical CSV/YAML by adding the rows to
+  bronze and rerunning the pipeline.
+
+This was an intentional design choice: the pipeline never deletes
+operational data. See "Architectural decisions worth not undoing."
 
 ---
 
@@ -178,6 +313,9 @@ human-readable. The fields you care about most:
 - `stages.silver.meetings.{in, out, rejects}` — did anything fail validation?
 - `stages.silver.documents.fk_warnings` — count of docs with broken FK to meetings (currently 76, see open issues)
 - `stages.publish.<table>.upserted` — how many rows we wrote to Supabase per table
+- `stages.publish.<table>.error` — present iff that table's upsert raised; the message is captured here and the rest of `publish` still ran
+- `stages.publish.<table>.name_conflicts` — local rows that share a `name_field` with a different-PK remote row and were skipped (reference tables only); see "Recovering from drift"
+- `stages.reset_reference.<table>.deleted` — present iff `--reset-reference` ran; how many rows we deleted (or `would_delete` under `--dry-run`)
 - `stages.verify.<table>.in_sync` — `true` if Supabase agrees with silver for this table
 - `stages.verify.<table>.in_local_only_sample` / `in_remote_only_sample` — first 50 PKs that disagree
 - `stages.verify.<table>.mismatched_sample` — first 10 rows where field values differ, with `local` and `remote` values
