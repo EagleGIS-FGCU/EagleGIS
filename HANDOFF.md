@@ -85,30 +85,53 @@ tests/                             pytest, no external dependencies
 
 ## Daily commands
 
+The `Makefile` is the primary command surface. Run `make help` for the full menu.
+
 ```bash
-# Install dependencies (one time, requires Python 3.10+)
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-# Build silver locally, no network
-python -m app.pipeline.run
-
-# Run the test suite
-pytest -q
-
-# Push silver up to Supabase, then redundancy-check
-SUPABASE_URL=...  SUPABASE_KEY=...  python -m app.pipeline.run --publish --verify
-
-# Inspect what publish would change without making any calls
-SUPABASE_URL=...  SUPABASE_KEY=...  python -m app.pipeline.run --publish --dry-run
-
-# CI-friendly: fail on any rejects (exit 2) or drift (exit 3)
-python -m app.pipeline.run --publish --verify --strict
-
-# Run the FastAPI service locally (read-only, hits Supabase)
-uvicorn app.main:app --reload
+make install-dev          # one-time setup: venv, deps, pre-commit hooks
+make build                # build silver locally, no network
+make test                 # run pytest
+make publish              # publish silver to Supabase + verify (needs SUPABASE_*)
+make publish-dry          # preview publish without remote calls
+make verify               # read-only Supabase diff
+make ci                   # strict pipeline + tests (what CI runs)
+make run-server           # uvicorn on :8000
 ```
+
+If you prefer the raw commands:
+
+```bash
+# Install
+python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+
+# Build silver / test / publish
+python -m app.pipeline.run                                              # offline
+python -m app.pipeline.run --strict                                     # fail on rejects
+SUPABASE_URL=... SUPABASE_KEY=... python -m app.pipeline.run --publish --verify
+SUPABASE_URL=... SUPABASE_KEY=... python -m app.pipeline.run --publish --dry-run
+
+pytest -q                                                               # tests
+uvicorn app.main:app --reload                                           # FastAPI dev server
+```
+
+## Automation
+
+Pipeline runs in five different ways without anyone clicking a button:
+
+| Trigger | What runs | Where |
+|---|---|---|
+| Every push & PR | `pytest -q`, `python -m app.pipeline.run --strict`, "silver matches commit" guard | `.github/workflows/ci.yml` |
+| Push to `main` (data/pipeline files) | `python -m app.pipeline.run --publish --verify --strict` | `.github/workflows/publish.yml` |
+| Nightly at 06:00 UTC | Same publish + verify pass — re-asserts canonical state | `.github/workflows/publish.yml` (schedule) |
+| Every 6 hours | `python -m app.pipeline.run --verify --strict` (read-only drift watch) | `.github/workflows/drift-watch.yml` |
+| Operator-triggered | Manual `workflow_dispatch` from the Actions UI, with optional `--dry-run` | `.github/workflows/publish.yml` |
+| Local `git commit` (after `make install-dev`) | Pre-commit framework: rebuilds silver if you touched bronze/reference, stages the regenerated outputs into your commit | `.pre-commit-config.yaml` |
+
+**One-time setup for the GitHub workflows:** in *Settings → Secrets and variables → Actions* on the GitHub repo, add `SUPABASE_URL` and `SUPABASE_KEY` (or `SUPABASE_SERVICE_KEY`). The workflows skip cleanly when secrets aren't set, so a fork or anyone without access can still run CI.
+
+If you want the API health check to run in CI, also set the repo variable `RUN_API_HEALTH=true` in *Settings → Secrets and variables → Actions → Variables*.
+
+**Dependabot** (`.github/dependabot.yml`) watches Python deps and GitHub Actions weekly; you'll see grouped PRs ("patches" / "minors") to review.
 
 ---
 
@@ -225,14 +248,7 @@ that calls the US Census Geocoder (free, no API key) and caches results
 in `app/data/reference/geocode_cache.json` would let teammates add
 addresses without manually looking up lat/long.
 
-### 5. No CI yet
-
-GitHub Actions running `pytest -q` and
-`python -m app.pipeline.run --strict` on every PR would catch any
-regression. Optional follow-up: also run `--publish --verify --strict`
-against a staging Supabase project before merging to `main`.
-
-### 6. The mock CSV-backed routers aren't wired up
+### 5. The mock CSV-backed routers aren't wired up
 
 `app/routers/{projects,meetings,meeting_types,locations,layers,documents}.py`
 all use `app/dependencies.py::get_store()` (which reads silver/bronze
@@ -240,6 +256,14 @@ locally) but they aren't included in `app/main.py`. They're functional but
 not mounted — only `export` and `feature_service` are. If we ever want a
 "local mode" for ArcGIS-style endpoints without Supabase, mount these in
 `main.py`.
+
+### 6. CI is configured but secrets need to be set
+
+`SUPABASE_URL` / `SUPABASE_KEY` need to be added in the GitHub repo's
+*Settings → Secrets and variables → Actions* before `publish.yml` and
+`drift-watch.yml` can do anything useful. Without them the workflows
+still pass (the pipeline gracefully skips publish/verify), but they
+won't actually publish to Supabase or detect drift.
 
 ---
 
