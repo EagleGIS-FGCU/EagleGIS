@@ -22,8 +22,9 @@ is live on `main` and operational:
   from drift" below). ✅
 - **Supabase verify (redundancy check)**: read-back, diff vs silver,
   per-table drift report. ✅
-- **31 tests passing** (cleaner, validator, end-to-end, fake Supabase
-  including unique-constraint + reset-reference paths). ✅
+- **38 tests passing** (cleaner, validator, end-to-end, fake Supabase
+  including unique-constraint + reset-reference paths, cleanup SQL
+  generator). ✅
 - **Automation**: GitHub Actions CI on every push/PR, scheduled publish
   to Supabase nightly + on push to `main`, drift-watch every 6 hours,
   manual dispatch, local pre-commit hooks, Dependabot. ✅
@@ -93,6 +94,7 @@ app/
 │   ├── load/silver.py             bronze → silver (atomic writes, dup checks)
 │   ├── publish/supabase.py        silver+reference → Supabase (idempotent upsert)
 │   ├── verify/supabase.py         Supabase → diff vs silver+reference (drift report)
+│   ├── recover/cleanup_sql.py     emits "delete remote extras" SQL (operator tool)
 │   └── run.py                     CLI orchestrator + run-manifest writer
 │
 ├── routers/
@@ -249,24 +251,33 @@ Operator checklist when you reach for `--reset-reference`:
 
 The 133 extra `meetings` and 169 extra `documents` rows shown by
 drift-watch are remote rows the pipeline never published. Those need to
-be triaged manually:
+be triaged manually — but you don't have to copy IDs by hand. A
+generator at `app/pipeline/recover/cleanup_sql.py` reads the current
+silver CSVs and reference YAML and emits a paste-into-Supabase SQL
+script keyed on `NOT IN (<canonical ids>)`:
 
-```sql
--- In the Supabase SQL editor, identify which PKs are remote-only:
-select meeting_id from public.meetings
-where meeting_id not in (<the IDs your silver publishes>);
+```bash
+python -m app.pipeline.recover.cleanup_sql > cleanup.sql
+# Inspect cleanup.sql, then paste it into the Supabase SQL editor.
 ```
 
-Your options are:
+The generated script is wrapped in `BEGIN … ROLLBACK`, so the first run
+just prints a row count per table without changing anything; promote
+the trailing `ROLLBACK` to `COMMIT` once you're satisfied. Delete order
+is documents → meetings → locations → meeting_types → projects so no
+statement orphans a child row.
 
-- **Keep them** (and accept that drift-watch will keep flagging them).
-- **Delete them** if they're stale: a one-time `delete from meetings
-  where meeting_id in (...)`. Same for `documents`.
+Your options for the extras are unchanged:
+
+- **Delete them** (most common): run the generated script. One pass and
+  drift-watch goes green.
 - **Promote them** into the canonical CSV/YAML by adding the rows to
   bronze and rerunning the pipeline.
+- **Keep them** (and accept that drift-watch will keep flagging them).
 
 This was an intentional design choice: the pipeline never deletes
-operational data. See "Architectural decisions worth not undoing."
+operational data on its own. See "Architectural decisions worth not
+undoing."
 
 ---
 
