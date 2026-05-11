@@ -497,7 +497,7 @@
         <div class="search-section">
             <div class="search-box">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="main-search" class="search-input" placeholder="Search meetings, actions, locations, staff...">
+                <input type="text" id="main-search" class="search-input" placeholder="Search minutes, projects, locations, titles…">
             </div>
         </div>
 
@@ -596,8 +596,16 @@
 </div><!-- end main-layout -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/minisearch@7.1.0/dist/umd/index.js" crossorigin="anonymous"></script>
 <script>
 const CSV_URL = 'https://raw.githubusercontent.com/EagleGIS-FGCU/EagleGIS/script/pdfs/Estero_Meetings_Final.csv';
+
+// Full-text index (MiniSearch) — built once per CSV load. Row identity is the
+// array index in allData (stable for this session). Indexed fields mirror
+// Estero_Meetings_Final.csv: ProjectName, MeetingType, MeetingDate, MeetingYear,
+// Status, ActionTaken, StartTime, StaffCode, Title, MinutesURL, DocDate,
+// LocationName, Latitude, Longitude.
+let meetingSearch = null;
 
 // Meeting types are the primary categorization. Location is preserved in the
 // row data for ArcGIS but is no longer the basis for filtering.
@@ -617,7 +625,7 @@ const TYPES = {
 const FALLBACK_TYPE = {color:"#0052a5",bg:"#eff6ff",bd:"#93c5fd",short:"Other",icon:"fa-file"};
 const t = type => TYPES[type] || FALLBACK_TYPE;
 
-let allData=[], active=new Set(['all']), term='', sortMode='newest', yearFilter='all', current=[];
+let allData=[], active=new Set(['all']), sortMode='newest', yearFilter='all', current=[];
 
 const fmtDate = d => {
     if (!d) return '—';
@@ -631,10 +639,13 @@ const sCls = s => {
 };
 const noAct = t => !t||['No action found','Meeting Cancelled','No action extracted - verify PDF'].includes(t);
 
-function highlight(text, term) {
-    if (!term || !text) return text;
-    const re = new RegExp('(' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
-    return text.replace(re, '<span class="hl">$1</span>');
+function highlight(text, termRaw) {
+    if (!termRaw || !text) return text;
+    const parts = String(termRaw).toLowerCase().trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return text;
+    const escaped = parts.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const re = new RegExp('(' + escaped.join('|') + ')', 'gi');
+    return String(text).replace(re, '<span class="hl">$1</span>');
 }
 
 function showSkeleton() {
@@ -659,6 +670,7 @@ async function init() {
         download:true, header:true, skipEmptyLines:true,
         complete:({data}) => {
             allData = data;
+            buildMeetingSearchIndex();
             populateYears();
             buildTypeFilters();
             run();
@@ -672,6 +684,56 @@ async function init() {
                 `<div class="empty"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i><p style="color:#ef4444;">Could not load data.<br>Ensure CSV is pushed to the script/pdfs branch.</p></div>`;
         }
     });
+}
+
+/**
+ * Builds an in-browser full-text index over all CSV columns used by the UI.
+ * Row IDs are numeric indices into allData (session-stable).
+ */
+function buildMeetingSearchIndex() {
+    meetingSearch = null;
+    if (typeof MiniSearch === 'undefined' || !allData.length) return;
+    try {
+        const ms = new MiniSearch({
+            idField: 'id',
+            fields: [
+                'projectName',
+                'meetingType',
+                'meetingDate',
+                'meetingYear',
+                'status',
+                'actionTaken',
+                'startTime',
+                'staffCode',
+                'title',
+                'minutesUrl',
+                'docDate',
+                'locationName',
+                'coordinates',
+            ],
+        });
+        const docs = allData.map((row, i) => ({
+            id: String(i),
+            projectName: row.ProjectName || '',
+            meetingType: row.MeetingType || '',
+            meetingDate: row.MeetingDate || '',
+            meetingYear: row.MeetingYear || '',
+            status: row.Status || '',
+            actionTaken: row.ActionTaken || '',
+            startTime: row.StartTime || '',
+            staffCode: row.StaffCode || '',
+            title: row.Title || '',
+            minutesUrl: row.MinutesURL || '',
+            docDate: row.DocDate || '',
+            locationName: row.LocationName || '',
+            coordinates: [row.Latitude, row.Longitude].filter(Boolean).join(' '),
+        }));
+        ms.addAll(docs);
+        meetingSearch = ms;
+    } catch (e) {
+        console.warn('Meeting search index failed:', e);
+        meetingSearch = null;
+    }
 }
 
 function populateYears() {
@@ -715,30 +777,75 @@ function buildTypeFilters() {
     });
 }
 
+function compareRowsBySortMode(a, b) {
+    if (sortMode === 'newest') return new Date(b.MeetingDate) - new Date(a.MeetingDate);
+    if (sortMode === 'oldest') return new Date(a.MeetingDate) - new Date(b.MeetingDate);
+    const typeCmp = (a.MeetingType || '').localeCompare(b.MeetingType || '');
+    if (typeCmp !== 0) return typeCmp;
+    return new Date(b.MeetingDate) - new Date(a.MeetingDate);
+}
+
 function run() {
-    current = allData.filter(r => {
-        const matchesType = active.has('all') || active.has((r.MeetingType||'').trim() || 'Other');
+    const qRaw = document.getElementById('main-search').value.trim();
+    const q = qRaw.toLowerCase();
+    const useIndex = !!q && meetingSearch;
+
+    const scores = new Map();
+    let idSet = null;
+    if (useIndex) {
+        const hits = meetingSearch.search(qRaw, {
+            prefix: true,
+            fuzzy: 0.2,
+            combineWith: 'AND',
+            boost: {
+                title: 1.7,
+                actionTaken: 1.45,
+                projectName: 1.25,
+                meetingType: 1.15,
+                locationName: 1.1,
+                minutesUrl: 1.05,
+            },
+        });
+        idSet = new Set(hits.map(h => parseInt(h.id, 10)));
+        hits.forEach(h => scores.set(parseInt(h.id, 10), h.score));
+    }
+
+    let rows = allData.map((r, idx) => ({ r, idx })).filter(({ r, idx }) => {
+        const matchesType = active.has('all') || active.has((r.MeetingType || '').trim() || 'Other');
         const matchesYear = yearFilter === 'all' || r.MeetingYear === yearFilter;
-        const matchesText = !term ||
-            (r.ActionTaken||'').toLowerCase().includes(term) ||
-            (r.MeetingDate||'').toLowerCase().includes(term) ||
-            (r.MeetingType||'').toLowerCase().includes(term) ||
-            (r.ProjectName||'').toLowerCase().includes(term) ||
-            (r.LocationName||'').toLowerCase().includes(term) ||
-            (r.StaffCode||'').toLowerCase().includes(term);
+        let matchesText = true;
+        if (q) {
+            if (useIndex && idSet) {
+                matchesText = idSet.has(idx);
+            } else {
+                matchesText =
+                    (r.ActionTaken || '').toLowerCase().includes(q) ||
+                    (r.MeetingDate || '').toLowerCase().includes(q) ||
+                    (r.MeetingType || '').toLowerCase().includes(q) ||
+                    (r.ProjectName || '').toLowerCase().includes(q) ||
+                    (r.LocationName || '').toLowerCase().includes(q) ||
+                    (r.StaffCode || '').toLowerCase().includes(q) ||
+                    (r.Title || '').toLowerCase().includes(q) ||
+                    (r.Status || '').toLowerCase().includes(q) ||
+                    (r.MinutesURL || '').toLowerCase().includes(q) ||
+                    (r.DocDate || '').toLowerCase().includes(q);
+            }
+        }
         return matchesType && matchesYear && matchesText;
     });
 
-    if (sortMode === 'newest') current.sort((a,b)=>new Date(b.MeetingDate)-new Date(a.MeetingDate));
-    else if (sortMode === 'oldest') current.sort((a,b)=>new Date(a.MeetingDate)-new Date(b.MeetingDate));
-    else if (sortMode === 'type') current.sort((a,b)=>{
-        // Primary: meeting type alphabetical. Secondary: newest first within
-        // each type group so the most-recent record per type rises to the top.
-        const typeCmp = (a.MeetingType||'').localeCompare(b.MeetingType||'');
-        if (typeCmp !== 0) return typeCmp;
-        return new Date(b.MeetingDate) - new Date(a.MeetingDate);
-    });
+    if (useIndex && scores.size) {
+        rows.sort((a, b) => {
+            const sb = scores.get(b.idx) ?? 0;
+            const sa = scores.get(a.idx) ?? 0;
+            if (sb !== sa) return sb - sa;
+            return compareRowsBySortMode(a.r, b.r);
+        });
+    } else {
+        rows.sort((a, b) => compareRowsBySortMode(a.r, b.r));
+    }
 
+    current = rows.map(x => x.r);
     stats(current);
     render(current);
 }
@@ -753,8 +860,9 @@ function stats(d) {
 function renderCard(row, i) {
     const {color,bg,bd,short,icon}=t(row.MeetingType);
     const rawAction = noAct(row.ActionTaken) ? null : row.ActionTaken;
+    const qForHl = document.getElementById('main-search').value.trim();
     const displayAction = rawAction
-        ? highlight(rawAction.length>130?rawAction.slice(0,130)+'...':rawAction, term)
+        ? highlight(rawAction.length>130?rawAction.slice(0,130)+'...':rawAction, qForHl)
         : `<span style="font-style:italic;color:#9ca3af;">View PDF for full meeting details.</span>`;
     return `
     <div class="record-card" data-idx="${i}">
@@ -762,11 +870,11 @@ function renderCard(row, i) {
             <span class="project-pill" style="background:${bg};color:${color};border-color:${bd};" title="${row.MeetingType||''}">
                 <i class="fa-solid ${icon}"></i>${short}
             </span>
-            <span class="card-date">${highlight(row.MeetingDate||'—', term)}</span>
+            <span class="card-date">${highlight(row.MeetingDate||'—', qForHl)}</span>
         </div>
         <div class="card-action">${displayAction}</div>
         <div class="card-footer">
-            <span class="card-loc"><i class="fa-solid fa-location-dot" style="color:${color};font-size:10px;"></i>${highlight(row.LocationName||'—', term)}</span>
+            <span class="card-loc"><i class="fa-solid fa-location-dot" style="color:${color};font-size:10px;"></i>${highlight(row.LocationName||'—', qForHl)}</span>
             <div class="card-btns">
                 <button class="btn-sm btn-outline detail-btn" data-idx="${i}">
                     <i class="fa-solid fa-circle-info"></i>Details
@@ -839,9 +947,10 @@ function openDetail(idx) {
 
     const {color,bg,bd,icon} = t(row.MeetingType);
 
+    const qForHl = document.getElementById('main-search').value.trim();
     const actions = noAct(row.ActionTaken)
         ? `<div class="action-empty"><i class="fa-solid fa-circle-info" style="margin-right:5px;"></i>No action text available — view the PDF for full meeting details.</div>`
-        : row.ActionTaken.split(' | ').filter(Boolean).map(a=>`<div class="action-item">${highlight(a.trim(), term)}</div>`).join('');
+        : row.ActionTaken.split(' | ').filter(Boolean).map(a=>`<div class="action-item">${highlight(a.trim(), qForHl)}</div>`).join('');
 
     document.getElementById('detail-content').innerHTML=`
         <div class="detail-banner" style="background:${bg};border-color:${bd};">
@@ -909,9 +1018,7 @@ document.getElementById('close-detail').addEventListener('click',()=>{
 });
 
 function setupSearch() {
-    document.getElementById('main-search').addEventListener('input',e=>{
-        term=e.target.value.toLowerCase().trim(); run();
-    });
+    document.getElementById('main-search').addEventListener('input', () => run());
 }
 
 function setupFilters() {

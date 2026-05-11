@@ -109,6 +109,25 @@ Combine with `--strict` to fail CI on any drift.
 Tests live under `tests/`; run with `pytest -q`. The Supabase tests use an
 in-process fake client and do not require credentials.
 
+#### GitHub Pages frontend (`index.html`)
+
+The public-facing **EagleGIS Meeting Document Tracker** is a single-page site
+committed at the repo root. When [GitHub Pages](https://pages.github.com/) is
+enabled for this repository (typically deploying from branch `main` at `/`), it
+loads a denormalized CSV over HTTP — see `CSV_URL` in `index.html` (defaults to
+[`Estero_Meetings_Final.csv` on branch `script/pdfs`](https://raw.githubusercontent.com/EagleGIS-FGCU/EagleGIS/script/pdfs/Estero_Meetings_Final.csv),
+Raw GitHub). **Important:** Pages does not talk to Supabase or the FastAPI layer;
+anything shown there is whatever is in that CSV. After changing silver or Supabase,
+regenerate/update that file (or adjust `CSV_URL` to another Raw URL / path) so the
+citizen-facing site stays in sync.
+
+**Search.** The sidebar search box builds a [**MiniSearch**](https://github.com/lucaong/minisearch)
+index in memory after parse (CDN `minisearch@7.1.0`). Queries use token-level
+matching with BM25 relevance, **prefix**, **light fuzziness** (~0.2), and boosted
+weights on titles and long `ActionTaken` text. Multiple words combine with logical
+AND. If the CDN script fails to load, filtering falls back to plain substring matching
+over the major columns — same limitation as earlier releases.
+
 Some records were also entered manually by the team where web data was incomplete or unavailable. Requirements and feedback from community partner Terry Flanagan guided the database design and query development throughout the project.
 
 ---

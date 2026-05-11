@@ -479,6 +479,13 @@ than ad-hoc — please push back on PRs that try to undo them.
   as `publish/supabase.py`: a module under `app/pipeline/<stage>/`, a
   function that takes a client/config and returns a report dict, plus a
   flag in `run.py` and a manifest section. Keep stages pure if possible.
+- **GitHub Pages** (`index.html`) does **not** read Supabase. It loads the
+  denormalized CSV at `CSV_URL` (defaults to Raw GitHub on branch
+  `script/pdfs`). Full-text search in the browser uses MiniSearch against
+  that file only. Updating silver or running `publish.yml` does not refresh
+  the Pages dataset — regenerate the CSV (or change `CSV_URL`) so the map
+  and search UI stay aligned with canonical data (see README, «GitHub Pages
+  frontend»).
 - **The `Estero bounding box`** is `app/pipeline/config.py::ESTERO_BBOX`.
   Use it in any new geo-validation code so the bounds stay consistent.
 
