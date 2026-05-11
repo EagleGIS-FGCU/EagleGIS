@@ -22,9 +22,9 @@ is live on `main` and operational:
   from drift" below). ✅
 - **Supabase verify (redundancy check)**: read-back, diff vs silver,
   per-table drift report. ✅
-- **38 tests passing** (cleaner, validator, end-to-end, fake Supabase
+- **46 tests passing** (cleaner, validator, end-to-end, fake Supabase
   including unique-constraint + reset-reference paths, cleanup SQL
-  generator). ✅
+  generator, derived-meeting synthesis). ✅
 - **Automation**: GitHub Actions CI on every push/PR, scheduled publish
   to Supabase nightly + on push to `main`, drift-watch every 6 hours,
   manual dispatch, local pre-commit hooks, Dependabot. ✅
@@ -309,9 +309,13 @@ undoing."
 
 ### Add new documents
 
-Same as meetings, but in `documents.csv`. **There is currently a known
-mismatch between document `meeting_id`s and the meetings table** — see the
-"Open issues" section below.
+Same as meetings, but in `documents.csv`. If a new document references a
+`meeting_id` that doesn't exist in `meetings.csv`, the pipeline will
+automatically synthesize a PZ&DB meeting for it (assuming
+`type_name = "Planning Zoning & Design Board"`). If the document is for
+a different governing body, add a new entry to
+`SYNTHESIZED_MEETING_DEFAULTS` in `app/pipeline/load/silver.py` mapping
+the `type_name` to the right `(type_id, project_id, location_id)`.
 
 ---
 
@@ -322,7 +326,8 @@ After every `python -m app.pipeline.run` you get a manifest at
 human-readable. The fields you care about most:
 
 - `stages.silver.meetings.{in, out, rejects}` — did anything fail validation?
-- `stages.silver.documents.fk_warnings` — count of docs with broken FK to meetings (currently 76, see open issues)
+- `stages.silver.meetings.out_bronze` / `out_synthesized` — split of bronze Village Council rows vs. PZ&DB rows derived from documents
+- `stages.silver.documents.fk_warnings` — count of docs with broken FK to meetings (should be 0 after the synthesis step; if it's not, something has regressed)
 - `stages.publish.<table>.upserted` — how many rows we wrote to Supabase per table
 - `stages.publish.<table>.error` — present iff that table's upsert raised; the message is captured here and the rest of `publish` still ran
 - `stages.publish.<table>.name_conflicts` — local rows that share a `name_field` with a different-PK remote row and were skipped (reference tables only); see "Recovering from drift"
@@ -342,21 +347,39 @@ wrong). Fix the source CSV/YAML, re-run.
 These are real problems the pipeline surfaced or that were intentionally
 left in scope for a follow-up.
 
-### 1. Document → Meeting FK mismatch (76 warnings)
+### 1. Document → Meeting FK mismatch (RESOLVED 2026-05-11)
 
-`documents.csv` references `meeting_id` values 158–233; `meetings.csv`
-covers 1–139. **Zero overlap.** They were clearly built independently, and
-the pipeline currently records each document as a "fk_warning" but keeps
-the row.
+**History.** `documents.csv` is PZ&DB minutes (`type_id=2`, dates
+2021–2026) and `meetings.csv` is Village Council meetings (`type_id=1`,
+dates 2015–2026). They have **zero overlap** in `meeting_id`, date, *or*
+type — they're feeds for two different governing bodies. For a long
+time the pipeline carried this as 76 `fk_warnings` and the publish to
+Supabase relied on the remote `documents_meeting_id_fkey` constraint
+being unenforced. Once the legacy "extras" were cleaned out of Supabase,
+the FK started rejecting inserts (`23503`) and documents couldn't
+publish.
 
-Options for the next person:
+**Fix.** `load/silver.py` now synthesizes a PZ&DB meeting row per
+unique `meeting_id` in `documents.csv` (see "Derived meetings" in that
+module's docstring). Defaults are deterministic and live in
+`SYNTHESIZED_MEETING_DEFAULTS`:
 
-- **Repair the source.** Walk both CSVs, match documents to meetings by
-  `meeting_date` + `filename` (the bronze data has both), rewrite
-  `documents.csv` with the correct `meeting_id`. This is the right fix.
-- **Rebuild documents from meetings.** Many meetings already have a
-  `filename` column pointing at the PDF. We could synthesize document
-  rows from meetings rather than tracking them separately.
+| type_name in document | type_id | project_id | location_id |
+|---|---|---|---|
+| Planning Zoning & Design Board | 2 | 4 (PZ&DB General Meeting Records) | 6 (Council Chambers) |
+
+The silver `meetings.csv` now contains 100 bronze Village Council rows
+plus 76 synthesized PZ&DB rows (total 176), and `fk_warnings` is `0`.
+Synthesized rows are clearly marked with `notes = "Derived from
+document feed (no bronze meetings row)."` so they're easy to filter or
+audit downstream. The run manifest carries `stages.silver.meetings.{
+out_bronze, out_synthesized }` for visibility.
+
+**Adding a new document feed.** If a future scraper introduces minutes
+for another governing body (e.g. School Board), add an entry to
+`SYNTHESIZED_MEETING_DEFAULTS` mapping the `type_name` to the right
+`(type_id, project_id, location_id)`. Documents with an unrecognised
+`type_name` go to the rejects file with an actionable error.
 
 ### 2. `action_taken` is still a `|`-joined blob
 
