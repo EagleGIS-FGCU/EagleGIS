@@ -1,0 +1,48 @@
+location_id,location_name,location_type,address,description,latitude,longitude
+1,Estero Village Hall,Meeting Venue,"9401 Corkscrew Palms Circle, Estero, FL 33928",,26.4285,-81.8068
+2,Legacy Church,Meeting Venue,"21115 Design Parc Lane, Estero, FL 33928",,,
+3,Estero Fire Rescue,Meeting Venue,"21500 Three Oaks Parkway, Estero, FL 33928",,,
+4,BERT Rail Trail Corridor,Trail,"Estero, FL",,26.4339,-81.8157
+5,Corkscrew Road Widening Corridor,Road,"Corkscrew Road, Estero, FL",,26.4363,-81.7701
+6,Corkscrew Rd / Puente Lane,Road,"Corkscrew Road at Puente Lane, Estero, FL",,26.4312,-81.7847
+7,Estero Bay Village Septic Area,Infrastructure,"Estero Bay Village, Estero, FL",,26.4408,-81.8225
+8,Sunny Grove Septic Area,Infrastructure,"Sunny Grove, Estero, FL",,26.4376,-81.8128
+9,Cypress Bend Septic Area,Infrastructure,"Cypress Bend, Estero, FL",,26.4469,-81.8116
+10,Broadway Avenue East UEP,Infrastructure,"Broadway Avenue East, Estero, FL",,26.442,-81.8054
+11,Broadway Avenue West UEP,Infrastructure,"Broadway Avenue West, Estero, FL",,,
+12,Sandy Lane,Road,"Sandy Lane, Estero, FL",,,
+13,Williams Road,Road,"Williams Road, Estero, FL",,,
+14,Estero Parkway,Road,"Estero Parkway, Estero, FL",,,
+15,Ben Hill Griffin Parkway,Road,"Ben Hill Griffin Parkway, Estero, FL",,,
+16,Three Oaks Parkway,Road,"Three Oaks Parkway, Estero, FL",,,
+17,US 41 / Tamiami Trail,Road,"US 41, Estero, FL",,,
+18,Coconut Road,Road,"Coconut Road, Estero, FL",,,
+19,Broadway Avenue,Road,"Broadway Avenue, Estero, FL",,,
+20,River Ranch Road,Road,"River Ranch Road, Estero, FL",,,
+21,River Oaks Preserve,Park,"River Oaks Preserve, Estero, FL",,,
+22,Estero River,General Area,"Estero River, Estero, FL",,,
+23,Coconut Point,Development,"Coconut Point, Estero, FL",,,
+24,Miromar Outlets,Development,"Miromar Outlets, Estero, FL",,,
+25,Koreshan State Park,Park,"Koreshan State Park, Estero, FL",,,
+26,Hertz Arena,Development,"Hertz Arena, Estero, FL",,,
+27,Bella Terra,Neighborhood,"Bella Terra, Estero, FL",,,
+28,Stoneybrook,Neighborhood,"Stoneybrook, Estero, FL",,,
+29,Pelican Sound,Neighborhood,"Pelican Sound, Estero, FL",,,
+30,The Brooks,Neighborhood,"The Brooks, Estero, FL",,,
+31,Shadow Wood,Neighborhood,"Shadow Wood, Estero, FL",,,
+32,University Village,Development,"University Village, Estero, FL",,,
+33,Genova,Development,"Genova, Estero, FL",,,
+34,Tidewater,Neighborhood,"Tidewater, Estero, FL",,,
+35,WildBlue,Neighborhood,"WildBlue, Estero, FL",,,
+36,8800 Corkscrew Road,General Area,"8800 Corkscrew Road, Estero, FL",,,
+37,21500 Three Oaks Parkway,General Area,"21500 Three Oaks Parkway, Estero, FL",,,
+38,20897 Three Oaks Parkway,General Area,"20897 Three Oaks Parkway, Estero, FL",,,
+39,9401 Corkscrew Palms Circle,General Area,"9401 Corkscrew Palms Circle, Estero, FL",,,
+40,9000 Williams Road,General Area,"9000 Williams Road, Estero, FL",,,
+41,10611 Chevrolet Way,General Area,"10611 Chevrolet Way, Estero, FL",,,
+42,21115 Design Parc Lane,General Area,"21115 Design Parc Lane, Estero, FL",,,
+43,8801 Corkscrew Road,General Area,"8801 Corkscrew Road, Estero, FL",,,
+44,645 feet south of Salerno Bay Road,General Area,"645 feet south of Salerno Bay Road, Estero, FL",,,
+45,20275 Sherrill Ln,General Area,"20275 Sherrill Ln, Estero, FL",,,
+46,9201 and 9301 Corkscrew Road,General Area,"9201 and 9301 Corkscrew Road, Estero, FL",,,
+47,4406 and 4410 Coconut Road,General Area,"4406 and 4410 Coconut Road, Estero, FL",,,
