@@ -416,13 +416,15 @@ class NormalizedBuilder:
             return
 
         for order, action in enumerate(actions, start=1):
-            entry_title = agenda_entries[order - 1].title if order <= len(agenda_entries) else None
+            entry = agenda_entries[order - 1] if order <= len(agenda_entries) else None
+            entry_title = entry.title if entry else None
             self._add_action(
                 meeting_id=meeting_id,
                 item_order=order,
                 meeting_type=meeting_type,
                 item_title=entry_title,
                 action_text=action,
+                vote_text=entry.vote_text if entry else None,
                 staff_code=staff_code,
                 needs_ocr=needs_ocr,
                 date_missing=date is None,
@@ -514,8 +516,9 @@ class NormalizedBuilder:
                 item_order=order,
                 meeting_type=meeting_type,
                 item_title=None,
-                action_text=action,
-                staff_code=row.get("StaffCode") or row.get("Staff Code"),
+                    action_text=action,
+                    vote_text=None,
+                    staff_code=row.get("StaffCode") or row.get("Staff Code"),
                     needs_ocr=False,
                     date_missing=meeting_date is None,
                     used_csv_fallback=True,
@@ -532,6 +535,7 @@ class NormalizedBuilder:
         meeting_type: str,
         item_title: str | None,
         action_text: str,
+        vote_text: str | None,
         staff_code: str | None,
         needs_ocr: bool,
         date_missing: bool,
@@ -563,7 +567,10 @@ class NormalizedBuilder:
         item_id = len(self.agenda_items) + 1
         display_title = item_title or action_text[:90]
         item_text = action_text if not item_title else f"{item_title}. Action: {action_text}"
+        if self._has_duplicate_agenda_item(meeting_id, item_text, action_text):
+            return
         motion_text = infer_motion_text(action_text)
+        vote_context = f"Vote: {vote_text}" if vote_text else action_text
         self.agenda_items.append({
             "item_id": item_id,
             "meeting_id": meeting_id,
@@ -577,7 +584,7 @@ class NormalizedBuilder:
             "summary": item_text,
             "outcome": action_text,
             "motion_text": motion_text,
-            "vote_result": infer_vote_result(action_text),
+            "vote_result": infer_vote_result(vote_context),
             "created_at": None,
             "project_matches": "; ".join(project_names),
             "staff_code": staff_code,
@@ -593,6 +600,7 @@ class NormalizedBuilder:
             "extraction_notes": "csv_fallback" if used_csv_fallback else None,
         })
         if motion_text or vote_detected(action_text):
+            vote_yes, vote_no, vote_abstain = infer_vote_counts(vote_context)
             self.motions.append({
                 "motion_id": len(self.motions) + 1,
                 "item_id": item_id,
@@ -600,9 +608,9 @@ class NormalizedBuilder:
                 "proposed_by": infer_motion_person(item_text, "Motion by"),
                 "seconded_by": infer_motion_person(item_text, "Seconded by"),
                 "outcome": action_text,
-                "vote_yes": None,
-                "vote_no": None,
-                "vote_abstain": None,
+                "vote_yes": vote_yes,
+                "vote_no": vote_no,
+                "vote_abstain": vote_abstain,
                 "created_at": None,
             })
 
@@ -663,6 +671,18 @@ class NormalizedBuilder:
             })
         if review:
             self._add_review(asset, meeting_id, needs_ocr, f"Review item {item_id}: weak or fallback extraction.")
+
+    def _has_duplicate_agenda_item(self, meeting_id: int, item_text: str, action_text: str) -> bool:
+        item_key = re.sub(r"\s+", " ", item_text).strip().lower()
+        action_key = re.sub(r"\s+", " ", action_text).strip().lower()
+        for row in self.agenda_items:
+            if row.get("meeting_id") != meeting_id:
+                continue
+            existing_item = re.sub(r"\s+", " ", str(row.get("summary") or "")).strip().lower()
+            existing_action = re.sub(r"\s+", " ", str(row.get("outcome") or "")).strip().lower()
+            if existing_item == item_key and existing_action == action_key:
+                return True
+        return False
 
     def _meeting_type_id(self, name: str) -> int:
         grouped_name = grouped_meeting_type_for(name)
@@ -1117,6 +1137,31 @@ def infer_vote_result(text: str) -> str | None:
     return None
 
 
+def infer_vote_counts(text: str) -> tuple[int | None, int | None, int | None]:
+    yes = _count_vote_names(text, "Aye")
+    no = _count_vote_names(text, "Nay")
+    abstain = _count_vote_names(text, "Abstentions")
+    return yes, no, abstain
+
+
+def _count_vote_names(text: str, label: str) -> int | None:
+    match = re.search(
+        rf"\b{re.escape(label)}\s*:\s*(.*?)(?=\s*(?:(?:\d{{1,2}}\.\s+)?(?:Aye|Nay|Abstentions|Motion|Action|Vote|Public Input|Board Communications|Adjournment)\s*:|\d{{1,2}}\.\s+[A-Z][A-Z ]{{2,}})|$)",
+        text,
+        flags=re.I,
+    )
+    if not match:
+        return None
+    value = match.group(1).strip(" .;:")
+    if not value:
+        return 0
+    if value.lower() in {"none", "n/a", "na"}:
+        return 0
+    value = re.sub(r"\b(?:board\s+members?|chairman|chair|vice\s+chairman|vice\s+chair|co-chairman|and)\b", "", value, flags=re.I)
+    parts = [part.strip(" .;:") for part in re.split(r",|;", value) if part.strip(" .;:")]
+    return len(parts) if parts else None
+
+
 def format_name_for(meeting_type: str) -> str:
     if meeting_type == "Village Council Regular Meeting":
         return "Regular Meeting"
@@ -1173,15 +1218,24 @@ def infer_motion_person(text: str, label: str) -> str | None:
 
 def infer_application_id(text: str) -> str | None:
     patterns = [
-        r"\b(?:Resolution|Ordinance)\s+No\.\s*([A-Z0-9-]+)",
-        r"\b(?:RFB|RFQ|CN|EC|STA)\s*(?:No\.)?\s*([A-Z0-9-]+)",
-        r"\b([A-Z]{2,5}\s*\d{4}-\d{1,3})\b",
+        r"\b((?:DOS|LDO|DCI|COP|ADD|CPA|ZTA|DO)\s*\d{4}-[A-Z]?\d{3})\b",
+        r"\b((?:RFB|RFQ|CN|EC|STA)\s+(?:No\.\s*)?[A-Z0-9-]+)\b",
+        r"\b((?:Resolution|Ordinance)\s+(?:No\.\s*)?\d{4}-\d{1,3})\b",
+        r"\b([A-Z]{2,5}\s+\d{4}-\d{1,3})\b",
     ]
     for pattern in patterns:
         match = re.search(pattern, text, flags=re.I)
         if match:
-            return re.sub(r"\s+", " ", match.group(1)).strip()
+            value = re.sub(r"\s+", " ", match.group(1)).strip()
+            if _valid_application_id(value):
+                return value
     return None
+
+
+def _valid_application_id(value: str) -> bool:
+    if len(value) < 6:
+        return False
+    return bool(re.search(r"\d{4}-[A-Z]?\d{1,3}", value) or re.search(r"\b(?:RFB|RFQ|CN|EC|STA)\s+", value, re.I))
 
 
 def infer_applicant_name(text: str) -> str | None:

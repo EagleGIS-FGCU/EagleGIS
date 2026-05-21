@@ -25,6 +25,7 @@ MEETING_TYPE_ALIASES = {
 class AgendaEntry:
     title: str | None
     action_text: str
+    vote_text: str | None = None
 
 
 def normalize_meeting_type(value: str | None) -> str | None:
@@ -124,9 +125,19 @@ def extract_staff_code(text: str) -> str | None:
 
 
 def infer_meeting_type(filename: str, text: str, fallback: str | None = None) -> str:
+    normalized_fallback = normalize_meeting_type(fallback) if fallback else None
+    filename_blob = filename.lower()
     blob = f"{filename} {text[:1200]}".lower()
     if "cancel" in filename.lower() or "meeting cancelled" in blob:
         return "Cancelled Meeting"
+    if normalized_fallback and (
+        "pzdb" in filename_blob
+        or "planning zoning" in filename_blob
+        or "planning, zoning" in filename_blob
+        or "village council" in normalized_fallback.lower()
+        or "council" in normalized_fallback.lower()
+    ):
+        return normalized_fallback
     if "joint workshop" in blob:
         return "Joint Workshop"
     if "zoning hearing and comp plan workshop" in blob or "zoning hearing and comprehensive plan workshop" in blob:
@@ -151,8 +162,8 @@ def infer_meeting_type(filename: str, text: str, fallback: str | None = None) ->
         return "Public Hearing"
     if "workshop" in blob:
         return "Workshop"
-    if fallback:
-        return normalize_meeting_type(fallback) or fallback
+    if normalized_fallback:
+        return normalized_fallback
     return "Village Council Regular Meeting"
 
 
@@ -169,14 +180,19 @@ def extract_agenda_entries(text: str) -> list[AgendaEntry]:
         action = _clean_action(match.group(1))
         if len(action) <= 8:
             continue
+        vote_text = _extract_following_vote_text(text[match.end():])
         title = _infer_agenda_title(text[max(0, match.start() - 1400):match.start()])
-        entries.append(AgendaEntry(title=title, action_text=action))
+        entries.append(AgendaEntry(title=title, action_text=action, vote_text=vote_text))
 
     if entries:
         return _dedupe_entries(entries)
 
+    section_entries = _extract_agenda_section_entries(text)
+    if section_entries:
+        return _dedupe_entries(section_entries)
+
     fallback_patterns = [
-        r"\b(Approved\s+.*?)(?=\s+(?:Motion:|Vote:|Action:|Public Comment|Adjourned|$))",
+        r"\b(Approved(?!\s+BY\s+(?:BOARD|COUNCIL))\s+.*?)(?=\s+(?:Motion:|Vote:|Action:|Public Comment|Adjourned|$))",
         r"\b(Adopted\s+.*?)(?=\s+(?:Motion:|Vote:|Action:|Public Comment|Adjourned|$))",
         r"\b(Passed\s+.*?)(?=\s+(?:Motion:|Vote:|Action:|Public Comment|Adjourned|$))",
     ]
@@ -209,6 +225,56 @@ def _clean_action(text: str) -> str:
     text = re.sub(r"Vote\s*:\s*(?:\(.*?\))?\s*Aye\s*:?", "", text, flags=re.I)
     text = re.sub(r"\s+", " ", text).strip(" .;:-")
     return text
+
+
+def _extract_following_vote_text(text: str) -> str | None:
+    match = re.match(
+        r"\s*Vote:\s*(.*?)(?=\s*(?:Motion:|Action:|Staff Presentation|Council Questions|Public Comment|Public Input|Board Communications|Adjourned|Adjournment|$))",
+        text,
+        flags=re.I | re.S,
+    )
+    if not match:
+        return None
+    value = re.sub(r"\s+", " ", match.group(1)).strip(" .;:")
+    return value or None
+
+
+def _extract_agenda_section_entries(text: str) -> list[AgendaEntry]:
+    normalized = re.sub(r"\s+", " ", text)
+    heading_pattern = re.compile(
+        r"\b(?:PUBLIC INFORMATION MEETINGS?|PUBLIC HEARINGS?|WORKSHOP)\s+"
+        r"(?:\([a-z]\)|\(\d+\)|[a-z]\)|\d+\.)\s+",
+        flags=re.I,
+    )
+    stop_pattern = re.compile(
+        r"\s+(?:PUBLIC INFORMATION MEETINGS?|PUBLIC HEARINGS?|WORKSHOP|PUBLIC INPUT|BOARD COMMUNICATIONS|"
+        r"\d{1,2}\.\s+[A-Z][A-Z ]{2,})(?:\s+|\(|$)",
+        flags=re.I,
+    )
+    entries: list[AgendaEntry] = []
+    markers = list(heading_pattern.finditer(normalized))
+    for index, marker in enumerate(markers):
+        start = marker.end()
+        next_start = markers[index + 1].start() if index + 1 < len(markers) else len(normalized)
+        stop = stop_pattern.search(normalized, start, next_start)
+        end = stop.start() if stop else next_start
+        section = normalized[start:end].strip(" .;:")
+        if not section or len(section) < 40:
+            continue
+        if not _section_has_project_signal(section):
+            continue
+        title = _clean_title(section)
+        if not title:
+            continue
+        entries.append(AgendaEntry(title=title, action_text=f"No formal action recorded. {section[:900]}"))
+    return entries
+
+
+def _section_has_project_signal(section: str) -> bool:
+    return bool(
+        re.search(r"\b(?:DOS|LDO|DCI|COP|ADD|CPA|ZTA|DO)\s*\d{4}-[A-Z]?\d{3}\b", section, flags=re.I)
+        or re.search(r"\b\d{3,6}\s+[A-Z][A-Za-z.'-]*(?:\s+[A-Z][A-Za-z.'-]*){0,5}\s+(?:Road|Rd|Street|St|Avenue|Ave|Parkway|Pkwy|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Circle|Cir|Way|Terrace|Place|Pl)\b", section, flags=re.I)
+    )
 
 
 def _infer_agenda_title(context: str) -> str | None:

@@ -14,7 +14,7 @@ class PdfAsset:
 
 def iter_local_pdfs(pdf_dir: Path) -> list[PdfAsset]:
     assets: list[PdfAsset] = []
-    for path in sorted(pdf_dir.glob("*.pdf")):
+    for path in sorted(pdf_dir.rglob("*.pdf")):
         assets.append(PdfAsset(str(path), path.name, path.read_bytes()))
     return assets
 
