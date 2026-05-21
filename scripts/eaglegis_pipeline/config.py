@@ -288,6 +288,13 @@ LOCATION_SEEDS: dict[str, dict[str, object]] = {
         "longitude": None,
         "aliases": ["wildblue", "wild blue"],
     },
+    "Summercrest": {
+        "location_type": "Development",
+        "address": "Summercrest, Estero, FL",
+        "latitude": None,
+        "longitude": None,
+        "aliases": ["summercrest", "toll brothers development"],
+    },
 }
 
 

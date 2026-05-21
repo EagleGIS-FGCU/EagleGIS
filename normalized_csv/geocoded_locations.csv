@@ -36,3 +36,49 @@ Location,Latitude,Longitude,DisplayName,GeocodeSource,GeocodeConfidence
 "23106 Fashion Drive, Estero, FL",26.404693008589,-81.807764164083,"23106 Fashion Dr, Estero, Florida, 33928",arcgis_world_geocoder,1.0
 "8400 Murano Del Lago Dr, Estero, FL",26.392257239852,-81.809213646599,"8400 Murano del Lago Dr, Estero, Florida, 34135",arcgis_world_geocoder,1.0
 "9501 Vintage Trace Circle, Estero, FL",26.455612966082,-81.814341298694,"Vintage Trace Cir, Fort Myers, Florida, 33967",arcgis_world_geocoder,0.9533
+10081 Estero Town Commons Place,26.430921743825,-81.785430080157,"10081 Estero Town Commons Pl, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"10100 Arcos Avenue, Estero, FL",26.433628889003,-81.788008772669,"10100 Arcos Ave, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"10170 and 10150 Arcos Avenue, Estero, FL",26.431996010445,-81.787748011662,"10170 Arcos Ave, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"10351 Corkscrew Commons Drive, Estero, FL",26.431986203618,-81.783570471119,"10351 Corkscrew Commons Dr, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"10411 Corkscrew Commons Drive, Estero, FL",26.43208733128,-81.781417998383,"10411 Corkscrew Commons Dr, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"10500 Corkscrew Road, Estero, FL",26.430907704137,-81.783054229702,"10500 Corkscrew Road, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"10640 Chevrolet Way, Estero, FL",26.430703353337,-81.779022785732,"10640 Chevrolet Way, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"11906 Newbridge Court, Estero, FL",26.439073815215,-81.762003582791,"11906 Newbridge Court, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"12840 Corkscrew Road, Estero, FL",26.449146368339,-81.742899851451,"12840 Corkscrew Rd, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"18251 Three Oaks Parkway, Estero, FL",26.465603469201,-81.795347887567,"18251 Three Oaks Pkwy, Fort Myers, Florida, 33967",arcgis_world_geocoder,0.999
+"19501 Vintage Trace Circle, Estero, FL",26.456810676705,-81.814442026342,"19501 Vintage Trace Cir, Estero, Florida, 33967",arcgis_world_geocoder,1.0
+"19701 S. Tamiami Trail, Estero, FL",26.454126833218,-81.821494392036,"19701 S Tamiami Trl, Fort Myers, Florida, 33908",arcgis_world_geocoder,1.0
+"19950 S. Tamiami Trail, Estero, FL",26.450385654555,-81.820808584718,"19950 S Tamiami Trl, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"19975 S. Tamiami Trail, Estero, FL",26.45095998256,-81.816792814907,"19975 S Tamiami Trl, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"19980 Bella Terra Boulevard, Estero, FL",26.450582796918,-81.73115952021,"19980 Bella Terra Boulevard, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"20161 Camellia Crosse Lane, Estero, FL",26.446950624905,-81.741493233359,"20161 Camellia Crosse Ln, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"20300 Country Club Drive, Estero, FL",26.436910613643,-81.74953793257,"20300 Country Club Dr, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"20481 Plantation Boulevard, Estero, FL",26.443526156453,-81.830131356525,"20481 Plantation Blvd, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"21180 Country Creek Drive, Estero, FL",26.433047604017,-81.794679007397,"21180 Country Creek Dr, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"21301 Town Commons Drive, Estero, FL",26.430775479614,-81.785967192513,"21301 Town Commons Dr, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"21351 Happy Hollow Lane, Estero, FL",26.428145699402,-81.805592580608,"21351 Happy Hollow Ln, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"21510 and 21520 Strada Nuova Circle, Estero, FL",26.430750878728,-81.803208180612,"21510 Strada Nuova Cir, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"21530 Strada Nuova Circle, Estero, FL",26.429852212979,-81.804329846895,"21530 Strada Nuova Cir, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"21580 River Ranch Road, Estero, FL",26.426601417561,-81.795157362612,"21580 River Ranch Rd, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"21750 Three Oaks Parkway, Estero, FL",26.422671017434,-81.789027006267,"21750 Three Oaks Pkwy, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"22604 S. Tamiami Trail, Estero, FL",26.411895242711,-81.812998075882,"22604 S Tamiami Trl, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"22770 S. Tamiami Trail, Estero, FL",26.410607321379,-81.812830856914,"22770 S Tamiami Trl, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"22801 Oakwilde Boulevard, Estero, FL",26.40717652459,-81.789995954274,"22801 Oakwilde Blvd, Estero, Florida, 34135",arcgis_world_geocoder,1.0
+"22910 Lyden Drive, Estero, FL",26.406167259629,-81.812370774249,"22910 Lyden Dr, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"22941 Lyden Drive, Estero, FL",26.403642127478,-81.811293532053,"22941 Lyden Dr, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"22961 Lyden Drive, Estero, FL",26.402115489543,-81.811415991658,"22961 Lyden Dr, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"23161 Village Shops Way, Estero, FL",26.401827780717,-81.807656037532,"23161 Village Shops Way, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"23421 Walden Center Drive, Estero, FL",26.396739714032,-81.811303590336,"23421 Walden Center Dr, Estero, Florida, 34134",arcgis_world_geocoder,1.0
+"3231 Coconut Road, Estero, FL",26.397050012088,-81.815187848087,"3231 Coconut Rd, Estero, Florida, 34134",arcgis_world_geocoder,1.0
+"4561 Pelican Sound Boulevard, Estero, FL",26.430564674749,-81.823385349393,"4561 Pelican Sound Blvd, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"4741 Broadway Ave, Estero, FL",26.441434871611,-81.833425612111,"4741 Broadway Ave W, Estero, Florida, 33928",arcgis_world_geocoder,0.995
+"4798 Pelican Sound Boulevard, Estero, FL",26.436773779074,-81.828971636402,"4798 Pelican Sound Blvd, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"8001 Via Rapallo Drive, Estero, FL",26.414570620477,-81.811771049077,"8001 Via Rapallo Drive, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"8009 Sweetwater Ranch Boulevard, Estero, FL",26.411810375942,-81.809483711519,"8009 Sweetwater Ranch Blvd, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"8400 Murano Del Lago Drive, Estero, FL",26.392257239852,-81.809213646599,"8400 Murano del Lago Dr, Estero, Florida, 34135",arcgis_world_geocoder,1.0
+"8990 Corkscrew Road, Estero, FL",26.42941237261,-81.805208605623,"8990 Corkscrew Rd, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"9441 Corkscrew Palms Circle, Estero, FL",26.430460781059,-81.797627425658,"9441 Corkscrew Palms Cir, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"9600 Corkscrew Road, Estero, FL",26.430342721953,-81.795270434485,"9600 Corkscrew Rd, Estero, Florida, 33928",arcgis_world_geocoder,1.0
+"9920 Coconut Road, Estero, FL",26.396742354332,-81.789981034487,"9920 Coconut Rd, Estero, Florida, 34135",arcgis_world_geocoder,1.0
+"Miromar Outlets, Estero, FL",26.438084,-81.772808,Miromar Outlets,arcgis_world_geocoder,1.0
+"Summercrest, Estero, FL",26.431257019952,-81.804863019756,"Corkscrew Rd & Sandy Ln, Estero, Florida, 33928",arcgis_world_geocoder,1.0

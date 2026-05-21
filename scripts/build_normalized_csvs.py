@@ -553,8 +553,10 @@ class NormalizedBuilder:
         # often assigns one whole PDF to one bucket even when its agenda items
         # cover unrelated actions. Only link a project/place when the agenda
         # item text itself contains matching evidence.
-        project_names = match_projects(action_text)
-        location_names = match_locations(action_text)
+        item_text = action_text if not item_title else f"{item_title}. Action: {action_text}"
+        title_context = item_title or action_text
+        project_names = match_projects(title_context)
+        location_names = match_locations(title_context)
         review = needs_review(
             needs_ocr=needs_ocr,
             date_missing=date_missing,
@@ -566,7 +568,6 @@ class NormalizedBuilder:
 
         item_id = len(self.agenda_items) + 1
         display_title = item_title or action_text[:90]
-        item_text = action_text if not item_title else f"{item_title}. Action: {action_text}"
         if self._has_duplicate_agenda_item(meeting_id, item_text, action_text):
             return
         motion_text = infer_motion_text(action_text)
@@ -614,14 +615,16 @@ class NormalizedBuilder:
                 "created_at": None,
             })
 
+        address_candidates = [normalize_address_candidate(a) for a in extract_address_candidates(item_text)]
+
         for project in project_names:
             self.agenda_item_projects.append({
                 "item_id": item_id,
                 "project_id": self._project_id(project),
             })
-        address_candidates = [normalize_address_candidate(a) for a in extract_address_candidates(action_text)]
 
-        for location in location_names:
+        seed_locations_to_write = [] if address_candidates else location_names
+        for location in seed_locations_to_write:
             location_id = self._location_id(location)
             self.agenda_item_locations.append({
                 "item_id": item_id,
@@ -1146,7 +1149,7 @@ def infer_vote_counts(text: str) -> tuple[int | None, int | None, int | None]:
 
 def _count_vote_names(text: str, label: str) -> int | None:
     match = re.search(
-        rf"\b{re.escape(label)}\s*:\s*(.*?)(?=\s*(?:(?:\d{{1,2}}\.\s+)?(?:Aye|Nay|Abstentions|Motion|Action|Vote|Public Input|Board Communications|Adjournment)\s*:|\d{{1,2}}\.\s+[A-Z][A-Z ]{{2,}})|$)",
+        rf"\b{re.escape(label)}\s*:\s*(.*?)(?=\s*(?:(?:\d{{1,2}}\.\s+)?(?:Aye|Nay|Abstentions|Motion|Action|Vote|Public Input|Board Communications|Adjournment)\s*:|(?:\([a-z0-9]\)|\d{{1,2}}\.)\s+[A-Z]|Planning Zoning and Design Board Minutes|Final Action Agenda|Recess\b|$))",
         text,
         flags=re.I,
     )
@@ -1156,6 +1159,12 @@ def _count_vote_names(text: str, label: str) -> int | None:
     if not value:
         return 0
     if value.lower() in {"none", "n/a", "na"}:
+        return 0
+    if re.match(
+        r"^(?:\([a-z0-9]\)|\d{1,2}\.)\s+[A-Z]|^(?:Planning Zoning and Design Board Minutes|Final Action Agenda|Recess\b)",
+        value,
+        flags=re.I,
+    ):
         return 0
     value = re.sub(r"\b(?:board\s+members?|chairman|chair|vice\s+chairman|vice\s+chair|co-chairman|and)\b", "", value, flags=re.I)
     parts = [part.strip(" .;:") for part in re.split(r",|;", value) if part.strip(" .;:")]
@@ -1295,7 +1304,9 @@ def ensure_estero_address(value: str) -> str:
 
 
 def normalize_address_candidate(value: str) -> str:
-    return value.replace("Design Pare Lane", "Design Parc Lane")
+    value = value.replace("Design Pare Lane", "Design Parc Lane")
+    value = re.sub(r"\b0251\s+Arcos\s+Avenue\b", "10251 Arcos Avenue", value, flags=re.I)
+    return value
 
 
 def confidence_score(

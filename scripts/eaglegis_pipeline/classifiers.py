@@ -82,7 +82,8 @@ def extract_address_candidates(text: str) -> list[str]:
     suffixes = (
         "Road", "Rd", "Street", "St", "Avenue", "Ave", "Parkway", "Pkwy",
         "Boulevard", "Blvd", "Lane", "Ln", "Drive", "Dr", "Court", "Ct",
-        "Circle", "Cir", "Way", "Terrace", "Place", "Pl",
+        "Circle", "Cir", "Way", "Terrace", "Place", "Pl", "Trail", "Trl",
+        "Highway", "Hwy",
     )
     suffix_pattern = "|".join(suffixes)
     token = r"(?:[A-Z][A-Za-z.'-]*|[A-Z]{1,4}|[0-9]+(?:st|nd|rd|th)?)"

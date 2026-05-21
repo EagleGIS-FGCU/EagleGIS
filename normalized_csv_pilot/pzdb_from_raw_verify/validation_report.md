@@ -7,9 +7,9 @@
 - Renumbered IDs: `True`
 - Meetings: `44`
 - Agenda items: `125`
-- Locations: `20`
+- Locations: `141`
 - Motions: `83`
-- ArcGIS rows: `20`
+- ArcGIS rows: `141`
 - ArcGIS missing coordinate rows: `0`
 - Agenda items with missing meeting parent: `0`
 - Locations with missing agenda item parent: `0`

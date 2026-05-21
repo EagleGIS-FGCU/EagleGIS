@@ -173,7 +173,7 @@ def extract_agenda_entries(text: str) -> list[AgendaEntry]:
 
     entries: list[AgendaEntry] = []
     for match in re.finditer(
-        r"\bAction:\s*(.*?)(?=\s*(?:Vote:|Motion:|Action:|Staff Presentation|Council Questions|Public Comment|Adjourned|$))",
+        r"\bAction:\s*(.*?)(?=\s*(?:Vote:|Motion:|Action:|Staff Presentation|Council Questions|Public Comment|Public Input|Board Communications|Adjourned|Adjournment|(?:\d{1,2}\.|[A-Z]\)|\([a-z0-9]\))\s+[A-Z]|$))",
         text,
         flags=re.I,
     ):
@@ -181,7 +181,7 @@ def extract_agenda_entries(text: str) -> list[AgendaEntry]:
         if len(action) <= 8:
             continue
         vote_text = _extract_following_vote_text(text[match.end():])
-        title = _infer_agenda_title(text[max(0, match.start() - 1400):match.start()])
+        title = _infer_agenda_title(text[max(0, match.start() - 5000):match.start()])
         entries.append(AgendaEntry(title=title, action_text=action, vote_text=vote_text))
 
     if entries:
@@ -229,7 +229,7 @@ def _clean_action(text: str) -> str:
 
 def _extract_following_vote_text(text: str) -> str | None:
     match = re.match(
-        r"\s*Vote:\s*(.*?)(?=\s*(?:Motion:|Action:|Staff Presentation|Council Questions|Public Comment|Public Input|Board Communications|Adjourned|Adjournment|$))",
+        r"\s*Vote:\s*(.*?)(?=\s*(?:Motion:|Action:|Staff Presentation|Council Questions|Public Comment|Public Input|Board Communications|Adjourned|Adjournment|(?:\d{1,2}\.|[A-Z]\)|\([a-z0-9]\))\s+[A-Z]|$))",
         text,
         flags=re.I | re.S,
     )
@@ -292,7 +292,10 @@ def _infer_agenda_title(context: str) -> str | None:
     if last_motion >= 0:
         context = context[:last_motion].strip()
 
-    marker_pattern = re.compile(r"(?:^|\s)(?:\d{1,2}\.|[A-Z]\)|\([a-z]\))\s+", flags=re.I)
+    marker_pattern = re.compile(
+        r"(?:^|\s)(?:(?<!US\s)(?<!U\.S\.\s)(?:[1-9]|1\d|20)\.|[A-Z]\)|\([a-z]\)|\(\d+\))\s+",
+        flags=re.I,
+    )
     stop_pattern = re.compile(
         r"\s+(?:Motion:|Staff Presentation|Staff Comments|Council Questions|Council Comments|"
         r"Public Comment|Village Clerk|Village Manager|Questions or Comments|Action:|Vote:)",
