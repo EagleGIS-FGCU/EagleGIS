@@ -29,14 +29,16 @@ is live on `main` and operational:
   drift" below). ✅
 - **Supabase verify (redundancy check)**: read-back, diff vs silver,
   per-table drift report. ✅
-- **63 tests passing** (cleaner, validator, minutes collector, gold
-  builder, end-to-end, fake Supabase including unique-constraint +
-  reset-reference paths, cleanup SQL generator, derived-meeting
-  synthesis). ✅
+- **98 tests passing** (cleaner, validator, minutes collector, meetings
+  extractor, structured meeting-actions parsing, geocode stage, gold
+  builder, API/router smoke tests, end-to-end, fake Supabase including
+  unique-constraint + reset-reference paths, cleanup SQL generator,
+  derived-meeting synthesis). ✅
 - **Automation**: GitHub Actions CI on every push/PR, scheduled publish
   to Supabase nightly + on push to `main`, weekly data refresh
-  (rescrape + rebuild silver/gold + commit + publish), drift-watch every
-  6 hours, manual dispatch, local pre-commit hooks, Dependabot. ✅
+  (rescrape + rebuild silver/gold + commit + publish), monthly meetings
+  discovery PR proposals, drift-watch every 6 hours, manual dispatch,
+  local pre-commit hooks, Dependabot. ✅
 
 What's **not** done is in the "Open issues" section near the bottom — those
 are intentionally deferred for follow-up work, not bugs.
@@ -102,10 +104,14 @@ app/
 │   │   ├── meetings.csv
 │   │   ├── documents.csv          (real documents only)
 │   │   ├── documents_planned.csv  (future placeholders, isolated)
+│   │   ├── meeting_actions.csv    parsed clauses from action_taken blobs
 │   │   └── _rejects.json          (rows that failed validation, with reasons)
 │   ├── gold/                      GENERATED  do not hand-edit
-│   │   └── meetings_public.csv    denormalized 14-col CSV the public site parses
+│   │   ├── meetings_public.csv    denormalized 14-col CSV the public site parses
+│   │   └── meeting_actions_public.csv  additive structured actions feed
 │   ├── minutes_index.json         GENERATED  canonical PDF URLs scraped from estero-fl.gov
+│   ├── extract/
+│   │   └── candidate_meetings.csv GENERATED  newly discovered meetings for PR review
 │   ├── runs/                      GENERATED & gitignored  per-run manifest
 │   │   └── <UTC-timestamp>/manifest.json
 │   ├── csv_store.py               read-only store over silver/bronze (backs the JSON/GeoJSON API)
@@ -115,7 +121,10 @@ app/
 │   ├── config.py                  filesystem paths (bronze/silver/gold/minutes), Estero bbox
 │   ├── reference.py               YAML loader (cached, has reload())
 │   ├── clean/text.py              OCR-artifact cleaner; pure functions, well-tested
+│   ├── clean/actions.py           structured action parser (kind/ref/amount heuristics)
 │   ├── collect/minutes.py         scrape estero-fl.gov → minutes_index.json (+ pure parsers)
+│   ├── extract/meetings.py        discover newly-held meetings → candidate_meetings.csv
+│   ├── enrich/geocode.py          optional US Census geocoder with JSON cache
 │   ├── validate/schemas.py        Pydantic models + FK checks + reject collection
 │   ├── load/silver.py             bronze → silver (atomic writes, dup checks, minutes enrich)
 │   ├── publish/gold.py            silver+reference+docs+minutes → gold public CSV
@@ -127,18 +136,21 @@ app/
 ├── routers/                       FastAPI read-API
 │   ├── export.py                  LIVE  Supabase-backed CSV exports for ArcGIS
 │   ├── feature_service.py         LIVE  Esri Feature Service endpoint
-│   └── {meetings,projects,documents,meeting_types,locations,layers}.py
-│                                  MOUNTED silver-backed JSON/GeoJSON read-API under /api/v1 (see issue #5)
+│   ├── {meetings,projects,documents,meeting_types,locations,layers}.py
+│   │                               MOUNTED silver-backed JSON/GeoJSON read-API under /api/v1 (see issue #5)
+│   └── actions.py                 structured meeting-actions API (created, not mounted)
 │
 ├── services/geojson.py           GeoJSON builders for the layers router
 ├── dependencies.py               get_store() — single swap point for the data layer
 ├── db.py                          Supabase client (get_client, try_get_client)
 ├── main.py                        FastAPI app: mounts all routers + serves /dashboard
 ├── static/dashboard.html         elderly-accessible interactive Leaflet map (served at /dashboard)
+├── ../dashboard.html             GitHub Pages-compatible static dashboard entrypoint
 └── ...
 
 scripts/
-└── scrape_minutes_index.py        CLI shim → app.pipeline.collect.minutes.collect_minutes_index()
+├── scrape_minutes_index.py        CLI shim → app.pipeline.collect.minutes.collect_minutes_index()
+└── scrape_meetings.py             CLI shim → app.pipeline.extract.meetings.collect_candidate_meetings()
 
 tests/                             pytest, no external dependencies
 ├── test_clean_text.py             OCR-artifact cleaning cases
@@ -146,6 +158,10 @@ tests/                             pytest, no external dependencies
 ├── test_silver_synthesis.py       derived-meeting synthesis from documents
 ├── test_minutes_collector.py      minutes filename/date parsing + URL resolution
 ├── test_gold.py                   gold schema + join behaviour
+├── test_meeting_actions.py        structured action parsing + silver output
+├── test_extract_meetings.py       meetings discovery parsing + bronze diffing
+├── test_geocode.py                geocoder cache/no-op behavior
+├── test_api_routers.py            mounted /api/v1 router smoke tests
 ├── test_pipeline_e2e.py           runs the pipeline against real bronze
 ├── test_recover_cleanup_sql.py    cleanup-SQL generator
 └── test_supabase_publish_verify.py  uses an in-process FakeSupabaseClient
@@ -212,7 +228,8 @@ Pipeline runs in six different ways without anyone clicking a button:
 | Every push & PR | `pytest -q`, `python -m app.pipeline.run --strict`, "silver matches commit" guard | `.github/workflows/ci.yml` |
 | Push to `main` (data/pipeline files) | `python -m app.pipeline.run --publish --verify --strict` | `.github/workflows/publish.yml` |
 | Nightly at 06:00 UTC | Same publish + verify pass — re-asserts canonical state | `.github/workflows/publish.yml` (schedule) |
-| Weekly Mon 07:00 UTC | Rescrape minutes → rebuild silver+gold → commit refreshed `minutes_index.json` + `meetings_public.csv` to `main` → publish + verify (strict) | `.github/workflows/refresh-data.yml` |
+| Weekly Mon 07:00 UTC | Rescrape minutes → rebuild silver+gold → commit refreshed artifacts to `main` → publish + verify (strict) | `.github/workflows/refresh-data.yml` |
+| Monthly | Discover newly-held meetings from estero-fl.gov and open a PR with `app/data/extract/candidate_meetings.csv` (human merge gate) | `.github/workflows/discover-meetings.yml` |
 | Every 6 hours | `python -m app.pipeline.run --verify --strict` (read-only drift watch) | `.github/workflows/drift-watch.yml` |
 | Operator-triggered | Manual `workflow_dispatch` from the Actions UI (publish or refresh) | `.github/workflows/publish.yml`, `.github/workflows/refresh-data.yml` |
 | Local `git commit` (after `make install-dev`) | Pre-commit framework: rebuilds silver if you touched bronze/reference, stages the regenerated outputs into your commit | `.pre-commit-config.yaml` |
@@ -430,16 +447,9 @@ for another governing body (e.g. School Board), add an entry to
 `(type_id, project_id, location_id)`. Documents with an unrecognised
 `type_name` go to the rejects file with an actionable error.
 
-### 2. `action_taken` is still a `|`-joined blob
+### 2. Structured `meeting_actions` (DONE 2026-05-28)
 
-The cleaner fixes the OCR artifacts but the structure is still:
-
-```
-"Approved Resolution 2024-01. | Approved Contract EC 2024-07 with ..."
-```
-
-`split_actions()` in `clean/text.py` already breaks this into a list. The
-natural next step is a real `meeting_actions` table:
+The `action_taken` blob is now exploded during silver build into:
 
 ```
 meeting_actions
@@ -452,10 +462,16 @@ meeting_actions
   raw_text  (the cleaned clause)
 ```
 
-This unlocks proper SQL filtering ("show me all approved contracts over
-$100k") and structured ArcGIS popups.
+Backed files/modules:
 
-### 3. The scraper (PARTIALLY ADDRESSED 2026-05-28)
+- `app/data/silver/meeting_actions.csv`
+- `app/data/gold/meeting_actions_public.csv` (additive; existing 14-col meetings gold unchanged)
+- parser helpers in `app/pipeline/clean/actions.py` (`kind`, `reference_code`, `amount_usd`, `raw_text`)
+- API surface in `app/routers/actions.py` (**created but not mounted**)
+
+This unlocks SQL/API filtering like "show approved contracts over $100k."
+
+### 3. Meetings scraper/discovery (PARTIALLY ADDRESSED 2026-05-28)
 
 A minutes collector now lives at `app/pipeline/collect/minutes.py` (CLI
 shim at `scripts/scrape_minutes_index.py`). It scrapes canonical PDF URLs
@@ -464,19 +480,26 @@ from estero-fl.gov's Village Council + PZDB minutes index pages into
 confirm/replace document URLs and set `link_status`. The weekly
 `refresh-data.yml` workflow keeps it current.
 
-What's **still** missing is a *meetings* scraper: the bronze
-`meetings.csv` / `documents.csv` rows themselves are not auto-discovered.
-A clean follow-up is `app/pipeline/extract/` that detects newly-held
-meetings from estero-fl.gov and opens a PR appending them to bronze
-(human merge gate, not auto-commit) — see the optional step sketched in
-`refresh-data.yml`.
+This now exists as a proposal stage:
 
-### 4. No geocoding stage
+- `app/pipeline/extract/meetings.py`
+- `scripts/scrape_meetings.py`
+- `.github/workflows/discover-meetings.yml` (monthly + manual)
+- output: `app/data/extract/candidate_meetings.csv`
 
-`locations.yaml` is hand-edited. Adding `app/pipeline/enrich/geocode.py`
-that calls the US Census Geocoder (free, no API key) and caches results
-in `app/data/reference/geocode_cache.json` would let teammates add
-addresses without manually looking up lat/long.
+It discovers newly-held meetings and opens a PR with candidate rows for
+human review. It still **does not auto-edit bronze**, by design.
+
+### 4. Geocoding stage (PARTIALLY DONE 2026-05-28)
+
+`app/pipeline/enrich/geocode.py` now exists with a cache path
+(`app/data/reference/geocode_cache.json`) and offline-testable behavior.
+It is intentionally optional and currently a no-op for today's reference
+set (all locations already have coordinates).
+
+Related geo coverage improvement already landed: `geometries.yaml` now has
+real area polygons for the three septic zones (`location_id` 2/3/4), so
+`/api/v1/layers/areas` no longer relies only on fallback centroid boxes.
 
 ### 5. The CSV/silver-backed read-API — MOUNTED ✅
 
@@ -500,6 +523,10 @@ On top of the read-API, an **elderly-accessible interactive map dashboard**
 is served at **`/dashboard`** (`app/static/dashboard.html`, Leaflet +
 OpenStreetMap, vanilla JS, same-origin so no CORS). See the README
 "Interactive dashboard" subsection.
+
+For static GitHub Pages hosting, `dashboard.html` at the repo root provides
+the same experience without FastAPI routing by reading generated CSV/YAML
+files directly.
 
 Cleanups completed at the same time:
 

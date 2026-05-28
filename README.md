@@ -56,8 +56,9 @@ is a parallel serving copy for ArcGIS.
 bronze:    app/data/meetings.csv, app/data/documents.csv
 reference: app/data/reference/*.yaml  (projects, meeting_types, locations, geometries)
 minutes:   app/data/minutes_index.json  (canonical PDF URLs scraped from estero-fl.gov)
-silver:    app/data/silver/meetings.csv, documents.csv, documents_planned.csv, _rejects.json
-gold:      app/data/gold/meetings_public.csv  (denormalized 14-col CSV for index.html)
+silver:    app/data/silver/meetings.csv, documents.csv, documents_planned.csv, meeting_actions.csv, _rejects.json
+gold:      app/data/gold/meetings_public.csv, meeting_actions_public.csv
+extract:   app/data/extract/candidate_meetings.csv  (newly discovered meetings for PR review)
 runs:      app/data/runs/<UTC-timestamp>/manifest.json
 ```
 
@@ -65,6 +66,7 @@ Run it with:
 
 ```bash
 python scripts/scrape_minutes_index.py           # refresh minutes_index.json (network)
+python scripts/scrape_meetings.py                # discover newly-held meetings (proposal CSV only)
 python -m app.pipeline.run                       # build silver + gold (offline)
 python -m app.pipeline.run --publish             # silver + gold + upsert into Supabase
 python -m app.pipeline.run --verify              # silver + gold + diff vs Supabase
@@ -90,6 +92,9 @@ What the pipeline does:
   schema `index.html` parses (`ProjectName, MeetingType, MeetingDate,
   MeetingYear, Status, ActionTaken, StartTime, StaffCode, Title, MinutesURL,
   DocDate, LocationName, Latitude, Longitude`).
+- Parses structured meeting actions from `action_taken` into
+  `app/data/silver/meeting_actions.csv` and additive
+  `app/data/gold/meeting_actions_public.csv`.
 - Writes a run manifest with input/output row counts per stage, reject counts,
   output file SHA-256 hashes, and the git SHA — making each run reproducible.
 
@@ -101,6 +106,27 @@ index pages on estero-fl.gov, parses dates out of the PDF filenames, and writes
 Run it directly via the CLI shim `scripts/scrape_minutes_index.py`. The silver
 build and gold build both consume this index so the public site links straight
 to the authoritative PDFs.
+
+#### Discovering newly-held meetings (proposal stage)
+
+`app/pipeline/extract/meetings.py` discovers newly-held meetings from
+estero-fl.gov, diffs against the current bronze layer, and writes
+candidate rows to `app/data/extract/candidate_meetings.csv` for **human
+review** (never auto-edits bronze). Run via:
+
+```bash
+python scripts/scrape_meetings.py
+```
+
+Automation: `.github/workflows/discover-meetings.yml` runs monthly (and
+on manual dispatch) and opens a PR when new candidates are found.
+
+#### Geocode enrichment stage
+
+`app/pipeline/enrich/geocode.py` provides an optional US Census Geocoder
+stage with a JSON cache at `app/data/reference/geocode_cache.json`. It is
+offline-testable and currently a no-op with the committed reference data
+because all locations already have coordinates.
 
 #### Publishing to Supabase (serving copy for ArcGIS)
 
@@ -206,7 +232,8 @@ EagleGIS/
 |   |   |-- minutes_index.json      # GENERATED  canonical PDF URLs from estero-fl.gov
 |   |   |-- reference/*.yaml        # REFERENCE  projects, meeting_types, locations, geometries
 |   |   |-- silver/                 # GENERATED  validated + cleaned CSVs (+ _rejects.json)
-|   |   |-- gold/meetings_public.csv# GENERATED  denormalized 14-col CSV the frontend parses
+|   |   |-- gold/{meetings_public,meeting_actions_public}.csv  # GENERATED frontend/public CSVs
+|   |   |-- extract/candidate_meetings.csv  # GENERATED proposed new meetings for PR review
 |   |   |-- runs/                   # GENERATED  per-run manifests (gitignored)
 |   |   |-- csv_store.py            # read-only store over silver/bronze (backs the JSON/GeoJSON API)
 |   |   |-- mock.py                 # in-memory seed store (dead: get_store() returns CSVStore)
@@ -214,7 +241,10 @@ EagleGIS/
 |   |   |-- config.py               # filesystem paths, Estero bbox
 |   |   |-- reference.py            # cached YAML loader
 |   |   |-- collect/minutes.py      # scrape estero-fl.gov -> minutes_index.json
+|   |   |-- extract/meetings.py     # discover newly-held meetings -> candidate_meetings.csv
+|   |   |-- enrich/geocode.py       # optional US Census geocoder + cache
 |   |   |-- clean/text.py           # OCR-artifact cleaner
+|   |   |-- clean/actions.py        # structured action parser (kind/ref/amount)
 |   |   |-- validate/schemas.py     # Pydantic models + FK checks
 |   |   |-- load/silver.py          # bronze -> silver (+ minutes enrichment, synthesis)
 |   |   |-- publish/gold.py         # silver+reference+docs+minutes -> gold public CSV
@@ -227,11 +257,13 @@ EagleGIS/
 |   |   |-- feature_service.py      # LIVE  Esri Feature Service endpoint
 |   |   |-- {meetings,projects,documents,meeting_types,locations,layers}.py
 |   |   |                           # MOUNTED  silver-backed JSON/GeoJSON read-API under /api/v1
+|   |   |-- actions.py              # structured meeting-actions API (created, not mounted)
 |   |-- services/geojson.py         # GeoJSON builders for the layers router
 |   |-- models/                     # Pydantic API + GeoJSON schemas
 |
 |-- scripts/
 |   |-- scrape_minutes_index.py     # CLI shim for the minutes collector
+|   |-- scrape_meetings.py          # CLI shim for meetings discovery extractor
 |
 |-- tests/                          # pytest, no external credentials required
 |
@@ -239,6 +271,7 @@ EagleGIS/
     |-- ci.yml                      # tests + strict pipeline on every push/PR
     |-- publish.yml                 # publish + verify to Supabase (push to main, nightly, manual)
     |-- refresh-data.yml            # weekly: rescrape, rebuild silver+gold, commit, publish
+    |-- discover-meetings.yml       # monthly: discover meetings and open candidate PR
     |-- drift-watch.yml             # read-only Supabase drift check every 6 hours
 ```
 
@@ -266,6 +299,10 @@ Interactive docs are at `/docs`. The two original Supabase-backed routers
 A self-contained, **elderly-accessible** interactive map is served at
 **`/dashboard`**. It uses Leaflet + OpenStreetMap and consumes the
 mounted read-API on the same origin, so there are no CORS or build steps.
+
+For GitHub Pages (static hosting), use **`dashboard.html`** at the repo
+root. It preserves the same elderly-first UI and loads data directly from
+`app/data/gold/meetings_public.csv` and reference YAML files.
 
 Accessibility is a first-class requirement: large 18px+ rem-scaled text
 with a "Text size" (A / A+ / A++) control, high-contrast colors meeting
@@ -431,37 +468,18 @@ Your Supabase connection details can be found under Project Settings > Database 
 
 ---
 
-## Web Scraper
+## Web Scrapers / Collectors
 
-The Python web scraper in `scraper/scraper.py` extracts meeting records from the Village of Estero website.
+The project now uses two stdlib-only collectors in the pipeline:
 
-### Setup
+- `scripts/scrape_minutes_index.py` → canonical minutes PDF index at
+  `app/data/minutes_index.json`
+- `scripts/scrape_meetings.py` → proposed newly-held meetings at
+  `app/data/extract/candidate_meetings.csv` (for PR review, not auto-import)
 
-```bash
-cd scraper
-pip install -r requirements.txt
-```
-
-### Usage
-
-```bash
-python scraper.py
-```
-
-The scraper will output structured data that can be reviewed and then inserted into the database using the seed data scripts or direct SQL inserts.
-
-### How It Works
-
-1. The scraper sends HTTP requests to the Village of Estero public meeting pages on estero-fl.gov.
-2. It parses the HTML response to extract meeting dates, titles, agenda links, minute links, and associated project information.
-3. The extracted data is cleaned, deduplicated, and formatted to match the database schema.
-4. Output is saved in a format ready for database insertion.
-
-### Notes for Future Teams
-
-- The Village of Estero website structure may change over time. If the scraper stops working, inspect the current HTML structure of the meeting pages and update the parsing logic accordingly.
-- Always review scraped data before inserting it into the database. Some records may be incomplete or require manual correction.
-- Be respectful of the website's server. Add appropriate delays between requests and avoid excessive scraping frequency.
+Both scrape estero-fl.gov pages and are covered by offline parser tests.
+If the site structure changes, update selectors/patterns in
+`app/pipeline/collect/minutes.py` and/or `app/pipeline/extract/meetings.py`.
 
 ---
 
@@ -672,22 +690,22 @@ The most impactful next step is expanding coverage to include all Village of Est
 
 ### Potential Future Enhancements
 
-- Add a *meetings* scraper (not just minutes): auto-discover newly-held
-  meetings from estero-fl.gov and open a PR appending them to bronze
-  (human merge gate). See the optional step sketched in `refresh-data.yml`
-  and HANDOFF.md issue #3.
-- Structure `action_taken` into a real `meeting_actions` table so you can
-  filter (e.g. "all approved contracts over $100k"). See HANDOFF.md issue #2.
-- Add a geocoding stage (`app/pipeline/enrich/geocode.py`) using the free US
-  Census Geocoder so `locations.yaml` doesn't need hand-entered lat/long.
-  See HANDOFF.md issue #4.
+- ~~Add a meetings scraper (not just minutes)~~ **Done (proposal stage)** —
+  monthly `discover-meetings.yml` opens candidate PRs via
+  `app/data/extract/candidate_meetings.csv`.
+- ~~Structure `action_taken` into a real `meeting_actions` table~~ **Done** —
+  silver + gold action feeds are generated (`meeting_actions.csv`,
+  `meeting_actions_public.csv`).
+- ~~Add a geocoding stage (`app/pipeline/enrich/geocode.py`)~~ **Done
+  (optional stage)** — with JSON cache; currently a no-op for committed data.
 - Expand `locations.yaml` coverage; council meetings without a mapped
   location currently get blank `Latitude/Longitude` in the gold CSV.
 - ~~Mount the silver-backed JSON/GeoJSON read-API (HANDOFF.md issue #5)~~
   **Done** — the read-API is mounted under `/api/v1` and an
   elderly-accessible interactive dashboard is served at `/dashboard`.
-  Next: tighten CORS for production and expand the dashboard (e.g. date
-  range filters, area polygons once `area_geometries` is populated).
+  A GitHub Pages-compatible static version is available at
+  `dashboard.html`. Next: tighten CORS for production and expand dashboard
+  filtering (for example date ranges and actions).
 - Create user roles / access controls in Supabase if multiple volunteers
   will be entering data.
 
