@@ -9,48 +9,69 @@ If you only read one section, read **"Mental model"** and **"Daily commands"**.
 
 ---
 
-## Status (last updated 2026-05-09)
+## Status (last updated 2026-05-28)
 
 The pipeline is **up to date and fully wired**. Everything described below
 is live on `main` and operational:
 
+- **Minutes collection**: scrapes canonical PDF URLs from estero-fl.gov
+  (Village Council + PZDB) into `app/data/minutes_index.json`. ✅
 - **Bronze → silver refinement**: validation, cleaning, FK checks, atomic
-  writes, run manifest, rejects file. ✅
+  writes, run manifest, rejects file; now also confirms/replaces document
+  URLs and sets `link_status` from the minutes index. ✅
+- **Silver → gold public CSV**: `build_gold()` joins silver + reference +
+  documents + minutes into the denormalized 14-column CSV the public
+  GitHub Pages site parses (`app/data/gold/meetings_public.csv`). Runs
+  offline on every pipeline run. ✅
 - **Silver → Supabase publish**: idempotent, non-destructive, FK-safe,
-  field-sliced upsert. Now also resilient to per-table failures and to
-  secondary `UNIQUE(name)` collisions on reference tables (see "Recovering
-  from drift" below). ✅
+  field-sliced upsert. Resilient to per-table failures and to secondary
+  `UNIQUE(name)` collisions on reference tables (see "Recovering from
+  drift" below). ✅
 - **Supabase verify (redundancy check)**: read-back, diff vs silver,
   per-table drift report. ✅
-- **46 tests passing** (cleaner, validator, end-to-end, fake Supabase
-  including unique-constraint + reset-reference paths, cleanup SQL
-  generator, derived-meeting synthesis). ✅
+- **63 tests passing** (cleaner, validator, minutes collector, gold
+  builder, end-to-end, fake Supabase including unique-constraint +
+  reset-reference paths, cleanup SQL generator, derived-meeting
+  synthesis). ✅
 - **Automation**: GitHub Actions CI on every push/PR, scheduled publish
-  to Supabase nightly + on push to `main`, drift-watch every 6 hours,
-  manual dispatch, local pre-commit hooks, Dependabot. ✅
+  to Supabase nightly + on push to `main`, weekly data refresh
+  (rescrape + rebuild silver/gold + commit + publish), drift-watch every
+  6 hours, manual dispatch, local pre-commit hooks, Dependabot. ✅
 
 What's **not** done is in the "Open issues" section near the bottom — those
 are intentionally deferred for follow-up work, not bugs.
 
-> If you re-run `python -m app.pipeline.run --strict` right now you should
-> see `meetings: in=100 out=100 rejects=0` and the committed silver should
-> match byte-for-byte (`git diff --exit-code app/data/silver/`).
+> If you re-run `python -m app.pipeline.run` right now you should see
+> `meetings: in=100 out=176` (100 bronze Village Council + 76 synthesized
+> PZ&DB) and `gold ... rows: 176`. The committed silver/gold should match
+> byte-for-byte (`git diff --exit-code app/data/silver/ app/data/gold/`),
+> modulo minutes-index churn when estero-fl.gov posts new PDFs.
 
 ---
 
 ## Mental model
 
-The repo follows a **medallion architecture**:
+The repo follows a **medallion architecture**. Note the two serving copies:
+a denormalized **gold CSV** for the public GitHub Pages site, and **Supabase**
+for ArcGIS.
 
 ```
-bronze (raw)        →   silver (validated, cleaned)   →   gold (Supabase)
-app/data/*.csv          app/data/silver/*.csv             projects, meeting_types,
+bronze (raw)        →   silver (validated, cleaned)   →   gold (public CSV)        →  index.html (GitHub Pages)
+app/data/*.csv          app/data/silver/*.csv             app/data/gold/
+                                                          meetings_public.csv
+
+                                                      →   Supabase Postgres         →  ArcGIS (export + feature_service)
+                                                          projects, meeting_types,
                                                           locations, meetings, documents
-                                                          on Supabase Postgres
 
-reference (curated YAML, used by both)
-app/data/reference/*.yaml
+reference (curated YAML, used by all stages)             minutes index (canonical PDF URLs)
+app/data/reference/*.yaml                                 app/data/minutes_index.json
 ```
+
+`gold` is a single denormalized 14-column CSV (`build_gold()` in
+`app/pipeline/publish/gold.py`) joining silver + reference + documents +
+the minutes index. It is what the public site actually parses — see
+`CSV_URL` in `index.html`. Supabase remains the serving copy for ArcGIS.
 
 Three rules to keep in your head:
 
@@ -82,32 +103,51 @@ app/
 │   │   ├── documents.csv          (real documents only)
 │   │   ├── documents_planned.csv  (future placeholders, isolated)
 │   │   └── _rejects.json          (rows that failed validation, with reasons)
+│   ├── gold/                      GENERATED  do not hand-edit
+│   │   └── meetings_public.csv    denormalized 14-col CSV the public site parses
+│   ├── minutes_index.json         GENERATED  canonical PDF URLs scraped from estero-fl.gov
 │   ├── runs/                      GENERATED & gitignored  per-run manifest
 │   │   └── <UTC-timestamp>/manifest.json
-│   └── csv_store.py               read-only API the (mock) FastAPI service uses
+│   ├── csv_store.py               read-only store over silver/bronze (backs the JSON/GeoJSON API)
+│   └── mock.py                    in-memory seed store (unused, intentionally kept; get_store() returns CSVStore)
 │
 ├── pipeline/                      THE PIPELINE
-│   ├── config.py                  filesystem paths, Estero bbox constant
+│   ├── config.py                  filesystem paths (bronze/silver/gold/minutes), Estero bbox
 │   ├── reference.py               YAML loader (cached, has reload())
 │   ├── clean/text.py              OCR-artifact cleaner; pure functions, well-tested
+│   ├── collect/minutes.py         scrape estero-fl.gov → minutes_index.json (+ pure parsers)
 │   ├── validate/schemas.py        Pydantic models + FK checks + reject collection
-│   ├── load/silver.py             bronze → silver (atomic writes, dup checks)
+│   ├── load/silver.py             bronze → silver (atomic writes, dup checks, minutes enrich)
+│   ├── publish/gold.py            silver+reference+docs+minutes → gold public CSV
 │   ├── publish/supabase.py        silver+reference → Supabase (idempotent upsert)
 │   ├── verify/supabase.py         Supabase → diff vs silver+reference (drift report)
 │   ├── recover/cleanup_sql.py     emits "delete remote extras" SQL (operator tool)
 │   └── run.py                     CLI orchestrator + run-manifest writer
 │
-├── routers/
-│   ├── export.py                  Supabase-backed CSV exports for ArcGIS
-│   └── feature_service.py         Esri Feature Service endpoint
+├── routers/                       FastAPI read-API
+│   ├── export.py                  LIVE  Supabase-backed CSV exports for ArcGIS
+│   ├── feature_service.py         LIVE  Esri Feature Service endpoint
+│   └── {meetings,projects,documents,meeting_types,locations,layers}.py
+│                                  MOUNTED silver-backed JSON/GeoJSON read-API under /api/v1 (see issue #5)
 │
+├── services/geojson.py           GeoJSON builders for the layers router
+├── dependencies.py               get_store() — single swap point for the data layer
 ├── db.py                          Supabase client (get_client, try_get_client)
+├── main.py                        FastAPI app: mounts all routers + serves /dashboard
+├── static/dashboard.html         elderly-accessible interactive Leaflet map (served at /dashboard)
 └── ...
+
+scripts/
+└── scrape_minutes_index.py        CLI shim → app.pipeline.collect.minutes.collect_minutes_index()
 
 tests/                             pytest, no external dependencies
 ├── test_clean_text.py             OCR-artifact cleaning cases
 ├── test_validate.py               Pydantic schema + FK validation cases
+├── test_silver_synthesis.py       derived-meeting synthesis from documents
+├── test_minutes_collector.py      minutes filename/date parsing + URL resolution
+├── test_gold.py                   gold schema + join behaviour
 ├── test_pipeline_e2e.py           runs the pipeline against real bronze
+├── test_recover_cleanup_sql.py    cleanup-SQL generator
 └── test_supabase_publish_verify.py  uses an in-process FakeSupabaseClient
 ```
 
@@ -119,7 +159,7 @@ The `Makefile` is the primary command surface. Run `make help` for the full menu
 
 ```bash
 make install-dev          # one-time setup: venv, deps, pre-commit hooks
-make build                # build silver locally, no network
+make build                # build silver + gold locally, no network
 make test                 # run pytest
 make publish              # publish silver to Supabase + verify (needs SUPABASE_*)
 make publish-dry          # preview publish without remote calls
@@ -134,8 +174,11 @@ If you prefer the raw commands:
 # Install
 python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
 
-# Build silver / test / publish
-python -m app.pipeline.run                                              # offline
+# Refresh canonical PDF URLs from estero-fl.gov (network; updates minutes_index.json)
+python scripts/scrape_minutes_index.py
+
+# Build silver + gold / test / publish
+python -m app.pipeline.run                                              # offline (silver + gold)
 python -m app.pipeline.run --strict                                     # fail on rejects
 SUPABASE_URL=... SUPABASE_KEY=... python -m app.pipeline.run --publish --verify
 SUPABASE_URL=... SUPABASE_KEY=... python -m app.pipeline.run --publish --dry-run
@@ -162,16 +205,22 @@ and drift reports `2`, but a run with only drift reports `3`.
 
 ## Automation
 
-Pipeline runs in five different ways without anyone clicking a button:
+Pipeline runs in six different ways without anyone clicking a button:
 
 | Trigger | What runs | Where |
 |---|---|---|
 | Every push & PR | `pytest -q`, `python -m app.pipeline.run --strict`, "silver matches commit" guard | `.github/workflows/ci.yml` |
 | Push to `main` (data/pipeline files) | `python -m app.pipeline.run --publish --verify --strict` | `.github/workflows/publish.yml` |
 | Nightly at 06:00 UTC | Same publish + verify pass — re-asserts canonical state | `.github/workflows/publish.yml` (schedule) |
+| Weekly Mon 07:00 UTC | Rescrape minutes → rebuild silver+gold → commit refreshed `minutes_index.json` + `meetings_public.csv` to `main` → publish + verify (strict) | `.github/workflows/refresh-data.yml` |
 | Every 6 hours | `python -m app.pipeline.run --verify --strict` (read-only drift watch) | `.github/workflows/drift-watch.yml` |
-| Operator-triggered | Manual `workflow_dispatch` from the Actions UI, with optional `--dry-run` | `.github/workflows/publish.yml` |
+| Operator-triggered | Manual `workflow_dispatch` from the Actions UI (publish or refresh) | `.github/workflows/publish.yml`, `.github/workflows/refresh-data.yml` |
 | Local `git commit` (after `make install-dev`) | Pre-commit framework: rebuilds silver if you touched bronze/reference, stages the regenerated outputs into your commit | `.pre-commit-config.yaml` |
+
+The **weekly refresh** is what keeps the public site current: it commits
+the regenerated gold CSV back to `main`, so GitHub Pages serves fresh data
+without anyone running the pipeline by hand. It commits with `[skip ci]` to
+avoid a redundant publish from the push trigger.
 
 **One-time setup for the GitHub workflows:** in *Settings → Secrets and variables → Actions* on the GitHub repo, add `SUPABASE_URL` and `SUPABASE_KEY` (or `SUPABASE_SERVICE_KEY`). The workflows skip cleanly when secrets aren't set, so a fork or anyone without access can still run CI.
 
@@ -406,12 +455,21 @@ meeting_actions
 This unlocks proper SQL filtering ("show me all approved contracts over
 $100k") and structured ArcGIS popups.
 
-### 3. The scraper is gone
+### 3. The scraper (PARTIALLY ADDRESSED 2026-05-28)
 
-`README.md` mentions a `scraper/` directory that doesn't exist in the repo.
-Re-introducing it as `app/pipeline/extract/` that writes timestamped raw
-files to a `bronze/` subfolder (with provenance: source URL, fetch time)
-is a clean unit of work.
+A minutes collector now lives at `app/pipeline/collect/minutes.py` (CLI
+shim at `scripts/scrape_minutes_index.py`). It scrapes canonical PDF URLs
+from estero-fl.gov's Village Council + PZDB minutes index pages into
+`app/data/minutes_index.json`, and the silver build uses that index to
+confirm/replace document URLs and set `link_status`. The weekly
+`refresh-data.yml` workflow keeps it current.
+
+What's **still** missing is a *meetings* scraper: the bronze
+`meetings.csv` / `documents.csv` rows themselves are not auto-discovered.
+A clean follow-up is `app/pipeline/extract/` that detects newly-held
+meetings from estero-fl.gov and opens a PR appending them to bronze
+(human merge gate, not auto-commit) — see the optional step sketched in
+`refresh-data.yml`.
 
 ### 4. No geocoding stage
 
@@ -420,14 +478,45 @@ that calls the US Census Geocoder (free, no API key) and caches results
 in `app/data/reference/geocode_cache.json` would let teammates add
 addresses without manually looking up lat/long.
 
-### 5. The mock CSV-backed routers aren't wired up
+### 5. The CSV/silver-backed read-API — MOUNTED ✅
 
 `app/routers/{projects,meetings,meeting_types,locations,layers,documents}.py`
-all use `app/dependencies.py::get_store()` (which reads silver/bronze
-locally) but they aren't included in `app/main.py`. They're functional but
-not mounted — only `export` and `feature_service` are. If we ever want a
-"local mode" for ArcGIS-style endpoints without Supabase, mount these in
-`main.py`.
+are a typed JSON + GeoJSON read-API (initial commit `5292f92`, authored by
+Ethan Malavia). They use `app/dependencies.py::get_store()` →
+`app/data/csv_store.py` (and `app/services/geojson.py` for the `layers`
+router), which serves the **canonical silver layer** (falling back to
+bronze).
+
+**Status: done.** All six routers are now mounted in `app/main.py` under
+`settings.api_v1_prefix` (`/api/v1`), alongside the unchanged
+Supabase-backed `export` and `feature_service`. Because the store reads
+silver, these endpoints are *not* a competing source of truth; they expose
+the same canonical data the pipeline produces, as filterable JSON
+(`/api/v1/meetings?project_id=…`) and ArcGIS-ready GeoJSON
+(`/api/v1/layers/points`). The whole read-API works with **no Supabase
+credentials**.
+
+On top of the read-API, an **elderly-accessible interactive map dashboard**
+is served at **`/dashboard`** (`app/static/dashboard.html`, Leaflet +
+OpenStreetMap, vanilla JS, same-origin so no CORS). See the README
+"Interactive dashboard" subsection.
+
+Cleanups completed at the same time:
+
+- The router `store:` annotations were switched from `MockStore` to
+  `CSVStore` (matching what `get_store()` actually returns).
+- `app/data/mock.py` is **intentionally kept but unused** (it is not
+  imported anywhere now). It remains as reference seed data; delete it only
+  if a future cleanup wants to remove the dead code.
+- `tests/test_api_routers.py` is a credential-free `TestClient` smoke test
+  that builds an app from just these routers (so it doesn't import
+  `app.main` / the `supabase` path) and asserts each endpoint returns 200
+  against the committed silver.
+
+Possible follow-ups: tighten CORS for production, and populate
+`area_geometries` in `geometries.yaml` so `/api/v1/layers/areas` returns
+real polygons (currently it falls back to small centroid boxes for
+Infrastructure/Park/Development locations that have coordinates).
 
 ### 6. CI is configured but secrets need to be set
 
@@ -480,12 +569,14 @@ than ad-hoc — please push back on PRs that try to undo them.
   function that takes a client/config and returns a report dict, plus a
   flag in `run.py` and a manifest section. Keep stages pure if possible.
 - **GitHub Pages** (`index.html`) does **not** read Supabase. It loads the
-  denormalized CSV at `CSV_URL` (defaults to Raw GitHub on branch
-  `script/pdfs`). Full-text search in the browser uses MiniSearch against
-  that file only. Updating silver or running `publish.yml` does not refresh
-  the Pages dataset — regenerate the CSV (or change `CSV_URL`) so the map
-  and search UI stay aligned with canonical data (see README, «GitHub Pages
-  frontend»).
+  denormalized gold CSV at `CSV_URL`, which now points to the
+  pipeline-generated `app/data/gold/meetings_public.csv` on `main` (no more
+  `script/pdfs` side branch). Full-text search in the browser uses
+  MiniSearch against that file only. The gold CSV is regenerated on every
+  `python -m app.pipeline.run` and committed to `main` by the weekly
+  `refresh-data.yml` workflow, so the Pages dataset tracks canonical data
+  automatically. If you build silver/gold locally, commit the regenerated
+  `app/data/gold/meetings_public.csv` to update the live site.
 - **The `Estero bounding box`** is `app/pipeline/config.py::ESTERO_BBOX`.
   Use it in any new geo-validation code so the bounds stay consistent.
 
