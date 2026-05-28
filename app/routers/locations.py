@@ -1,6 +1,6 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
-from app.data.mock import MockStore
+from app.data.csv_store import CSVStore
 from app.dependencies import get_store
 from app.models.schemas import Location, LocationDetail, LocationType
 
@@ -11,13 +11,13 @@ router = APIRouter(prefix="/locations", tags=["Locations"])
 def list_locations(
     project_id: Optional[int] = Query(None, description="Filter by project"),
     location_type: Optional[LocationType] = Query(None, description="Filter by feature type"),
-    store: MockStore = Depends(get_store),
+    store: CSVStore = Depends(get_store),
 ):
     return store.get_locations(project_id=project_id, location_type=location_type)
 
 
 @router.get("/{location_id}", response_model=LocationDetail, summary="Get a location with project name and meeting count")
-def get_location(location_id: int, store: MockStore = Depends(get_store)):
+def get_location(location_id: int, store: CSVStore = Depends(get_store)):
     location = store.get_location(location_id)
     if not location:
         raise HTTPException(status_code=404, detail=f"Location {location_id} not found")

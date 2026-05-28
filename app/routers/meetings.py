@@ -1,6 +1,6 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
-from app.data.mock import MockStore
+from app.data.csv_store import CSVStore
 from app.dependencies import get_store
 from app.models.schemas import Meeting, MeetingDetail, MeetingStatus
 
@@ -13,7 +13,7 @@ def list_meetings(
     year: Optional[int] = Query(None, ge=2015, le=2030, description="Filter by meeting year"),
     status: Optional[MeetingStatus] = Query(None, description="Filter by outcome status"),
     type_id: Optional[int] = Query(None, description="Filter by meeting type ID"),
-    store: MockStore = Depends(get_store),
+    store: CSVStore = Depends(get_store),
 ):
     return store.get_meetings(
         project_id=project_id,
@@ -24,7 +24,7 @@ def list_meetings(
 
 
 @router.get("/{meeting_id}", response_model=MeetingDetail, summary="Get a meeting with project context and documents")
-def get_meeting(meeting_id: int, store: MockStore = Depends(get_store)):
+def get_meeting(meeting_id: int, store: CSVStore = Depends(get_store)):
     meeting = store.get_meeting(meeting_id)
     if not meeting:
         raise HTTPException(status_code=404, detail=f"Meeting {meeting_id} not found")

@@ -33,7 +33,7 @@ _GEO_MEDIA = "application/json"
 )
 def get_point_layer(
     project_id: Optional[int] = Query(None, description="Restrict to a single project"),
-    store: MockStore = Depends(get_store),
+    store: CSVStore = Depends(get_store),
 ):
     fc = build_point_layer(store, project_id=project_id)
     return Response(content=fc.model_dump_json(), media_type=_GEO_MEDIA)
@@ -50,7 +50,7 @@ def get_point_layer(
 )
 def get_road_layer(
     project_id: Optional[int] = Query(None),
-    store: MockStore = Depends(get_store),
+    store: CSVStore = Depends(get_store),
 ):
     fc = build_road_layer(store, project_id=project_id)
     return Response(content=fc.model_dump_json(), media_type=_GEO_MEDIA)
