@@ -1,0 +1,299 @@
+action_id,meeting_id,sequence,kind,reference_code,amount_usd,raw_text
+1,1,0,Adopted,,,Adopted the Village of Estero Information Security Policy.
+2,1,1,Accepted Payment,,30000.0,"Accepted a payment of $30,000 from ProEnergy, LLC, in compromise of the Village's code enforcement lien on the owner's property at 8800 Corkscrew Road, and to authorize the Village Manager or his designee to file a release of lien once the payment has been made. Vote : (Roll Call) Aye:"
+3,1,2,Approved Contract,EC 2024-07,249480.0,"Approved Contract EC 2024-07 with Johnson Engineering, Inc. to prepare the Village Wide Traffic Study for $249,480, approve a $25,000 contingency for additional services that may be required to complete the project, authorize the Village Manager to sign the contract and other additional implementing documents within the scope of the contract on behalf of the Village of Estero"
+4,1,3,Approved Contract,EC 2024-06,,Approved contract EC 2024-06 with Florida Acquisition Services to provide right -of-way acquisition services to the Village of Estero and authorize the Village Manager to sign the contract and other implementing documents within the scope of the contract on behalf of the Village of Estero
+5,1,4,Approved Change Order,EC 2022-83,8500.0,"Approved Change Order No. 1 in the amount of $8,500.00 to Contract EC 2022-83 with National Water Main Cleaning Company for the gravity sewer line testing in the Estero Bay Village, Sunny Grove, and Cypress Bend mobile home developments, approve a 10% (of the total project cost) project contingency of $9,400, and authorize the Village Manager to"
+6,2,0,Adopted,,,Adopted the Village of Estero Information Security Policy.
+7,2,1,Accepted Payment,,30000.0,"Accepted a payment of $30,000 from ProEnergy, LLC, in compromise of the Village's code enforcement lien on the owner's property at 8800 Corkscrew Road, and to authorize the Village Manager or his designee to file a release of lien once the payment has been made. Vote : (Roll Call) Aye:"
+8,2,2,Approved Contract,EC 2024-07,249480.0,"Approved Contract EC 2024-07 with Johnson Engineering, Inc. to prepare the Village Wide Traffic Study for $249,480, approve a $25,000 contingency for additional services that may be required to complete the project, authorize the Village Manager to sign the contract and other additional implementing documents within the scope of the contract on behalf of the Village of Estero"
+9,2,3,Approved Contract,EC 2024-06,,Approved contract EC 2024-06 with Florida Acquisition Services to provide right -of-way acquisition services to the Village of Estero and authorize the Village Manager to sign the contract and other implementing documents within the scope of the contract on behalf of the Village of Estero
+10,2,4,Approved Change Order,EC 2022-83,8500.0,"Approved Change Order No. 1 in the amount of $8,500.00 to Contract EC 2022-83 with National Water Main Cleaning Company for the gravity sewer line testing in the Estero Bay Village, Sunny Grove, and Cypress Bend mobile home developments, approve a 10% (of the total project cost) project contingency of $9,400, and authorize the Village Manager to"
+11,3,0,Adopted Resolution,2017-02,,Adopted Resolution No. 2017-02.
+12,3,1,Adopted Resolution,2017-03,,Adopted Resolution No. 2017-03 and approved the agreement between the Village and Pritchard Construction LLC as amended.
+13,3,2,Approved Agreement,,,Approved the Traffic Signal Maintenance Agreement with Lee County
+14,3,3,Passed,,,Passed first reading and set second reading and
+15,3,4,Passed Ordinance,2016-15,,Passed second reading and adopted Ordinance No. 2016-15.
+16,3,5,Passed Ordinance,2016-16,,Passed second reading and adopted Ordinance No. 2016-16.
+17,4,0,Approved Change Order,EC 2019-36,46980.0,"Approved Change Order #1 to Contract EC 2019-36 in t he amount of $46,980 with Coastal Engineering Consultants, Inc. for additional work required to address environmental permit application questions from the Florida Department of Environmental Protection for the propos ed dredging of sediments from the Estero River."
+18,4,1,Accepted Settlement,,14400.0,"Accepted the Village's portion of the Opiod Settlement in the amount of $14,400."
+19,5,0,Approved Ordinance,2016-01,,Approved first reading of Ordinance No. 2016-01.
+20,5,1,Adopted Resolution,2016-01,,Adopted Resolution No. 2016-01.
+21,5,2,Adopted Resolution,2016-02,,Adopted Resolution No. 2016-02.
+22,5,3,Adopted Resolution,2016-03,,Adopted Resolution No. 2016-03.
+23,5,4,Other,,,No action required. 8.
+24,6,0,Approved Task Authorization,EC 2022-38,193411.0,"Approved award of Task Authorization 14 to Contract EC 2022-38 to Johnson Engineering to provide water monitoring services for The Village of Estero for $193,411, approve a $19,000 contingency for additional services that may be required to complete the project, and authorize the Village Manager to sign the STA and other additional implementing documents within the scope of the STA on behalf of the Village of Estero"
+25,6,1,Passed,,,"Passed first reading and schedule second reading for February 5, 2025 and the applica nt will provide us with additional information."
+26,6,2,Passed,,,"Passed first reading and schedule second reading for January 22, 2025."
+27,7,0,Directed,,,Directed Village Land Use Attorney Nancy Stroud to investigate the merits
+28,7,1,Continued,,,"Continued deliberations to 9:00 a.m. on January 20, 2016."
+29,8,0,Other,,,No action found
+30,9,0,Approved,,,Approved to permit
+31,9,1,Approved Ordinance,2021-01,,Approved Ordinance 2021-01.
+32,10,0,Approved Agreement,,,Approved Interlocal Agreement for Election Services with the Supervisor of Elections.
+33,10,1,Approved Contract,EC 2024-10,151440.0,"Approved EC 2024-10 in the amount of $151,440 for CW3 Engineering, Inc. to provide construction engineering and inspection services for the Estero on the River Phase 1 Improvements, approve a $15,000 contingency for additional services tha t may be required to complete the project and authorize the Village Manager to sign the contract and other additional implementing documents within the scope of the contract on behalf of the Village of Estero"
+34,10,2,Approved Contract,EC 2024-09,490560.65,"Approved EC 2024-09 in the amount of $490,560.65 for HighSpans Engineering, Inc. to provide construction engineering and inspection services for the Sandy Lake Bike/Ped Improvements, approve a $49,000 contingency for additional services that may be required to complete the project, and authorize the Village Manager to sign the contract and other additional i mplementing documents within the scope of the contract on behalf of the Village of Estero"
+35,10,3,Adopted Resolution,2024-02,,Adopted Resolution No. 2024-02. Vote : (Roll Call) Aye:
+36,10,4,Approved Agreement,,,Approved Agreement of Purchase and Sale Agreement for the purchase of 20897 Three Oaks Parkway. Vote : (Roll Call) Aye:
+37,10,5,Approved Lease,,,Approved Recreation Lease Agreement with the Lee County School Board . Vote : (Roll Call) Aye:
+38,11,0,Approved,,,Approved to permit
+39,11,1,Approved Resolution,2021-01,,Approved Resolution No. 2021-01.
+40,11,2,Adopted Ordinance,2020-10,,"Adopted the Land Development Code Ordinance 2020-10 and Official Zoning Map as amended in the ""Addendum of Recommended Changes "" document dated January 19, 2021 as well as the addition of a sentence to Table 3- 405.C that states ""A stand -alone car wash which has applied but has not been determined to be complete for an application for Development Order prior to January 27, 2021, and which submits a complete application for Development Order prior to April 27, 2021, a permitted use and not a special exception use shall apply."""
+41,12,0,Other,,,Estero Chamber of Commerce approval of financial support for Strategic Plans for Future Growth and Impact .
+42,12,1,Passed Ordinance,2020-11,,Passed first reading of Ordinance No. 2020-11 and schedule second reading/
+43,12,2,Passed Ordinance,2021-01,,Passed first reading of Ordinance No. 2021-01 and schedule second reading/
+44,12,3,Approved,,,Approved m otion for a continuance until February 3 with the goal of making a final decision .
+45,12,4,Adopted Ordinance,2020-07,,Adopted Ordinance 2020-07.
+46,13,0,Passed Ordinance,2023-01,,"Passed first reading of Zoning Ordinance 2023-01 and set seco nd reading for February 15, 2023."
+47,14,0,Adopted Resolution,2022-02,,Adopted Resolution No. 2022-02.
+48,14,1,Approved,,,Approved the consultants ranking for Sandy Lane and Broadway East Bicycle/Pedestrian Improvements Pro ject as follows: Number
+49,14,2,Approved,,,"Approved the consultants ranking for Broadway Avenue West Utilities Extension Project (UEP) as follows: Number 1 - Johnson Engineering, Inc.; Number 2 - Tetra Tech, Inc. ; Number 3 - CW3 Engineering, Inc.; Number 4 - JR Evans Engineering, P.A., and authorize"
+50,14,3,Approved,,,"Approved the consultants ranking for Broadway Avenue East Utilities Extension Project (UEP) as follows: Number 1 - Tetra Tech, Inc.; Number 2 - Johnson Engineering, Inc.; Number 3 - CW3 Engineering, Inc .; Number 4 - JR Evans Engineering, P.A., and authorize"
+51,15,0,Approved Resolution,2025-01,,"Approved Resolution No. 2025-01 to reappoint two (2) Planning, Zoning, and Design Board members for a one -year term."
+52,15,1,Adopted Ordinance,2024-14,,Adopted Ordinance No. 2024-14 with
+53,16,0,Approved,,,Approved schedule for Planning Zoning and Design Board appointments.
+54,16,1,Adopted Resolution,2024-03,,Adopted Resolution No. 2024-03. Vote : (Roll Call) Aye:
+55,16,2,Approved Easement,EC 2024-06,47200.0,"Approved EC 2024-06 STA - 02 in the amount of $47,200 for Florida Acquisition & Appraisal Inc. to provide easement acquisition services for the Sandy Lane Bike/Ped Improvements Project, approve a $4,700 contingency for additional services that may be required to complete the project, and authorize the Village Manager to sign the contract and other additional implementing documents within the scope of the contract on behalf of the Village of Estero"
+56,16,3,Approved Easement,EC 2024-06,200600.0,"Approved EC 2024-06 STA -03 in the amount of $200,600 for Florida Acquisition & Appraisal Inc. to provide easement acquisition services for the River Ranch Road Improvements Project, approve a $20,000 contingency for additional services that may be required to complete the project, and authorize the Village Manager to sign the contract and other additional implementing documents within the scope of the contract on behalf of the Village of Estero"
+57,16,4,Approved Contract,EC 2019-66,236405.0,"Approved EC 2019-66 STA -42 in the amount of $236,405 for P & T Lawn & Tractor Services, Inc. to install landscaping along US 41 from Williams Road to south of Estero Parkway, approve a $23,000 contingency for additional services that may be required to complete the project, and authorize the Village Manager to sign the contract and other additional implementing documents within the scope of the contract on"
+58,16,5,Approved Easement,EC 2024-06,59000.0,"Approved EC 2024-06 STA - 01 in the amount of $59,000 for Florida Acquisition & Appraisal Inc. to provide easement acquisition services for the Corkscrew Road Pathway Improvements Project, approve a $5,900 contingency for additional services that may be required to complete the project, and authorize the Village Manager to sign the contract and other additional implementing documents within the scope of the contract on behalf of the Village of Estero"
+59,17,0,Other,,,Appointed Robert King as Village CAC Representative to MPO.
+60,17,1,Accepted,,,"Accepted the letter of resignation from Jeffrey Mass dated January 12, 2016 and directed the Village Clerk to advertise the vacancy and solicit applications."
+61,17,2,Adopted Resolution,2016-05,,Adopted Resolution 2016-05 as amended.
+62,17,3,Authorized,,,"Authorized the Mayor to sign the letter and approved and endorsed the white paper entitled ""Caloosahatchee Watershed Regional Water Management Issues."""
+63,17,4,Adopted Resolution,2016-04,,Adopted Resolution No. 2016-04.
+64,18,0,Approved Agreement,2021-2022,,Approved the 2021-2022 Interlocal Agreement between Village of Estero and Lee County for Stray Animal Control Services.
+65,19,0,Approved Easement,,104994.23,"Approved a perpetual sidewalk easement agreement with GL Homes to obtain an easement for the path along the River Creek Community and pay GL Homes $104,994.23 after they build the path using asphalt as the material, approve a $10,000 contingency for additional services that may be required to complete the project, and authorize the Village Manager to sign the sidewalk easement agreement and other additional implementing documents within the scope of the agreement on behalf of the Village of Estero"
+66,19,1,Other,2024-03,,"P assed first reading of Ordinance No. 2024-03 and set second reading for March 6, 2024. Vote : (Roll Call) Aye:"
+67,20,0,Approved Resolution,2021-02,,Approved Resolution No. 2021-02 and authorize the Village to modify the Resolution if needed.
+68,21,0,Approved,,,Approved to permit
+69,21,1,Denied Ordinance,2020-09,,"Denied request to amend the zoning for the Estero Town Center CPD for a Firestone Complete Auto C are, and adopt Ordinance 2020-09."
+70,21,2,Approved Contract,EC 2020-56,,"Approved the Williams Road Bicycle and Pedestrian Improvements - Concept Design contract with Banks Engineering under Supplemental Task Authorization (STA) - 01 Contract EC 2020-56 Miscellaneous Professional Services to perform a suite of desi gn services for the Bicycle & Pedestrian improvements along Williams Road, betwe en US 41 and"
+71,21,3,Approved Task Authorization,,,"Approved Ben Hill Griffin Parkway Preliminar y Landscape Design contracts with Bruce Howard and Associates under EC2020-42 and RWA Engineering under EC2020-67 to perform a suite of design services for the proposed landscape improvements along Ben Hill Griffin Parkway from Corkscrew Road to Estero Pa rkway, a pprove a 10% contingency for additional services that may be r equired to complete the project, and Authorize the Village Manager to sign the Supplemental Task Authorization (STA) and other additional implementing documents within the scope of the S TAs on behalf of the Village of Estero"
+72,22,0,Other,EC 2019-06,69968.0,"A pprove s Supplemental Task Authorization (STA) -34 under contract EC 2019-06 to P & T Lawn and Tractor Service, Inc. to construct and install a monument sign on US 41 at a total cost of $69,968, approve a contingency fund amount of $7,000 (an amount equal to 10% of the total project cost) to cover unforeseen circumstances which may occur, and authorize the Village Manager to execute the STA on behalf of the Village of Estero"
+73,22,1,Approved Ordinance,,,Approved Ordinance No. 2023 -02 the recommended changes made by the P lanning Zoning and Design Board.
+74,23,0,Approved Contract,EC 2024-26,1967667.0,"Approved EC 2024-26 in the amount of $1,967,667 for Hellas Construction, Inc. to install artificial turf on The Jeff Sommer Stadium football field, approve a $197,000 contingency for additional services that may be required to complete the project, and authorize the Village Manager to sign the contract and other additional implementing documents within the scope of the contract on behalf of the Village of Estero"
+75,23,1,Approved Agreement,,,"Approved the attached Professional Services agreement with Vieste, LLC."
+76,23,2,Other,2024-01,,"P assed first reading of Ordinance No. 2024-01 and set second reading for March 20, 2024."
+77,23,3,Other,2024-02,,"P assed first reading of Ordinance No. 2024-02 and set second reading for March 20, 2024."
+78,23,4,Other,2024-04,,"P assed first reading of Ordinance No. 2024-04 and set second reading for March 20, 2024."
+79,23,5,Adopted Ordinance,2024-03,,Adopted Ordinance No. 2024-03 subject to changing the word enforcement to compliance .
+80,24,0,Approved,,,"Approved continuing to a date certain, March 23, 2016."
+81,133,0,Other,,,No action found
+82,25,0,Approved,,,"Approved initiation of a rezoning and Comprehensive Plan Amendme nt for property south of Estero River, East of US 41 and north of Corkscrew Road ."
+83,25,1,Approved,,,"Approved the purchase of the 10- acre vacant parcel, commonly known as ""River Oaks"" at the east end of Broadway Avenue."
+84,25,2,Approved Agreement,,,"Approved First Addendum to Peoples Gas System, Inc. ""(TECO)"" Franchise Agreement Ordinance 2021 -09."
+85,25,3,Approved Contract,,671513.25,"Approved the contract with Atkins North Amer ica to provide design and permitting services for the Sandy Lane and Broadway East Bicycle/Pedestrian Improvements Project in the amount of $671,513.25, approve a contingency fund amount of $67,000 (an amount equal to 10% of the total project cost) to cove r unforeseen circumstances which may occur, and authorize the Vi llage Manager to execute t he contract with Atkins North America and"
+86,26,0,Approved,,,"Approved initiation of a rezoning and Comprehensive Plan Amendme nt for property south of Estero River, East of US 41 and north of Corkscrew Road ."
+87,26,1,Approved,,,"Approved the purchase of the 10- acre vacant parcel, commonly known as ""River Oaks"" at the east end of Broadway Avenue."
+88,26,2,Approved Agreement,,,"Approved First Addendum to Peoples Gas System, Inc. ""(TECO)"" Franchise Agreement Ordinance 2021 -09."
+89,26,3,Approved Contract,,671513.25,"Approved the contract with Atkins North Amer ica to provide design and permitting services for the Sandy Lane and Broadway East Bicycle/Pedestrian Improvements Project in the amount of $671,513.25, approve a contingency fund amount of $67,000 (an amount equal to 10% of the total project cost) to cove r unforeseen circumstances which may occur, and authorize the Vi llage Manager to execute t he contract with Atkins North America and"
+90,27,0,Other,,,No action found
+91,28,0,Other,,,Elected Vice Mayor Errington to be Mayor.
+92,28,1,Approved Resolution,2021-04,,Approved Resolution 2021-04.
+93,28,2,Authorized,,,"Authorized the M ayor to provide letters to our legislative deleg ation on several issues of local government preemption that are being considered by the legislature, one being building design standards preemption, the other being the comprehensive plan language in S enate Bill 284, and the language in House Bill 403, which is the home-based business preemption."
+94,29,0,Other,,,No action found
+95,30,0,Approved Grant,EC 2023-38,203782.0,"Approved EC 2023-38 STA -02 in the amount of $203,782 for Hagerty Consulting, Inc. to assist the Village of Estero in preparing and submitting CDBG -DR Infrastructure Grant applications, approve a $20,000 contingency for additional services that may be required to complete the project, and authorize the Village Manager to sign the contract and other additional implementing documents within the scope of the contract on behalf of the Village of Estero"
+96,30,1,Approved Agreement,EC 2024-27,,Approved EC 2024-27 Chris -Tel Construction Piggyback Agreement for Construction Manager at Risk services and to authorize the Village Manager to execute the agreement and any related documents or amendments as may be necessary.
+97,30,2,Approved Agreement,EC 2024-28,,Approved EC 2024-28 Manhattan Construction Piggyback Agreement for Construction Manager at Risk services and to authorize the Village Manager to execute the agreement and any related documents or amendments as may be necessary.
+98,30,3,Adopted Ordinance,2024-01,,Adopted Ordinance No. 2024-01.
+99,30,4,Adopted Ordinance,2024-02,,Adopted Ordinance No. 2024-02.
+100,30,5,Adopted Ordinance,2024-04,,Adopted Ordinance No. 2024-04.
+101,31,0,Adopted Ordinance,2016-02,,Adopted Ordinance No. 2016-02 as amended.
+102,31,1,Accepted,,,"Accepted all submissions, appointed the Village Manager, Finance"
+103,31,2,Accepted,,,"Accepted all submissions, appointed the Village Manager, Finance Director and Community Development Director as the interview committee, directed the committee to interview each firm (these would be posted and"
+104,31,3,Awarded,,,Awarded the bid to ProAudio Services with the recommended add-ons.
+105,31,4,Authorized,,,"Authorized the Village Manager to submit a letter to Lee County requesting support for traffic control for Bella Terra and Corkscrew Road, the sidewalk project on Estero Parkway, and resurfacing Estero Parkway."
+106,31,5,Approved,,,Approved commencing
+107,32,0,Other,,,No action found
+108,33,0,Passed Ordinance,2016-04,,Passed first reading and transmittal of Ordinance No. 2016-04.
+109,34,0,Adopted Resolution,2025-06,,Adopted Resolution No. 2025-06.
+110,34,1,Adopted,,,Adopted the First Amendment .
+111,34,2,Other,,,"A uthorized a deeper solicitation process to search for additional, complimentary sports, entertainment and recreational partners within the Village Center Hub ."
+112,34,3,Approved Contract,EC 2022-33,,Approved award of Contract EC 2022-33 Change Order 01 to RWA Engineering to provide additional professional services to update design changes. Vote : (Roll Call) Aye:
+113,34,4,Approved Agreement,,,Approved the BERT Memorandum of Agreement and to authorize the Village Manager to approve any minor revisions requested by the other partners to the agreement .
+114,34,5,Approved Ordinance,2025-03,,"Approved Ordinance No. 2025-03 on First Reading and schedule Second Reading for April 16, 2025."
+115,35,0,Other,2024-04,,"Selected Al Paivandy, James E Tatooles, and Leonard E Scotty Wood III to a one -year term to the Planning, Zoning, and Design Board members, Dan Williams, Anthony Gargano, and Michael Sheeley to a three -year term to the Planning Zoning and Design Board and approve Resolution No. 2024-04. Vote : (Roll Call) Aye:"
+116,35,1,Other,,,Selected Anthony Gargano as Chairperson of the Planning Zoning and Design Board.
+117,35,2,Approved,,,Approved the Framework of Cooperation Between the Village of Estero and the Estero Forever Foundation.
+118,35,3,Approved Agreement,EC 2024-29,,Approved EC 2024-29 Wright Construction Group Piggyback Agreement for Construction Manager At Risk services and to authorize the Village Manager to execute the agreement and any related documents or amendments as may be necessary.
+119,35,4,Approved Contract,EC 2019-66,57500.0,"Approved EC 2019-66 STA -44 in the amount of $57,500 with P & T Lawn & Tractor to relocated twelve palm trees at Jeff Sommer Stadium, approve a $5,000 contingency for additional services that may be required to complete the project, and authorize the Village Manager to sign the contract and other additional implementing documents within the scope of the contract on behalf of the Village of Estero"
+120,35,5,Approved Contract,EC 2022-38,175486.0,"Approved EC 2022-38 STA-13 in the amount of $175,486 with Johnson Engineering to perform construction site inspections for all projects within the Village of Estero, approve a $17,000 contingency for additional services that may be required to complete the project, authorize the Village Manager to sign the contract and other additional implementing documents within the scope of the contract on behalf of the Village of Estero"
+121,36,0,Adopted Resolution,2023-07,,Adopted Resolution No. 2023-07.
+122,36,1,Adopted Resolution,2023-08,,Adopted Resolution No. 2023-08.
+123,37,0,Other,,,No action found
+124,38,0,Adopted Resolution,2022-03,,Adopted Resolution 2022-03 which approves the updated Multijurisdictional Program for
+125,38,1,Approved,,,Approved final P lat for Estero Crossing .
+126,38,2,Approved,,,Approved final Pla t for Rivercreek Phase One (formerly known as Corkscrew Crossing) .
+127,38,3,Approved Resolution,2022-05,,"Approved Resolution No. 2022-05 to purchase the 10- acre vacant parcel, commonly known as ""River Oaks"" at the east end of Broadway Avenue."
+128,38,4,Approved Resolution,2022-06,,"Approved Resolution No. 2022-06 Commercial Contract for the Purchase of Real Estate from Gess Family Partnership + Gulf Coast Driving Range LLC, Located at 9000 Wi lliams Road, Estero, Florida ."
+129,38,5,Approved,,,Approved the following list of short -listed firms listed below. Delegate authority to
+130,39,0,Other,,,No action found
+131,40,0,Approved Resolution,2021-10,,Approved Resolution 2021-10.
+132,40,1,Approved Resolution,2021-12,,Approved Resolution 2021-12.
+133,40,2,Approved Contract,RFB 2021-02,118075.0,"Approved award of Request for Bids No. RFB 2021-02, US 41 Landscape Improvements Broadway East to Vintage Parkway and Coconut Road to Fountain Lakes Boulevard to P & T Lawn and Tractor Service, Inc. at a Grand Total Cost of $118,075, ap prove a contingency fund amount of $11,800 (an amount equal to 10% of the total project cost) to cover unforeseen circumstances which may occur, and a uthorize the Village Manager to execute the contract and any other related ancillary documents on behalf of the Village of Estero Counci l."
+134,40,3,Approved Task Authorization,EC 2020-61,469099.0,"Approved award of Supplemental Task Authorization ( STA) - 02 Contract EC 2020-61 to KCA under the Village's Misc. Service Contract CN 2020-01 in the amount of $469,099, approve a contingency fund amount of $47,000 (an amount equal to 10% of the total project cost) to cover unforesee n circumstances which ma y occur, and a uthorize the Village Manager to execute the STA and any other related ancillary documents on behalf of the Village of Estero"
+135,40,4,Approved Task Authorization,EC 2020-48,54000.0,"Approved award of Supplemental Task Authorization (STA) 06 to Contract EC 2020-48 to CW3 Engineering under the Village's Misc. Service Contract CN 2 020-01 in the amount of $54,000, approve a contingency fund amount of $5,400 (an amount equal to 10% of the total project cost) to cover unforesee n circumstances which may occur, and a uthorize the Village Manager to execute the STA and any other related ancillary documents on behalf of the Village of Estero"
+136,40,5,Approved Task Authorization,EC 2020-32,41352.0,"Approved award of Suppl emental Task Authorization 06 to Contract EC 2020-32 to Johnson Engineering to provide water monitoring services for The Village of Estero for $41,352, a pprove a 10% contingency for additional services that may be required to complete the project, and a uthorize the Village Manger to sign the STA and other additional implementing documents within the scope of the STA on behalf of the Village of Estero"
+137,41,0,Other,,,No action found
+138,42,0,Other,,,No action found
+139,43,0,Other,,,No action found
+140,44,0,Approved Easement,EC 2024-06,81000.0,"Approved EC 2024-06 STA -05 in the amount of $81,000 with Florida Acquisition & Appraisal, Inc. to assist the Village in obtaining easement and property required to construction the Broadway Ave East UEP Areas 2 & 3, approve a $8,100 contingency for additional services that may be required to complete the project, and authorize the Village Manager to sign the contract and other additional implementing documents within the scope of the contract on behalf of the Village of Estero"
+141,44,1,Approved Agreement,,,"Approved the Assignment and Amendment of the License Agreement for Sandy Lane Right of Way Occupation, Drainage Pipe Construction and Maintenance agreement with Seminole Gulf Railway and authorize the Village Manager to execute the agreement on behalf of the"
+142,44,2,Approved,,,"Approved continuance to May 1, 2024."
+143,45,0,Adopted Resolution,2023-09,,Adopted Resolution No. 2023-09.
+144,45,1,Approved Task Authorization,EC 2023-38,89858.0,"Approved the award of Supplemental Task authorization 04 to Contract EC 2023-38 to Johnson Engineering, Inc. for the Phase 1 Estero Parkway Reuse Ma in Design, Permit and Grant Funding Assistance at a cost of $89,858.00, approve a $9,000 contingency (10%) for additional services that may be required to complete the project, and authorize the Village Manager to sign the STA and other additional impleme nting documents within the scope of the STA on behalf of the Village of Estero"
+145,45,2,Other,,,Approv ed the consultants ranking f or Williams Road Widening Preliminary Design and Engineering P roject as follows: Number 1 - Kisinger Campo & Associates; Number 2 -
+146,45,3,Other,,,"Approv ed the revised Hagerty Consulting, Inc. contract and a uthorize the Village Manager to execute the contract document on behalf of the Village of Estero"
+147,46,0,Accepted,,,"Accepted Roger Strelow's resignation, with thanks from the"
+148,47,0,Adopted Resolution,2022-08,,"Adopted Resolution No. 2022-08 to purchas e the 10 -acre vacant parcel, commonly known as ""River Oaks"" at the east end of Broadway Avenue."
+149,47,1,Other,EC 2020-31,,"Amendme nt One to Contract No. EC 2020-31 for Estero on the River Structure Demolition and updating contract to keep structure #6, the bomb shelter ."
+150,47,2,Approved Contract,EC 2020-48,358790.0,"Approved the contract EC 2020-48 STA 10 with CW3 Engineering to provide de sign and permitting services for the Williams Road Bicycle/Pedestrian Improvements Project in the amount of $358,790, approve a contingency fund amount of $36,000 (an amount equal to 10% of the total project cost) to cover unforeseen circumstances which ma y occur, and authorize the Vill age Manager to execute the contract with CW3 Engineering and any other related ancillary documents on behalf of the"
+151,47,3,Approved,,,Approved Ben Hill Griffin Parkway Improvements contracts with Bruce Howard and Associates under EC2020-42 STA - 07 and CW3 Engineering under EC2020-48 STA - 09 to perform landscape architecture and engineering ser vices for the proposed improvements along Ben Hill Griffin Parkway from Corkscrew Road to Estero Parkway.
+152,48,0,Other,,,No action found
+153,49,0,Approved Agreement,,,"Approved Construction Manager at Risk agreement between Village of Estero and Manhattan Construction, Inc. for Williams Road and Atlantic Gulf Blvd Intersection Project and to authorize the Village Manager to execute the agreement and any related documents or amendments as may be necessary, except for the Guaranteed Maximum Price amendment, which will be approved by"
+154,49,1,Approved Agreement,,,"Approved Construction Manager at Risk agreement between Village of Estero and Chris -Tel Construction, Inc. for the Sandy Lane Bike/Ped Improvements Project and to authorize the Village Manager to execute the agreement with an effective date of July 1, 2024 and any related documents or amendments as may be necessary, except for the Guaranteed Maximum Price amendment, which will be approved by"
+155,49,2,Approved Resolution,,,Approved of the attached Resolution will give credibility to the Village of Estero interest in this acquisition. It can also be used as the necessary financial match for Federal and State grants.
+156,49,3,Adopted Resolution,2024-07,,Adopted Resolution No. 2024-07.
+157,49,4,Approved Resolution,2024-08,,Approved Resolution No. 2024-08 authorizing the Village Manager to perform various duties including accepting and authorizing CDBG -DR grants from HUD and administered by Lee County.
+158,49,5,Approved Resolution,2024-09,,Approved Resolution No. 2024-09 Excessive Force Policy.
+159,129,0,Adopted Resolution,2025-27,,Adopted Resolution No. 2025-27.
+160,129,1,Adopted Resolution,2025-28,,Adopted Resolution No. 2025-28.
+161,129,2,Adopted Resolution,2025-24,,Adopted Resolution No 2025-24 and authorize the Village Manager to execute the related Interlocal Agreement with the Lee County Property Appraiser to administer the assessment process.
+162,129,3,Adopted Resolution,2025-25,,Adopted Resolution No. 2025-25 and authorize the Village Manager to execute the related Interlocal Agreement with the Lee County Property Appraiser to administer the assessment process.
+163,129,4,Adopted Ordinance,2025-16,,Adopted Ordinance No. 2025-16 on first reading and to schedule a second reading and
+164,129,5,Adopted Ordinance,2025-13,,Adopted Ordinance No. 2025-13.
+165,50,0,Other,EC 2019-66,109872.0,"Approve Misc. Contractor Services contract EC 2019-66 STA 21 with P & T Lawn & Tractor Services for $109,872 to replace trees along US 41 and provide additional landscape maintenance work on medians 22- 24, approve a contingency fund amount of $11,000 (an amount equal to 10% of the total project cost) to cover unforeseen circumstances which may occur, and authorize the Village Manager to execu te the contract documents on behalf of the Village of Estero"
+166,50,1,Approved Contract,,52815.0,"Approved Misc. Contractor Services contract EC 2019 -59 STA 08 with Cougar Contracting, LLC for $52,815 for the repair of sidewalks along Vi a Coconut Point and Williams Road, approve a contingency fund amount of $5,300 (an amount e qual to 10% of the total project cost) to cover unforeseen circumstances which may occur, and authorize the Village Manager to execute the contract documents on beha lf of the Village of Estero"
+167,50,2,Approved Resolution,2022-07,,Approved Resolution No. 2022-07 which a mends Resolution No. 2015-68.
+168,50,3,Passed Ordinance,2022-02,,"Passed first reading of Ordinance 2022-02 and set second reading for May 18, 2022."
+169,51,0,Approved,,,Approved send ing notification letter and affidavit signed by Mayor to Florida Department of Commerce .
+170,51,1,Approved Contract,,430000.0,"Approved the award of Contract 25035 with LandDesign, Inc. to prepare the Village of Estero Eco -Historic planning study for $430,000, approve a $43,000 contingency for additional services that may be required to complete the project, and authorize the Village Manager to sign the contract and other additional implementing documents within the scope of the contract on behalf of the Village of Estero"
+171,51,2,Approved,,2896517.52,"Approved the award of landscaping, mowing and irrigation services for Village roadways for P & T Lawn & Tractor, for an amount not to exceed $2,896,517.52 annually, approve a $200,000 Contingency for additional services that may be required to complete the project, and authorize the Village Manager to sign the purchase order and other additional implementing documents on behalf of the Village of Estero"
+172,51,3,Approved,,1432600.0,"Approved awards of landscaping, mowing and irrigation services for Village roadways for Mainscape, Inc., in an amount not to exceed $1,432,600 annually, and to P & T Lawn & Tractor, for an amount not to exceed $581,107 annually. Vote : (Roll Call) Aye:"
+173,51,4,Approved Contract,,9536910.0,"Approved GMP Addendum 2 for contract EC 2024 - 12 CMAR for Wright Construction to complete the site work and utility installation for the Estero Entertainment Campus for $ 9,536,910 and authorize the Village Manager to sign the contract and other additional implementation documents within the scope of the GMP addendum on behalf of the Village of Estero"
+174,52,0,Other,,,No action found
+175,53,0,Other,,,No action found
+176,54,0,Other,,,No action found
+177,55,0,Approved Resolution,2024-05,,Approved Resolution No. 2024-05. Vote : (Roll Call) Aye:
+178,55,1,Approved,,,Approved the Village Manager to execute the High- 5
+179,55,2,Approved,,,Approved that Wright Construction Group is granted a Notice to Proceed on their phase 1 construction costs based on GMP#1.
+180,55,3,Passed Ordinance,2024-06,,"Passed First Reading of Ordinance No. 2024-06 and set second reading for June 5, 2024."
+181,56,0,Other,,,No action found
+182,57,0,Passed Ordinance,2023-05,,Passed second reading of Ordinance No. 2023-05.
+183,58,0,Adopted Ordinance,2016-05,,"Adopted Ordinance No. 2016-05, amending the Commercial Planned Development Zoning Resolution No. Z-09-037, Section 2.B, as revised by including a statement that this approval is unique to this particular petition and is not to be considered a precedent in other matters."
+184,58,1,Approved Ordinance,2016-06,,Approved first reading of Ordinance No. 2016-06 and advanced to second reading and
+185,58,2,Adopted Resolution,2016-10,,Adopted Resolution No. 2016-10 establishing a Village Credit Card Account with SunTrust.
+186,58,3,Awarded,RFP 2016-01,,"Awarded RFP 2016-01 -Village Traffic Study to Kimley-Horn and authorized the Village Manager, with the assistance of"
+187,58,4,Approved,,,"Approved the letter of support to be sent to Office of Environmental Services Division of State Lands, Department of Environmental Protection as revised with the language suggested by Mayor Batos."
+188,58,5,Other,,,No one on the
+189,59,0,Other,,,Meeting Cancelled
+190,60,0,Approved,,,Approved the final plat.
+191,61,0,Other,,,No action found
+192,62,0,Other,,,No action found
+193,63,0,Approved,,,Approved to permit
+194,63,1,Approved Ordinance,,,Approved the first reading of the ordinance and to transmit the Comprehensive Plan Amendment request to the State reviewing agencies with
+195,64,0,Approved Ordinance,2016-06,,Approved Ordinance No. 2016-06.
+196,64,1,Approved Ordinance,2016-06,,Approved Ordinance No. 2016-06.
+197,64,2,Approved Ordinance,2016-07,,Approved first reading of Ordinance No. 2016-07 and advanced to second reading and
+198,64,3,Adopted Resolution,2016-11,,Adopted Resolution No. 2016-11.
+199,64,4,Adopted Resolution,2016-12,,Adopted Resolution No. 2016-12.
+200,64,5,Adopted Resolution,2016-13,,Adopted Resolution No. 2016-13.
+201,65,0,Approved Resolution,,,"Approved a Joint Resolution with Lee County for participation in CDBG and related Programs, authorize Mayor to sign and forward to Lee County."
+202,65,1,Approved,CN 2020-01,,"Approved t erminat ion as of June 1, 2022, CN 2020-01 Miscellaneous Professional Services to allow for the immediate use of the firms approved under CN 2022-06."
+203,65,2,Approved Contract,CN 2022-06,,"Approved the recommendation of t he evaluation committee to select all 36 consulting firms that submitted Letters of Interest under CN 2022-06, for a contract period of three (3) years (with the option at"
+204,65,3,Authorized,,50000.0,"Authorized the Village Manager to execute agreements for individual pr ojects as needed at or below $50,000 (contracts in excess of $50,000 will require"
+205,65,4,Passed Ordinance,2022-03,,Passed Ordinance 2022-03.
+206,130,0,Approved,,,Approved the final Sports Park Master Plan .
+207,130,1,Approved,,,Approved m otion to accept the Standard & Poor's General Obligation Bond Rating for the Village of Estero.
+208,134,0,Other,,,"Affirm ed the decision of the Planning Zoning & Design Board to issue the development order , including the conditions that have been set fo rth therein."
+209,135,0,Other,,,No action found
+210,66,0,Approved Task Authorization,EC 2020-42,60000.0,"Approved award of Supplemental Task Authorization (STA) - 04 Contract EC 2020-42 to Bruce Howard & Associates under the Village's Misc. Service Contract CN 2020-01 in the amount of $60,000, approve award of Supplement al Task Authorization (STA) - 03 Contract EC 2020-67 to RWA Engineering under the Village's Misc. Service Contract CN 2020 -01 in the amount of $11,700, approve a contingency fund amount of $7,200 (an amount equal to 10% of the total project cost) to cover unforeseen circumstances which may occur, and authorize the Village Manager to execute the Supplemental Task Authorization and any other related ancillary documents on behalf of the Village of Estero"
+211,66,1,Approved Contract,RFI 2020-02,,Approved the selection of Provion Inc. as the consultant of record under Request for Information No. RFI 2020-02 Community Development Software Consultant and authorize the Village Manager to negotiate and execute a contract on behalf of the Village of Estero
+212,66,2,Approved,,,Approved the
+213,66,3,Other,,,A uthorize d the
+214,66,4,Other,,,"P assed first reading of Ordinance 2021 -04 and set second reading for June 16, 2021."
+215,66,5,Other,,,"P assed first reading of Ordinance 2021 -08 and set second reading for June 16, 2021."
+216,67,0,Other,,,No action found
+217,68,0,Passed Ordinance,2025-05,,"Passed first reading of Ordinance No. 2025-05 and set second reading for June 18, 2025."
+218,68,1,Passed Ordinance,2025-04,,"Passed first reading of Ordinance No. 2025-04 and set second reading for July 2, 2025."
+219,68,2,Passed Ordinance,2025-06,,Passed first reading of Ordinance No. 2025-06 and Set
+220,68,3,Passed Ordinance,2025-08,,Passed first reading of Ordinance No. 2025-08 and Set
+221,68,4,Approved,,,"Approved continuance to July 2 , 2025 for Condition 10 only."
+222,69,0,Approved,RFP 2024-04,,Approved the ranking of construction management firms for RFP 2024-04 as 1- Wright Construction and a uthorize
+223,69,1,Approved,RFP 2024-02,,"Approved the ranking of construction management firms for RFP 2024-02 as recommended by the Village of Estero's selection committee. 1-Manhattan Construction, 2- Wright Construction, 3- Chris Tel Construction, 4- Seagate Development Group, 5 Brooks & Freund, and authorize"
+224,69,2,Approved,RFP 2024-03,,"Approved the ranking of construction management firms for RFP 2024-03 as recommended by the Village's selection committee. 1 - Wright Construction, 2 - AIM Construction, 3 - Chris Tel Construction, 4 - American Infrastructure Services, and authorize"
+225,69,3,Passed,,,"Passed first reading and schedule second reading for June 19, 2024."
+226,69,4,Passed Ordinance,2024-06,,Passed Second Reading of Ordinance No. 2024-06.
+227,70,0,Approved,,,Approved
+228,70,1,Approved,,,Approved Supplemental
+229,70,2,Passed Ordinance,,,Passed First Reading of Ordinance 2023 -04 and set
+230,70,3,Other,2023-11,,M oved Capital Improvement Hearing and Resolution 2023-11 on to second
+231,71,0,Approved Contract,,397379.0,"Approved the contract with N. Harris Computer Corporation to provide ""CityView"" software for Community Development for an estimated cost of $397,379, approve a contingency fund amount of $49,153 (an amount equal to 15% of the total project cost minus annual fees) to cover unforeseen circumstances which may occur, and authorize the Village Manager to execute the contract including revisions resulting from fi nal negotiations and related documents including annual renewal (maintenance) fee on behalf of the"
+232,71,1,Approved Resolution,2022-11,,Approved Resolution No. 2022-11.
+233,71,2,Approved Resolution,2022-17,,Approved Resolution No. 2022-17.
+234,71,3,Passed Ordinance,2022-04,,"Passed first reading of Ordinance No. 2022-04 and set second reading for July 6, 2022."
+235,71,4,Other,2022-02,,P assed Ordinance No. 2022-02.
+236,72,0,Other,,,No action found
+237,73,0,Approved Contract,EC 2022-29,311650.0,"Approved STA 02 to Contract EC 2022-29 with Weston & Sampson to design and permit the extension of utilities to Cypress Park Circle for $311,650, approve a $31,000 contingency (10%) for additional services that may be required to complete the project, and authorize the Village"
+238,73,1,Approved Contract,RFB 2023-04,106890.0,"Approved award of Request for Bi ds No. RFB 2023-04, 8801 Corkscrew Road Structure Demolition to Southwest Builders Inc. to demolish the structure located at 8801 Corkscrew Road at a grand total cost of $106,890, approve a contingency fund amount of $10,689 (an amount equal to 10% of t he total project cost) to cover unforeseen circumstances which may occur , and authorize the Village Manager to execute the contract documents on behalf of the Village of Estero"
+239,73,2,Approved Contract,EC 2021-04,,Approved award Contract EC 2021-04 Amendment 5 to replace p lant materials along Estero Parkway and authorize the Village Manager to sign the contract amendment and other additional implementing documents within the scope of the contract amendment on behalf of the Village of E stero
+240,73,3,Approved Contract,EC 2023-21,11886.89,"Approved award Amendment 1 to Contract EC 2023-21 to mulch all debris and downed trees located at 8801 Corkscrew Road for $11,886.89 and authorize the Village Manager to sign the contract amendment and other additional implementing docume nts within the scope of the contr act amendment on behalf of the Village of Estero"
+241,73,4,Approved Agreement,,,"Approved the software as a service agreement (SaaS) for Munis ERP software between the Village of Estero and Tyler Technologies, Inc. and authorized the Vi llage Manager to execute the contract documents on behalf of the Village of Estero"
+242,73,5,Approved Contract,EC 2022-33,4.0,"Approved STA 01 to Contract EC 2022-33 with RWA Engineering to design and permit the Estero Entertainment District for $4 85,045, subject to the consultant's acceptance of a revised Exhibit ""C"" (Project Schedule) to meet the time constrain ts of the Village, to au thorize the Village Manager to sign the STA and other additional implementing documents within the scope of the STA on behalf of the Village of Estero"
+243,74,0,Other,,,No action found
+244,75,0,Other,,,No action found
+245,76,0,Other,,,No action found
+246,77,0,Adopted Resolution,2025-10,,Adopted Resolution No. 2025-10.
+247,77,1,Adopted Resolution,2025-11,,Adopted Resolution No. 2025-11.
+248,77,2,Passed Ordinance,2025-07,,Passed first reading of Ordinance No. 2025-07 and set second reading and
+249,78,0,Adopted Resolution,2024-12,,Adopted Resolution No. 2024-12. Vote : (Roll Call) Aye:
+250,78,1,Adopted Resolution,2024-13,,Adopted Resolution No. 2024-13.
+251,78,2,Adopted Resolution,2024-15,,Adopted Resolution No. 2024-15.
+252,78,3,Approved Contract,,,"Approved award of Invitation to Bid 100124, Disaster Debris Monitoring Services for the Village of Estero to the apparent low bidder, Disaster Program Operations, Inc. to provide on- call disaster debris monitoring services as provided in the contract for a one -year period, at the rates submitted on their bid, authorize the Village Manager to execute contract documents on behalf of the Village of Estero"
+253,78,4,Approved Contract,,,"Approved award of Invitation to Bid 100224, Disaster Recovery Services for the Village of Estero to CrowderGulf Joint Venture, Inc. to provide on-call disaster recovery services as provided in the solicitation. Authorize the Village Manager to execute a contract document on behalf of the Village of Estero"
+254,78,5,Approved Grant,,188921.0,"Approved EC Task Order in the amount of $188,921 for Hagerty Consulting, Inc. to assist the Village of Estero in CDBG -DR Recovery and Resiliency Planning Program Grant Management Support."
+255,136,0,Other,,,Meeting Cancelled
+256,137,0,Other,,,No action found
+257,138,0,Other,,,No action found
+258,139,0,Other,,,No action found
+259,79,0,Adopted,2023-12,,Adopted Resoluti on No. 2023-12.
+260,79,1,Approved Task Authorization,EC 2022-38,146340.0,"Approved award of Suppleme ntal Task Authorization 06 to Contract EC 2022-38 to Johnson Engineering to provide water monitoring services for The Village of Estero for $146,340, approve a $14,600 contingency for additional services that may be required to complete the project and authorize the Village Manager to sign the STA and other additional impleme nting documents within the scope of the STA on behalf of the Village of Estero"
+261,79,2,Other,RFB 2023-07,239500.0,"App roved of RFB 2023-07, Sandy Lane Path Prefabricated Bridge to Contech Engine ered Solutions, LLC to provide the bridge as provided in the contract, at a grand total cost of $239,500, approve a contingency fund amount of $23,950 (an amount equal to 10% of the total project cost) to cover unforeseen circumstances which may occur, and authorize the Village Manager to execute the contract documents on behalf of the Village of Estero"
+262,79,3,Approved Contract,2022-32,256060.0,"Approved the STA 1 to Contract 2022-32 with Tetra Tech, Inc. for the preparation of an engineering assessment of the existing roads and sidewalks maintained by the Village of Estero for $256,060, approve a $25,600 contingency (10%) for additional services that may be required to complete the project, and authorize the Village Manager to sign the STA and other additional implementing documents wi thin the scope of the STA on behalf of the Village of Estero"
+263,79,4,Other,,55233.34,"Approv ed the Seminole Gulf Railway license agreement and approve payment of $55,233.34 to Seminole Gulf Railway to secure the license agreement and authorize the Village Manager to execute the agreement on behalf of the Vi llage"
+264,79,5,Adopted Resolution,2023-14,,Adopted Resolution No. 2023-14.
+265,80,0,Approved,,,Approved Comprehensive Annual Financial Report
+266,80,1,Adopted Resolution,2022-20,,Adopted Resolution No. 2022-20.
+267,80,2,Adopted Resolution,2022-18,,Adopted Resolution No. 2022-18.
+268,80,3,Passed Ordinance,2022-05,,"Passed first reading of Ordinance No. 2022-05 with the map 2A-1 and set second reading for July 20, 2022."
+269,80,4,Approved Ordinance,2022-06,,Approved m otion to transmit Comprehensive Plan Amendment and Ordinance No. 2022-06 to state review agency.
+270,80,5,Passed Ordinance,2022-07,,Passed Ordinance No. 2022-07 on the first reading.
+271,81,0,Other,,,M otion to permit
+272,81,1,Approved,,,Approved Comprehensive Annual Financial Report.
+273,81,2,Other,,,"A uthori zed the Village Manager to execute the attached three letters of engagement, or similarly priced alternatives, and other invoices related to these services."
+274,81,3,Approved Payment,,5000.0,"Approved the lien mitigation request f rom Ms. Hernandez releasing any outstanding liens against the Property in exchange for payment of a reduced fine of $5,000.00 and $327.20 for administrative cost."
+275,81,4,Other,,,"P assed first reading of Ordinance 2021 -09 and set second readi ng for July 21, 2021."
+276,82,0,Other,,,No action found
+277,83,0,Other,,,No action found
+278,84,0,Adopted Resolution,2022-21,,Adopted Resolution No. 2022-21.
+279,84,1,Adopted Resolution,2022-19,,Adopted Resolution No. 2022-19.
+280,84,2,Other,2022-05,,"P assed second reading of Ordinance No. 2022-05 with Map 2A-1 and ordinance shall take effect immediately upon adoption, for implementation for the next regular"
+281,85,0,Other,,,No action found
+282,86,0,Other,2020-2021,,Review proposed Budget for Fiscal Year 2020-2021 Financial Impact: The proposed budget will provide funding for the Fiscal Year 2020-2021
+283,86,1,Adopted Resolution,2020-13,,Adopted Resolution No. 2020-13
+284,86,2,Other,2020-12,,"Approve Resolution 2020-12 Naming the Lee County Supervisor of Elections as the Village ofEstero's Qualifying Official and authority for the Village Manager to enter into the attached agreement with the Lee County Supervisor of Elections, which is an expansion of the existing interlocal agreement between the parties."
+285,86,3,Other,,,Approve the WCI/Lennar Transportation Impact Fee Credit Agreement between WCVLennar and the Village of Estero for the Pelican Colony Traffic Signal. Authorize the Mayor to execute this agreement on behalf of the Village ofEstero
+286,86,4,Approved Agreement,,,Approved the WCI/Lennar Transportation Impact Fee Credit Agreement between WCI/Lennar and the Village ofEstero for the Pelican Colony Traffic Signal. Authorize the Mayor to execute this agreement on behalf of the Village ofEstero
+287,86,5,Approved Agreement,,,Approved the Interlocal Agreement between Lee County and the Village of Estero for Corkscrew Road/Puente Lane Traffic Signal. Authorize the Mayor to execute this agreement on behalf of the Village ofEstero
+288,87,0,Adopted Agreement,,,"Adopted Agreement to Transfer Ownership, Operation and Maintenance of the T&T Water Management System and Dedication and Conveyance of Related Roads and the Supplement to Agre ement to Transfer Ownership, Operation, and Maintenance of a Portion of the T&T Water Management System and for Dedication and Conveyance of Roads."
+289,87,1,Approved Easement,,,Approved a Sovereignty Submerged Lands easement with the Florida Department of Environmental Protection for the Sunny Groves force main and authorize the Village Mayor to sign the easement and any other associated documents on behalf of the
+290,88,0,Other,,,No action found
+291,89,0,Endorsed,,,"Endorsed the revised Caloosahatchee Watershed Regional Water Management Issues White Paper, dated July 15, 2016, and authorized the Mayor to sign a letter indicating"
+292,89,1,Adopted Resolution,2016-23,,Adopted Resolution No. 2016-23.
+293,89,2,Approved Grant,,,Approved the request for the Mayor to sign a letter of support for the Edward Byrne Memorial Justice Assistance Grant (JAG)
+294,89,3,Approved Agreement,,,"Approved the agreement between the Village ofEstero and LaRue Planning & Management Services, Inc."
+295,89,4,Continued,,,Continued to next
+296,89,5,Approved Agreement,,,"Approved the agreement as amended, between the Village of Estero and Nancy Stroud of Lewis Stroud & Deutsch, PL, for continuing legal services related to land use matters, including legal assistance with the Comprehensive Plan"
+297,90,0,Approved Resolution,2023-20,,"Approved Resolution 2023-20 waiving the provision of SECTION 5, NUMBER 2 ."
+298,91,0,Other,,,No action found
