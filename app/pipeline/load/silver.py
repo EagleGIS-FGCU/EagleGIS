@@ -41,7 +41,9 @@ from typing import Any
 from urllib.parse import unquote, urlparse
 
 from app.pipeline import config, reference
+from app.pipeline.clean.actions import parse_actions
 from app.pipeline.clean.text import clean_action_text
+from app.pipeline.collect.minutes import load_minutes_index, resolve_minutes_url
 from app.pipeline.validate.schemas import (
     DocumentRow,
     MeetingRow,
@@ -71,6 +73,36 @@ DOCUMENT_OUT_FIELDS = [
     "document_id", "meeting_id", "title", "file_url", "doc_date",
     "meeting_date", "meeting_year", "status", "type_name", "link_status",
 ]
+
+MEETING_ACTION_OUT_FIELDS = [
+    "action_id", "meeting_id", "sequence", "kind",
+    "reference_code", "amount_usd", "raw_text",
+]
+
+
+def build_meeting_actions(meeting_dicts: list[dict]) -> list[dict]:
+    """Explode each meeting's ``action_taken`` blob into structured rows.
+
+    ``action_id`` is a stable sequential int assigned in meeting order (which
+    is itself deterministic) then by within-meeting ``sequence``. Meetings with
+    no parseable actions contribute no rows.
+    """
+    rows: list[dict] = []
+    action_id = 1
+    for m in meeting_dicts:
+        mid = m.get("meeting_id")
+        for record in parse_actions(m.get("action_taken")):
+            rows.append({
+                "action_id": action_id,
+                "meeting_id": mid,
+                "sequence": record["sequence"],
+                "kind": record["kind"],
+                "reference_code": record["reference_code"],
+                "amount_usd": record["amount_usd"],
+                "raw_text": record["raw_text"],
+            })
+            action_id += 1
+    return rows
 
 
 def _read_csv(path: Path) -> list[dict]:
@@ -216,6 +248,24 @@ def _check_unique(rows: list[dict], key: str) -> list[dict]:
     return dups
 
 
+def _enrich_documents_from_minutes_index(document_dicts: list[dict]) -> dict[str, int]:
+    """Replace document URLs with canonical estero-fl.gov PDFs when the index has them."""
+    index = load_minutes_index()
+    stats = {"confirmed": 0, "still_missing": 0}
+    for d in document_dicts:
+        iso = str(d.get("meeting_date") or "")[:10]
+        type_name = d.get("type_name")
+        canonical = resolve_minutes_url(index, iso, type_name=type_name)
+        if canonical:
+            d["file_url"] = canonical
+            d["link_status"] = "Uploaded"
+            stats["confirmed"] += 1
+        elif d.get("file_url"):
+            d["link_status"] = "Missing / Not Uploaded"
+            stats["still_missing"] += 1
+    return stats
+
+
 def build_silver() -> dict:
     """Run the bronze -> silver step end-to-end and return a report."""
     raw_meetings = _read_csv(config.BRONZE_MEETINGS)
@@ -229,6 +279,7 @@ def build_silver() -> dict:
 
     document_dicts = [d.model_dump() for d in valid_documents]
     document_rejects.extend(_check_unique(document_dicts, "document_id"))
+    minutes_doc_stats = _enrich_documents_from_minutes_index(document_dicts)
 
     bronze_meeting_ids = {m["meeting_id"] for m in meeting_dicts}
     synth_meetings, synth_rejects = _synthesize_pzdb_meetings_from_documents(
@@ -246,9 +297,14 @@ def build_silver() -> dict:
     real_docs = [d for d in document_dicts if not _is_future_placeholder_dict(d)]
     planned_docs = [d for d in document_dicts if _is_future_placeholder_dict(d)]
 
+    meeting_actions = build_meeting_actions(meeting_dicts)
+
     _atomic_write_csv(config.SILVER_MEETINGS, MEETING_OUT_FIELDS, meeting_dicts)
     _atomic_write_csv(config.SILVER_DOCUMENTS, DOCUMENT_OUT_FIELDS, real_docs)
     _atomic_write_csv(config.SILVER_DOCUMENTS_PLANNED, DOCUMENT_OUT_FIELDS, planned_docs)
+    _atomic_write_csv(
+        config.SILVER_MEETING_ACTIONS, MEETING_ACTION_OUT_FIELDS, meeting_actions,
+    )
     _atomic_write_json(
         config.SILVER_REJECTS,
         {
@@ -272,6 +328,11 @@ def build_silver() -> dict:
             "out_planned": len(planned_docs),
             "rejects": len(document_rejects),
             "fk_warnings": len(fk_warnings),
+            "minutes_confirmed": minutes_doc_stats["confirmed"],
+            "minutes_still_missing": minutes_doc_stats["still_missing"],
+        },
+        "meeting_actions": {
+            "out": len(meeting_actions),
         },
     }
 

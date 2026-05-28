@@ -96,6 +96,43 @@ def _load_meetings() -> list[dict]:
     return rows
 
 
+def _parse_float(value: Optional[str]) -> Optional[float]:
+    v = _null(value)
+    if v is None:
+        return None
+    try:
+        return float(v)
+    except (ValueError, TypeError):
+        return None
+
+
+def _load_meeting_actions() -> list[dict]:
+    """Load silver meeting_actions.csv.
+
+    Gracefully returns ``[]`` when the file hasn't been built yet (the pipeline
+    may not have run) — never raises, so the API stays up.
+    """
+    path = pipe_config.SILVER_MEETING_ACTIONS
+    if not path.exists():
+        return []
+    rows: list[dict] = []
+    try:
+        with open(path, newline="", encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                rows.append({
+                    "action_id":      _parse_int(row.get("action_id")),
+                    "meeting_id":     _parse_int(row.get("meeting_id")),
+                    "sequence":       _parse_int(row.get("sequence")),
+                    "kind":           _null(row.get("kind", "")) or "Other",
+                    "reference_code": _null(row.get("reference_code", "")),
+                    "amount_usd":     _parse_float(row.get("amount_usd", "")),
+                    "raw_text":       _null(row.get("raw_text", "")) or "",
+                })
+    except OSError:
+        return []
+    return rows
+
+
 def _load_documents(include_planned: bool = False) -> list[dict]:
     path = _documents_path()
     rows: list[dict] = []
@@ -136,6 +173,7 @@ class CSVStore:
         self._area_geometries = geom["area_geometries"]
         self._meetings = _load_meetings()
         self._documents = _load_documents(include_planned=include_planned_documents)
+        self._meeting_actions = _load_meeting_actions()
 
     def get_projects(self, status: Optional[str] = None) -> list[dict]:
         rows = deepcopy(self._projects)
@@ -218,6 +256,24 @@ class CSVStore:
     def get_document(self, document_id: int) -> Optional[dict]:
         return next(
             (deepcopy(r) for r in self._documents if r["document_id"] == document_id),
+            None,
+        )
+
+    def get_actions(
+        self,
+        meeting_id: Optional[int] = None,
+        kind: Optional[str] = None,
+    ) -> list[dict]:
+        rows = deepcopy(self._meeting_actions)
+        if meeting_id is not None:
+            rows = [r for r in rows if r["meeting_id"] == meeting_id]
+        if kind:
+            rows = [r for r in rows if r["kind"] == kind]
+        return rows
+
+    def get_action(self, action_id: int) -> Optional[dict]:
+        return next(
+            (deepcopy(r) for r in self._meeting_actions if r["action_id"] == action_id),
             None,
         )
 

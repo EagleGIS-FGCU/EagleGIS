@@ -119,5 +119,21 @@ class Document(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ---------------------------------------------------------------------------
+# MeetingAction
+# ---------------------------------------------------------------------------
+
+class MeetingAction(BaseModel):
+    action_id: int
+    meeting_id: int
+    sequence: int
+    kind: str
+    reference_code: Optional[str] = None
+    amount_usd: Optional[float] = None
+    raw_text: str
+
+    model_config = {"from_attributes": True}
+
+
 # Resolve forward reference in MeetingDetail
 MeetingDetail.model_rebuild()

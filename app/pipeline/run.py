@@ -51,6 +51,7 @@ from typing import Optional
 
 from app.pipeline import config
 from app.pipeline.load.silver import build_silver
+from app.pipeline.publish.gold import build_gold
 from app.pipeline.publish.supabase import (
     has_publish_errors,
     publish as publish_to_supabase,
@@ -183,7 +184,15 @@ def run(
 
     silver_report = build_silver()
     stages["silver"] = silver_report
-    logger.info("silver build complete: %s", silver_report)
+    logger.info(
+        "silver build complete: %s (meeting_actions=%d)",
+        silver_report,
+        silver_report.get("meeting_actions", {}).get("out", 0),
+    )
+
+    gold_report = build_gold()
+    stages["gold"] = gold_report
+    logger.info("gold build complete: %s", gold_report)
 
     drift_detected, publish_errors = _maybe_run_supabase_stages(
         do_publish=do_publish,
@@ -204,7 +213,11 @@ def run(
             _file_hash(config.SILVER_MEETINGS),
             _file_hash(config.SILVER_DOCUMENTS),
             _file_hash(config.SILVER_DOCUMENTS_PLANNED),
+            _file_hash(config.SILVER_MEETING_ACTIONS),
             _file_hash(config.SILVER_REJECTS),
+            _file_hash(config.GOLD_MEETINGS_PUBLIC),
+            _file_hash(config.GOLD_MEETING_ACTIONS_PUBLIC),
+            _file_hash(config.MINUTES_INDEX),
         ],
     }
     manifest_path = _write_manifest(manifest)
