@@ -117,7 +117,8 @@ def _atomic_write_csv(path: Path, fields: list[str], rows: list[dict]) -> None:
     fd, tmp_path = tempfile.mkstemp(prefix=f".{path.name}.", dir=str(path.parent))
     try:
         with os.fdopen(fd, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=fields)
+            # Use LF line endings so CI rebuild diffs are deterministic across OSes.
+            writer = csv.DictWriter(f, fieldnames=fields, lineterminator="\n")
             writer.writeheader()
             for row in rows:
                 writer.writerow({k: ("" if row.get(k) is None else row.get(k)) for k in fields})
