@@ -3,7 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Estero Public Meetings Dashboard</title>
+  <title>EagleGIS Dashboard — Village of Estero</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
   <link
     rel="stylesheet"
@@ -21,307 +26,436 @@
 
   <style>
     :root {
-      --font-base: 1.125rem;
-      --ink: #1a1a1a;
-      --ink-soft: #333333;
-      --bg: #ffffff;
-      --panel: #f4f6f8;
-      --panel-border: #6b7280;
-      --brand: #0b4f6c;
-      --brand-dark: #08384c;
-      --accent: #b3541e;
-      --trail: #1b7837;
-      --area: #88419d;
-      --point: #0b4f6c;
-      --focus: #d97706;
-      --link: #0b4f6c;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface2: #f8fafc;
+      --border: #e2e8f0;
+      --border2: #cbd5e1;
+      --text: #0f172a;
+      --muted: #334155;
+      --subtle: #64748b;
+      --accent: #0052a5;
+      --accent-light: #e8f0fb;
+      --accent-border: #b3ccf0;
+      --trail: #15803d;
+      --road: #c2410c;
+      --area: #6d28d9;
+      --header-h: 64px;
+      --sidebar-w: 430px;
+      --font-base: 1.06rem;
     }
+
     html { font-size: 100%; }
     html[data-textscale="large"] { font-size: 118%; }
-    html[data-textscale="xlarge"] { font-size: 138%; }
-    * { box-sizing: border-box; }
+    html[data-textscale="xlarge"] { font-size: 136%; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      margin: 0;
-      font-family: "Segoe UI", Tahoma, Verdana, Arial, sans-serif;
-      font-size: var(--font-base);
-      line-height: 1.55;
-      color: var(--ink);
+      font-family: "Inter", sans-serif;
       background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-size: var(--font-base);
+      line-height: 1.5;
     }
-    a { color: var(--link); text-decoration: underline; }
-    a:hover { color: var(--brand-dark); }
-    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
-      outline: 4px solid var(--focus);
+    a { color: var(--accent); }
+    a:focus-visible,
+    button:focus-visible,
+    select:focus-visible,
+    input:focus-visible {
+      outline: 3px solid #f59e0b;
       outline-offset: 2px;
+      border-radius: 8px;
+    }
+
+    #top-header {
+      height: var(--header-h);
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      flex-shrink: 0;
+    }
+    #top-header img {
+      height: 40px;
+      width: auto;
       border-radius: 4px;
+      background: white;
+      padding: 3px;
     }
-    .skip-link {
-      position: absolute;
-      left: -9999px;
-      top: 0;
-      background: var(--brand-dark);
-      color: #fff;
-      padding: 0.75rem 1rem;
-      z-index: 2000;
-    }
-    .skip-link:focus { left: 0.5rem; top: 0.5rem; }
-    header.site-header {
-      background: var(--brand);
-      color: #fff;
-      padding: 1.25rem 1.5rem;
-    }
-    header.site-header h1 {
-      margin: 0 0 0.4rem 0;
-      font-size: 2rem;
+    .header-divider { width: 1px; height: 32px; background: rgba(255,255,255,0.25); }
+    .header-titles { flex: 1; }
+    .header-title {
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: white;
+      letter-spacing: -0.2px;
       line-height: 1.2;
     }
-    header.site-header p {
-      margin: 0;
-      max-width: 72ch;
-      font-size: 1.1rem;
-      color: #f0f6fa;
+    .header-sub {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.7);
+      font-weight: 500;
+      letter-spacing: 0.03em;
     }
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      align-items: flex-end;
-      padding: 1rem 1.5rem;
-      background: var(--panel);
-      border-bottom: 3px solid var(--panel-border);
-    }
-    .control-group { display: flex; flex-direction: column; gap: 0.4rem; }
-    .control-group > label, .control-group > .group-label { font-weight: 700; }
-    select, input[type="search"] {
-      font-size: 1.1rem;
-      min-height: 48px;
-      padding: 0.5rem 0.75rem;
-      border: 2px solid var(--panel-border);
-      border-radius: 6px;
-      background: #fff;
-      color: var(--ink);
-    }
-    select { min-width: 16rem; }
-    input[type="search"] { min-width: 18rem; width: 100%; }
-    button {
-      font-size: 1.05rem;
-      min-height: 48px;
-      padding: 0.5rem 1rem;
-      border: 2px solid var(--brand-dark);
-      border-radius: 8px;
-      background: #fff;
-      color: var(--brand-dark);
-      cursor: pointer;
-      font-weight: 700;
-    }
-    button:hover { background: #e8eef2; }
-    button[aria-pressed="true"] { background: var(--brand); color: #fff; }
-    .textsize-buttons { display: flex; gap: 0.4rem; align-items: center; }
-    .textsize-buttons .a1 { font-size: 1rem; }
-    .textsize-buttons .a2 { font-size: 1.2rem; }
-    .textsize-buttons .a3 { font-size: 1.45rem; }
-    .home-link {
+    .header-link {
       display: inline-flex;
       align-items: center;
-      min-height: 48px;
-      padding: 0.5rem 1rem;
-      border: 2px solid var(--brand-dark);
+      gap: 6px;
+      min-height: 44px;
+      padding: 8px 12px;
       border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.35);
       background: #fff;
-      font-weight: 700;
+      color: var(--accent);
       text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 700;
     }
-    .stats {
+    .header-badge {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: white;
+      font-size: 0.62rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    #main-layout {
+      flex: 1;
       display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      padding: 1rem 1.5rem 0 1.5rem;
+      overflow: hidden;
+      position: relative;
     }
-    .stat-card {
-      flex: 1 1 12rem;
-      background: var(--panel);
-      border: 2px solid var(--panel-border);
-      border-radius: 10px;
-      padding: 0.9rem 1.1rem;
+    #sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      z-index: 10;
     }
-    .stat-card .num { font-size: 2rem; font-weight: 800; color: var(--brand); }
-    .stat-card .lbl { font-size: 1.05rem; color: var(--ink); }
-    main.layout {
-      display: grid;
-      grid-template-columns: 1.4fr 1fr;
-      gap: 1rem;
-      padding: 1rem 1.5rem 2rem 1.5rem;
-      align-items: stretch;
+    @media (max-width: 1080px) {
+      #main-layout { flex-direction: column; }
+      #sidebar {
+        width: 100%;
+        min-width: 100%;
+        height: 56%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
     }
-    @media (max-width: 900px) {
-      main.layout { grid-template-columns: 1fr; }
+
+    .section {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
     }
-    section.map-pane, section.list-pane { min-width: 0; }
-    h2.pane-title { font-size: 1.5rem; margin: 0 0 0.6rem 0; }
-    #map {
+    .section h2 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .control-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      color: var(--subtle);
+      margin-bottom: 6px;
+      display: block;
+    }
+    .ctrl {
       width: 100%;
-      height: 560px;
-      min-height: 420px;
-      border: 3px solid var(--panel-border);
-      border-radius: 10px;
+      min-height: 44px;
+      padding: 8px 10px;
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      background: white;
+      color: var(--text);
+      font-size: 0.93rem;
+      font-family: "Inter", sans-serif;
     }
-    .legend {
-      margin-top: 0.75rem;
-      background: var(--panel);
-      border: 2px solid var(--panel-border);
-      border-radius: 10px;
-      padding: 0.9rem 1.1rem;
+    .textsize-row { display: flex; gap: 8px; margin-top: 10px; }
+    .text-btn {
+      min-height: 44px;
+      min-width: 54px;
+      border-radius: 8px;
+      border: 1px solid var(--border2);
+      background: white;
+      color: var(--muted);
+      font-weight: 700;
+      cursor: pointer;
     }
-    .legend h3 { margin: 0 0 0.5rem 0; font-size: 1.2rem; }
-    .legend ul {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
+    .text-btn[aria-pressed="true"] {
+      background: var(--accent-light);
+      color: var(--accent);
+      border-color: var(--accent-border);
     }
-    .legend li { display: flex; align-items: center; gap: 0.6rem; font-size: 1.05rem; }
-    .swatch { display: inline-block; border-radius: 3px; flex-shrink: 0; }
-    .swatch.point { width: 20px; height: 20px; background: var(--point); border: 3px solid #fff; box-shadow: 0 0 0 2px var(--point); border-radius: 50%; }
-    .swatch.trail { width: 34px; height: 8px; background: var(--trail); }
-    .swatch.road { width: 34px; height: 8px; background: var(--accent); }
-    .swatch.area { width: 34px; height: 8px; background: var(--area); }
-    #meetingCount { font-size: 1.05rem; color: var(--ink-soft); margin: 0.4rem 0 0.75rem 0; }
-    ul.meetings { list-style: none; margin: 0; padding: 0; max-height: 620px; overflow-y: auto; }
-    ul.meetings li {
-      border: 2px solid var(--panel-border);
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .stat-box {
+      background: white;
+      border: 1px solid var(--border2);
       border-radius: 10px;
-      padding: 0.9rem 1.1rem;
-      margin-bottom: 0.75rem;
+      padding: 10px;
+    }
+    .stat-num {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1.1;
+    }
+    .stat-lbl {
+      margin-top: 3px;
+      color: var(--subtle);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+
+    .detail-wrap {
+      padding: 12px;
+      border: 1px solid var(--border2);
+      border-radius: 10px;
       background: #fff;
+      max-height: 300px;
+      overflow-y: auto;
     }
-    .m-date { font-size: 1.25rem; font-weight: 800; color: var(--ink); }
-    .m-meta { margin: 0.3rem 0; font-size: 1.05rem; color: var(--ink); }
-    .m-meta .label { font-weight: 700; }
+    .detail-empty {
+      color: var(--subtle);
+      font-size: 0.9rem;
+    }
+    .detail-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .detail-row { margin-bottom: 5px; font-size: 0.9rem; color: var(--muted); }
+    .detail-row strong { color: var(--text); }
+    .detail-subhead {
+      margin: 10px 0 6px;
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      color: var(--subtle);
+    }
+    .detail-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .detail-list li {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      background: #fafcff;
+      font-size: 0.86rem;
+    }
+    .detail-minutes {
+      margin-top: 5px;
+      display: inline-block;
+      min-height: 36px;
+      padding: 6px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--accent-border);
+      background: var(--accent-light);
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.82rem;
+    }
+
+    .meeting-count {
+      margin: 8px 0;
+      color: var(--subtle);
+      font-size: 0.85rem;
+    }
+    #meeting-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 44vh;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .meeting-item {
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      background: white;
+      padding: 10px;
+    }
+    .meeting-date {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .meeting-meta {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
     .badge {
       display: inline-block;
-      padding: 0.15rem 0.6rem;
+      margin-top: 5px;
+      padding: 2px 8px;
       border-radius: 999px;
+      font-size: 0.74rem;
       font-weight: 700;
-      font-size: 0.98rem;
-      border: 2px solid currentColor;
+      border: 1px solid currentColor;
     }
-    .badge.accepted { color: #1b5e20; background: #e6f4ea; }
-    .badge.pending { color: #8a5a00; background: #fdf3e1; }
-    .badge.rejected { color: #8a1c1c; background: #fbe9e9; }
-    .badge.tabled { color: #334155; background: #eef2f7; }
-    .badge.cancelled { color: #3b3b3b; background: #ededed; }
-    .pdf-link {
-      display: inline-flex;
-      align-items: center;
-      min-height: 44px;
-      margin-top: 0.5rem;
-      padding: 0.4rem 0.9rem;
-      border: 2px solid var(--brand-dark);
-      border-radius: 8px;
-      background: #fff;
+    .accepted { color: #166534; background: #e7f7ea; }
+    .pending { color: #92400e; background: #fff7e7; }
+    .rejected { color: #991b1b; background: #fdecec; }
+    .tabled { color: #334155; background: #eef2f7; }
+    .cancelled { color: #374151; background: #f3f4f6; }
+    .meeting-link {
+      display: inline-block;
+      margin-top: 7px;
+      font-size: 0.8rem;
       font-weight: 700;
-      text-decoration: underline;
     }
-    .no-pdf { margin-top: 0.5rem; color: var(--ink-soft); font-style: italic; font-size: 1rem; }
-    .empty-msg {
-      padding: 1rem;
-      background: #fdf3e1;
-      border: 2px solid #8a5a00;
+
+    #map-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--bg);
+      position: relative;
+    }
+    #map {
+      width: 100%;
+      height: calc(100vh - var(--header-h));
+      min-height: 380px;
+    }
+    .legend {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      z-index: 700;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid var(--border2);
       border-radius: 10px;
-      color: #5a3a00;
-      font-size: 1.05rem;
+      padding: 10px;
+      min-width: 180px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
     }
-    .leaflet-popup-content { font-size: 1.05rem; line-height: 1.5; color: var(--ink); margin: 0.9rem 1rem; }
-    .leaflet-popup-content h3 { margin: 0 0 0.4rem 0; font-size: 1.25rem; color: var(--brand-dark); }
-    .leaflet-popup-content .row { margin: 0.2rem 0; }
-    .leaflet-popup-content .label { font-weight: 700; }
-    footer.site-footer {
-      padding: 1.25rem 1.5rem;
-      background: var(--panel);
-      border-top: 3px solid var(--panel-border);
-      font-size: 1rem;
-      color: var(--ink);
+    .legend h3 {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--subtle);
+      margin-bottom: 8px;
     }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .swatch { display: inline-block; flex-shrink: 0; }
+    .swatch.point {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid white;
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .swatch.trail { width: 24px; height: 6px; border-radius: 6px; background: var(--trail); }
+    .swatch.road { width: 24px; height: 6px; border-radius: 6px; background: var(--road); }
+    .swatch.area { width: 24px; height: 6px; border-radius: 6px; background: var(--area); }
   </style>
 </head>
 <body>
-  <a class="skip-link" href="#meetings-heading">Skip to meetings list</a>
-
-  <header class="site-header">
-    <h1>Estero Public Meetings Dashboard</h1>
-    <p>
-      This page is GitHub Pages compatible (static only). It reads the
-      pipeline-generated CSV/YAML files from this repository to show project
-      locations, roads, service areas, and meeting history.
-    </p>
+  <header id="top-header">
+    <img src="engage-estero-logo.png" alt="Engage Estero" onerror="this.outerHTML='<div style=&quot;background:white;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:800;color:#0052a5;letter-spacing:-0.2px;line-height:1.3;text-align:center;&quot;>ENGAGE<br>ESTERO</div>'">
+    <div class="header-divider"></div>
+    <div class="header-titles">
+      <div class="header-title">EagleGIS — Public Meetings Dashboard</div>
+      <div class="header-sub">Village of Estero, Florida · Static GitHub Pages version</div>
+    </div>
+    <a class="header-link" href="./index.html"><i class="fa-solid fa-house"></i> Main Site</a>
+    <div class="header-badge">FGCU COP 3710 · Spring 2026</div>
   </header>
 
-  <nav class="controls" aria-label="Map and meeting controls">
-    <div class="control-group">
-      <label for="projectFilter">Show a project</label>
-      <select id="projectFilter" aria-label="Filter the map and meetings by project">
-        <option value="">All projects</option>
-      </select>
-    </div>
+  <div id="main-layout">
+    <aside id="sidebar">
+      <section class="section">
+        <h2><i class="fa-solid fa-sliders"></i> Filters</h2>
+        <label class="control-label" for="project-filter">Project</label>
+        <select id="project-filter" class="ctrl">
+          <option value="">All projects</option>
+        </select>
+        <label class="control-label" for="meeting-search" style="margin-top:10px;">Search meetings</label>
+        <input id="meeting-search" class="ctrl" type="search" placeholder="Type project, type, date, status...">
+        <div class="textsize-row" role="group" aria-label="Text size">
+          <button class="text-btn" id="text-normal" aria-pressed="true">A</button>
+          <button class="text-btn" id="text-large" aria-pressed="false">A+</button>
+          <button class="text-btn" id="text-xlarge" aria-pressed="false">A++</button>
+        </div>
+      </section>
 
-    <div class="control-group">
-      <span class="group-label" id="textsize-label">Text size</span>
-      <div class="textsize-buttons" role="group" aria-labelledby="textsize-label">
-        <button type="button" class="a1" id="textNormal" aria-pressed="true">A</button>
-        <button type="button" class="a2" id="textLarge" aria-pressed="false">A+</button>
-        <button type="button" class="a3" id="textXLarge" aria-pressed="false">A++</button>
-      </div>
-    </div>
+      <section class="section">
+        <h2><i class="fa-solid fa-chart-simple"></i> Snapshot</h2>
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-num" id="stat-projects">—</div><div class="stat-lbl">Projects</div></div>
+          <div class="stat-box"><div class="stat-num" id="stat-locations">—</div><div class="stat-lbl">Locations</div></div>
+          <div class="stat-box"><div class="stat-num" id="stat-meetings">—</div><div class="stat-lbl">Meetings</div></div>
+          <div class="stat-box"><div class="stat-num" id="stat-minutes">—</div><div class="stat-lbl">With Minutes</div></div>
+        </div>
+      </section>
 
-    <div class="control-group">
-      <span class="group-label">Public website</span>
-      <a class="home-link" href="./index.html">Back to main site</a>
-    </div>
-  </nav>
+      <section class="section">
+        <h2><i class="fa-solid fa-circle-info"></i> Selected Location Details</h2>
+        <div id="detail-panel" class="detail-wrap">
+          <div class="detail-empty">Click any map point, road, or area to open details here.</div>
+        </div>
+      </section>
 
-  <section class="stats" aria-label="Project summary">
-    <div class="stat-card"><div class="num" id="statProjects">—</div><div class="lbl">Projects</div></div>
-    <div class="stat-card"><div class="num" id="statLocations">—</div><div class="lbl">Map locations</div></div>
-    <div class="stat-card"><div class="num" id="statMeetings">—</div><div class="lbl">Meetings on file</div></div>
-    <div class="stat-card"><div class="num" id="statDocs">—</div><div class="lbl">Meetings with minutes URL</div></div>
-  </section>
+      <section class="section" style="flex:1; min-height:0;">
+        <h2><i class="fa-solid fa-calendar-days"></i> Meeting Feed</h2>
+        <div id="meeting-count" class="meeting-count">Loading…</div>
+        <ul id="meeting-list"></ul>
+      </section>
+    </aside>
 
-  <main class="layout">
-    <section class="map-pane" aria-label="Project map">
-      <h2 class="pane-title">Map of project locations</h2>
-      <div id="map" role="application" aria-label="Interactive map of Estero project locations"></div>
-
+    <main id="map-wrap">
+      <div id="map"></div>
       <div class="legend" aria-label="Map legend">
-        <h3>What the colors mean</h3>
-        <ul>
-          <li><span class="swatch point" aria-hidden="true"></span> Project location (marker)</li>
-          <li><span class="swatch trail" aria-hidden="true"></span> Trail (green line)</li>
-          <li><span class="swatch road" aria-hidden="true"></span> Road (orange line)</li>
-          <li><span class="swatch area" aria-hidden="true"></span> Service area (purple polygon)</li>
-        </ul>
+        <h3>Legend</h3>
+        <div class="legend-item"><span class="swatch point"></span> Project location</div>
+        <div class="legend-item"><span class="swatch trail"></span> Trail corridor</div>
+        <div class="legend-item"><span class="swatch road"></span> Road corridor</div>
+        <div class="legend-item"><span class="swatch area"></span> Service area polygon</div>
       </div>
-    </section>
-
-    <section class="list-pane" aria-label="Public meetings">
-      <h2 class="pane-title" id="meetings-heading">Recent public meetings</h2>
-      <div class="control-group">
-        <label for="meetingSearch">Search meetings (project, type, date, status)</label>
-        <input type="search" id="meetingSearch" placeholder="Type to search, for example: Corkscrew" />
-      </div>
-      <p id="meetingCount" role="status" aria-live="polite">Loading meetings…</p>
-      <ul class="meetings" id="meetingList"></ul>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <p>
-      Data sources: `app/data/gold/meetings_public.csv`,
-      `app/data/reference/locations.yaml`, and
-      `app/data/reference/geometries.yaml`.
-    </p>
-  </footer>
+    </main>
+  </div>
 
   <script>
     "use strict";
@@ -339,7 +473,7 @@
     let projects = [];
     let locations = [];
     let geoms = { road_geometries: {}, area_geometries: {} };
-    let currentProject = "";
+    let currentProjectId = "";
 
     function esc(s) {
       if (s === null || s === undefined) return "";
@@ -369,13 +503,53 @@
         fetchText(FILES.locationsYaml),
         fetchText(FILES.geomsYaml)
       ]);
-
-      meetings = parseCSV(meetingsCsv).sort(
-        (a, b) => String(b.MeetingDate || "").localeCompare(String(a.MeetingDate || ""))
+      meetings = parseCSV(meetingsCsv).sort((a, b) =>
+        String(b.MeetingDate || "").localeCompare(String(a.MeetingDate || ""))
       );
       projects = jsyaml.load(projectsYaml) || [];
       locations = jsyaml.load(locationsYaml) || [];
       geoms = jsyaml.load(geomsYaml) || { road_geometries: {}, area_geometries: {} };
+    }
+
+    function projectById(id) {
+      return projects.find((p) => String(p.project_id) === String(id)) || null;
+    }
+
+    function meetingsForProject(projectName) {
+      return meetings.filter((m) => m.ProjectName === projectName);
+    }
+
+    function renderDetailPanel(loc) {
+      const panel = document.getElementById("detail-panel");
+      if (!loc) {
+        panel.innerHTML = '<div class="detail-empty">Click any map point, road, or area to open details here.</div>';
+        return;
+      }
+      const proj = projectById(loc.project_id);
+      const projectName = proj ? proj.project_name : "Unknown project";
+      const projectMeetings = meetingsForProject(projectName).slice(0, 24);
+
+      let meetingsHtml = '<li>No meetings available for this project.</li>';
+      if (projectMeetings.length) {
+        meetingsHtml = projectMeetings.map((m) => `
+          <li>
+            <div><strong>${esc(m.MeetingDate || "Date unknown")}</strong> · ${esc(m.MeetingType || "Meeting")}</div>
+            <div>${esc(m.Status || "Unknown")} · ${esc(m.ActionTaken || "No action text")}</div>
+            ${m.MinutesURL ? `<a class="detail-minutes" href="${esc(m.MinutesURL)}" target="_blank" rel="noopener">Open minutes PDF</a>` : ""}
+          </li>
+        `).join("");
+      }
+
+      panel.innerHTML = `
+        <div class="detail-title">${esc(loc.location_name || "Location")}</div>
+        <div class="detail-row"><strong>Project:</strong> ${esc(projectName)}</div>
+        <div class="detail-row"><strong>Type:</strong> ${esc(loc.location_type || "—")}</div>
+        <div class="detail-row"><strong>Address:</strong> ${esc(loc.address || "—")}</div>
+        <div class="detail-row"><strong>Description:</strong> ${esc(loc.description || "—")}</div>
+        <div class="detail-row"><strong>Coordinates:</strong> ${esc(loc.latitude)}, ${esc(loc.longitude)}</div>
+        <div class="detail-subhead">Project meetings (${projectMeetings.length}${meetingsForProject(projectName).length > 24 ? " of many" : ""})</div>
+        <ul class="detail-list">${meetingsHtml}</ul>
+      `;
     }
 
     function initMap() {
@@ -389,27 +563,6 @@
       areaLayer = L.layerGroup().addTo(map);
     }
 
-    function projectById(id) {
-      return projects.find((p) => String(p.project_id) === String(id));
-    }
-
-    function latestMeetingForProject(projectName) {
-      return meetings.find((m) => m.ProjectName === projectName) || null;
-    }
-
-    function markerPopup(loc, projectName) {
-      const latest = latestMeetingForProject(projectName);
-      return `
-        <div>
-          <h3>${esc(loc.location_name || "Location")}</h3>
-          <div class="row"><span class="label">Project:</span> ${esc(projectName || "—")}</div>
-          <div class="row"><span class="label">Type:</span> ${esc(loc.location_type || "—")}</div>
-          <div class="row"><span class="label">Address:</span> ${esc(loc.address || "—")}</div>
-          <div class="row"><span class="label">Latest meeting:</span> ${esc(latest ? latest.MeetingDate : "None on file")}</div>
-          <div class="row"><span class="label">Latest action:</span> ${esc(latest ? latest.ActionTaken : "—")}</div>
-        </div>`;
-    }
-
     function renderMap() {
       pointLayer.clearLayers();
       roadLayer.clearLayers();
@@ -417,38 +570,37 @@
 
       const bounds = [];
       const filteredLocations = locations.filter((loc) => {
-        if (!currentProject) return true;
-        return String(loc.project_id) === String(currentProject);
+        if (!currentProjectId) return true;
+        return String(loc.project_id) === String(currentProjectId);
       });
 
       filteredLocations.forEach((loc) => {
         if (loc.latitude == null || loc.longitude == null) return;
-        const proj = projectById(loc.project_id);
-        const projectName = proj ? proj.project_name : "";
         const latlng = [Number(loc.latitude), Number(loc.longitude)];
         bounds.push(latlng);
         const marker = L.circleMarker(latlng, {
-          radius: 11,
+          radius: 10,
           color: "#ffffff",
           weight: 3,
-          fillColor: "#0b4f6c",
+          fillColor: "#0052a5",
           fillOpacity: 1
         });
-        marker.bindPopup(markerPopup(loc, projectName), { maxWidth: 340 });
         marker.bindTooltip(esc(loc.location_name || ""), { direction: "top" });
+        marker.on("click", () => renderDetailPanel(loc));
         marker.addTo(pointLayer);
       });
 
       Object.entries(geoms.road_geometries || {}).forEach(([locId, coords]) => {
         const loc = locations.find((l) => String(l.location_id) === String(locId));
         if (!loc) return;
-        if (currentProject && String(loc.project_id) !== String(currentProject)) return;
+        if (currentProjectId && String(loc.project_id) !== String(currentProjectId)) return;
         const latlngs = (coords || []).map((c) => [Number(c[1]), Number(c[0])]);
         if (!latlngs.length) return;
         const isTrail = String(loc.location_type || "") === "Trail";
-        const color = isTrail ? "#1b7837" : "#b3541e";
-        const line = L.polyline(latlngs, { color, weight: 8, opacity: 0.95 });
+        const color = isTrail ? "#15803d" : "#c2410c";
+        const line = L.polyline(latlngs, { color, weight: 7, opacity: 0.95 });
         line.bindTooltip(esc(loc.location_name || ""), { sticky: true });
+        line.on("click", () => renderDetailPanel(loc));
         line.addTo(roadLayer);
         latlngs.forEach((ll) => bounds.push(ll));
       });
@@ -456,27 +608,25 @@
       Object.entries(geoms.area_geometries || {}).forEach(([locId, polygons]) => {
         const loc = locations.find((l) => String(l.location_id) === String(locId));
         if (!loc) return;
-        if (currentProject && String(loc.project_id) !== String(currentProject)) return;
+        if (currentProjectId && String(loc.project_id) !== String(currentProjectId)) return;
         (polygons || []).forEach((ring) => {
           const latlngs = (ring || []).map((c) => [Number(c[1]), Number(c[0])]);
           if (!latlngs.length) return;
           const poly = L.polygon(latlngs, {
-            color: "#88419d",
+            color: "#6d28d9",
             weight: 3,
-            fillColor: "#88419d",
+            fillColor: "#6d28d9",
             fillOpacity: 0.2
           });
           poly.bindTooltip(esc(loc.location_name || ""), { sticky: true });
+          poly.on("click", () => renderDetailPanel(loc));
           poly.addTo(areaLayer);
           latlngs.forEach((ll) => bounds.push(ll));
         });
       });
 
-      if (bounds.length) {
-        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
-      } else {
-        map.setView(ESTERO_CENTER, 13);
-      }
+      if (bounds.length) map.fitBounds(bounds, { padding: [36, 36], maxZoom: 14 });
+      else map.setView(ESTERO_CENTER, 13);
     }
 
     function statusClass(status) {
@@ -488,47 +638,39 @@
     function filteredMeetings(searchText) {
       const q = (searchText || "").trim().toLowerCase();
       return meetings.filter((m) => {
-        if (currentProject) {
-          const proj = projectById(currentProject);
+        if (currentProjectId) {
+          const proj = projectById(currentProjectId);
           if (!proj || m.ProjectName !== proj.project_name) return false;
         }
         if (!q) return true;
         const hay = [
-          m.ProjectName,
-          m.MeetingType,
-          m.MeetingDate,
-          m.Status,
-          m.ActionTaken,
-          m.Title
+          m.ProjectName, m.MeetingType, m.MeetingDate, m.Status, m.ActionTaken, m.Title
         ].join(" ").toLowerCase();
         return hay.includes(q);
       });
     }
 
     function renderMeetings() {
-      const list = document.getElementById("meetingList");
-      const countEl = document.getElementById("meetingCount");
-      const rows = filteredMeetings(document.getElementById("meetingSearch").value);
+      const rows = filteredMeetings(document.getElementById("meeting-search").value);
+      const list = document.getElementById("meeting-list");
+      const count = document.getElementById("meeting-count");
       list.innerHTML = "";
-
       if (!rows.length) {
-        list.innerHTML = '<li class="empty-msg">No meetings match your filter/search.</li>';
-        countEl.textContent = "0 meetings shown";
+        count.textContent = "0 meetings shown";
+        list.innerHTML = '<li class="meeting-item">No meetings match your filter/search.</li>';
         return;
       }
-
-      countEl.textContent = `${rows.length} meeting${rows.length === 1 ? "" : "s"} shown`;
+      count.textContent = `${rows.length} meeting${rows.length === 1 ? "" : "s"} shown`;
       const frag = document.createDocumentFragment();
       rows.forEach((m) => {
         const li = document.createElement("li");
+        li.className = "meeting-item";
         li.innerHTML = `
-          <div class="m-date">${esc(m.MeetingDate || "Date unknown")}</div>
-          <div class="m-meta"><span class="label">Type:</span> ${esc(m.MeetingType || "Meeting")}</div>
-          <div class="m-meta"><span class="label">Project:</span> ${esc(m.ProjectName || "Unknown project")}</div>
-          <div class="m-meta"><span class="label">Status:</span> <span class="badge ${statusClass(m.Status)}">${esc(m.Status || "Unknown")}</span></div>
-          ${m.MinutesURL
-            ? `<a class="pdf-link" href="${esc(m.MinutesURL)}" target="_blank" rel="noopener">Open minutes (PDF)</a>`
-            : '<div class="no-pdf">No minutes document on file</div>'}
+          <div class="meeting-date">${esc(m.MeetingDate || "Date unknown")}</div>
+          <div class="meeting-meta"><strong>${esc(m.ProjectName || "Unknown project")}</strong></div>
+          <div class="meeting-meta">${esc(m.MeetingType || "Meeting")}</div>
+          <span class="badge ${statusClass(m.Status)}">${esc(m.Status || "Unknown")}</span>
+          ${m.MinutesURL ? `<a class="meeting-link" href="${esc(m.MinutesURL)}" target="_blank" rel="noopener">Open minutes</a>` : ""}
         `;
         frag.appendChild(li);
       });
@@ -536,38 +678,37 @@
     }
 
     function renderStats() {
-      const docs = meetings.filter((m) => m.MinutesURL).length;
-      document.getElementById("statProjects").textContent = projects.length;
-      document.getElementById("statLocations").textContent = locations.length;
-      document.getElementById("statMeetings").textContent = meetings.length;
-      document.getElementById("statDocs").textContent = docs;
+      document.getElementById("stat-projects").textContent = projects.length;
+      document.getElementById("stat-locations").textContent = locations.length;
+      document.getElementById("stat-meetings").textContent = meetings.length;
+      document.getElementById("stat-minutes").textContent = meetings.filter((m) => m.MinutesURL).length;
     }
 
     function setupControls() {
-      const filter = document.getElementById("projectFilter");
+      const projectFilter = document.getElementById("project-filter");
       projects.forEach((p) => {
-        const o = document.createElement("option");
-        o.value = p.project_id;
-        o.textContent = p.project_name;
-        filter.appendChild(o);
+        const opt = document.createElement("option");
+        opt.value = p.project_id;
+        opt.textContent = p.project_name;
+        projectFilter.appendChild(opt);
       });
-      filter.addEventListener("change", (e) => {
-        currentProject = e.target.value;
+      projectFilter.addEventListener("change", (e) => {
+        currentProjectId = e.target.value;
         renderMap();
         renderMeetings();
       });
-      document.getElementById("meetingSearch").addEventListener("input", renderMeetings);
+      document.getElementById("meeting-search").addEventListener("input", renderMeetings);
 
       const btns = {
-        "": document.getElementById("textNormal"),
-        "large": document.getElementById("textLarge"),
-        "xlarge": document.getElementById("textXLarge")
+        "": document.getElementById("text-normal"),
+        "large": document.getElementById("text-large"),
+        "xlarge": document.getElementById("text-xlarge")
       };
       function apply(scale) {
         if (scale) document.documentElement.setAttribute("data-textscale", scale);
         else document.documentElement.removeAttribute("data-textscale");
         Object.entries(btns).forEach(([k, b]) => b.setAttribute("aria-pressed", String(k === scale)));
-        setTimeout(() => map.invalidateSize(), 50);
+        setTimeout(() => map.invalidateSize(), 60);
       }
       btns[""].addEventListener("click", () => apply(""));
       btns["large"].addEventListener("click", () => apply("large"));
@@ -576,16 +717,10 @@
 
     function showLoadError(err) {
       console.error(err);
-      document.getElementById("meetingList").innerHTML = `
-        <li class="empty-msg">
-          Could not load dashboard data files. Make sure this page is served from the
-          repository root and these files exist:
-          <br /><code>app/data/gold/meetings_public.csv</code>
-          <br /><code>app/data/reference/projects.yaml</code>
-          <br /><code>app/data/reference/locations.yaml</code>
-          <br /><code>app/data/reference/geometries.yaml</code>
-        </li>`;
-      document.getElementById("meetingCount").textContent = "";
+      const list = document.getElementById("meeting-list");
+      document.getElementById("meeting-count").textContent = "";
+      list.innerHTML = '<li class="meeting-item">Could not load data files. Confirm this page is served from the repo root on GitHub Pages.</li>';
+      document.getElementById("detail-panel").innerHTML = '<div class="detail-empty">Data load failed. Check browser console/network.</div>';
     }
 
     document.addEventListener("DOMContentLoaded", async () => {
