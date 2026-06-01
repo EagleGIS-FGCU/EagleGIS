@@ -1,3 +1,4 @@
+estero_map_data_polished.csv
 venv/
 __pycache__/
 *.pyc
@@ -8,8 +9,37 @@ __pycache__/
 dist/
 build/
 .DS_Store
+.pytest_cache/
+.test_tmp/
+pytest-cache-files-*/
+
+# Local tool/runtime artifacts
+node_modules/
+.server.*.log
+/codex
+/codex.cmd
+/codex.ps1
+
+# Legacy bulk Council PDFs (branch `script` only)
+/pdfs/
+
+# Future non-pilot raw archives
+/data/raw/council/
+
+# PZDB download bookkeeping
+/data/raw/pzdb/download_log.csv
+/data/raw/pzdb/retry_log.csv
+
+# Local CSV verification scratch outputs
+/normalized_csv_test/
+/normalized_csv_verify_pzdb/
+/normalized_csv_verify_pzdb_full/
+/normalized_csv_pilot/pzdb_2022_2025/
+/normalized_csv_pilot/pzdb_qa_verify/
+/normalized_csv_pilot/pzdb_from_raw_verify/blank_address_72_location_audit.*
 
 # Pipeline run manifests are local artifacts; commit silver/ outputs
 # only intentionally (they're regeneratable from bronze + reference).
 app/data/runs/
+
 .cursor/debug-*.log
