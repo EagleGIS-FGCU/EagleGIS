@@ -56,19 +56,20 @@ def test_documents_by_meeting_prefers_uploaded():
 def test_resolve_location_by_location_id():
     loc_by_id = {6: {"location_name": "Council Chambers", "latitude": 26.4, "longitude": -81.8}}
     meeting = {"location_id": 6, "project_id": 4}
-    name, lat, lon = _resolve_location(meeting, loc_by_id, {})
+    name, lat, lon, confidence = _resolve_location(meeting, loc_by_id, {})
     assert name == "Council Chambers"
     assert lat == "26.4"
     assert lon == "-81.8"
+    assert confidence == "exact_location_id"
 
 
 def test_resolve_location_falls_back_to_project_then_text():
-    locs_by_project = {4: [{"location_name": "Proj Loc", "latitude": 26.5, "longitude": -81.7}]}
+    locs_by_project = {4: [{"location_id": 9, "location_name": "Proj Loc", "latitude": 26.5, "longitude": -81.7}]}
     by_project = _resolve_location({"project_id": 4, "location": "x"}, {}, locs_by_project)
-    assert by_project == ("Proj Loc", "26.5", "-81.7")
+    assert by_project == ("Proj Loc", "26.5", "-81.7", "project_fallback")
 
     text_only = _resolve_location({"location": "Somewhere"}, {}, {})
-    assert text_only == ("Somewhere", "", "")
+    assert text_only == ("Somewhere", "", "", "text_only")
 
 
 # ---------------------------------------------------------------------------
@@ -109,3 +110,5 @@ def test_build_gold_populates_minutes_urls_and_coords():
     # PZ&DB synthesized meetings map to Council Chambers (location_id 6),
     # which carries coordinates in locations.yaml.
     assert any(r["Latitude"] and r["Longitude"] for r in rows)
+    assert "location_quality" in report
+    assert report["location_quality"]["with_coords"] >= 1

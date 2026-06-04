@@ -44,4 +44,8 @@ ESTERO_BBOX = {
     "max_lon": -81.65,
 }
 
+# Maximum allowed drift between canonical coordinates and a fresh Census
+# geocode lookup before strict mode fails the run.
+GEOCODE_MISMATCH_THRESHOLD_METERS = 1000.0
+
 FUTURE_PLACEHOLDER_TAG = "Future Placeholder"

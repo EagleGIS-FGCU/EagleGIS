@@ -17,6 +17,7 @@ from typing import Any
 from app.pipeline import config, reference
 from app.pipeline.collect.minutes import load_minutes_index, minutes_body_key, resolve_minutes_url
 from app.pipeline.load.silver import _atomic_write_csv, _read_csv
+from app.pipeline.validate.schemas import in_estero_bbox
 
 # Frontend filter chips / colors key off these display names (see index.html TYPES).
 TYPE_DISPLAY_NAMES: dict[str, str] = {
@@ -77,26 +78,40 @@ def _resolve_location(
     meeting: dict,
     loc_by_id: dict[int, dict],
     locs_by_project: dict[int, list[dict]],
-) -> tuple[str, str, str]:
-    """Return (location_name, latitude, longitude) as strings for CSV."""
+    geocoded_location_ids: set[int] | None = None,
+) -> tuple[str, str, str, str]:
+    """Return (location_name, latitude, longitude, confidence)."""
+    geocoded_location_ids = geocoded_location_ids or set()
     lid = meeting.get("location_id")
     if lid not in (None, ""):
-        loc = loc_by_id.get(int(lid))
+        lid_int = int(lid)
+        loc = loc_by_id.get(lid_int)
         if loc:
+            confidence = (
+                "geocoded" if lid_int in geocoded_location_ids else "exact_location_id"
+            )
             return (
                 loc.get("location_name") or meeting.get("location") or "",
                 _fmt_coord(loc.get("latitude")),
                 _fmt_coord(loc.get("longitude")),
+                confidence,
             )
     pid = meeting.get("project_id")
     if pid is not None:
         for loc in locs_by_project.get(int(pid), []):
+            loc_id = loc.get("location_id")
+            confidence = (
+                "geocoded" if loc_id in geocoded_location_ids else "project_fallback"
+            )
             return (
                 loc.get("location_name") or meeting.get("location") or "",
                 _fmt_coord(loc.get("latitude")),
                 _fmt_coord(loc.get("longitude")),
+                confidence,
             )
-    return (meeting.get("location") or "", "", "")
+    if meeting.get("location"):
+        return (meeting.get("location") or "", "", "", "text_only")
+    return ("", "", "", "missing")
 
 
 def _fmt_coord(val: Any) -> str:
@@ -154,7 +169,18 @@ def _build_title(type_display: str, meeting_date: str, doc: dict | None) -> str:
     return f"{type_display} — {meeting_date}"
 
 
-def build_gold() -> dict[str, Any]:
+def _is_valid_coord_pair(lat: str, lon: str) -> bool:
+    if not lat or not lon:
+        return False
+    try:
+        lat_f = float(lat)
+        lon_f = float(lon)
+    except (TypeError, ValueError):
+        return False
+    return in_estero_bbox(lat_f, lon_f)
+
+
+def build_gold(*, geocoded_location_ids: set[int] | None = None) -> dict[str, Any]:
     """Emit app/data/gold/meetings_public.csv and return a stage report."""
     meetings = _read_csv(config.SILVER_MEETINGS)
     documents = _read_csv(config.SILVER_DOCUMENTS)
@@ -168,6 +194,16 @@ def build_gold() -> dict[str, Any]:
 
     rows: list[dict[str, str]] = []
     with_pdf = 0
+    location_quality: dict[str, Any] = {
+        "exact_location_id": 0,
+        "project_fallback": 0,
+        "geocoded": 0,
+        "text_only": 0,
+        "missing": 0,
+        "with_coords": 0,
+        "outside_bbox_or_invalid": 0,
+        "strict_violations": [],
+    }
     for m in meetings:
         pid = int(m["project_id"])
         tid = int(m["type_id"])
@@ -178,7 +214,27 @@ def build_gold() -> dict[str, Any]:
         meeting_date = str(m.get("meeting_date", ""))[:10]
         doc = docs_by_meeting.get(int(m["meeting_id"]))
 
-        loc_name, lat, lon = _resolve_location(m, loc_by_id, locs_by_project)
+        loc_name, lat, lon, confidence = _resolve_location(
+            m,
+            loc_by_id,
+            locs_by_project,
+            geocoded_location_ids=geocoded_location_ids,
+        )
+        location_quality[confidence] += 1
+        has_coords = bool(lat and lon)
+        if has_coords and _is_valid_coord_pair(lat, lon):
+            location_quality["with_coords"] += 1
+        elif has_coords:
+            location_quality["outside_bbox_or_invalid"] += 1
+            if len(location_quality["strict_violations"]) < 25:
+                location_quality["strict_violations"].append(
+                    f"meeting_id={m.get('meeting_id')} resolved outside ESTERO_BBOX or invalid coords"
+                )
+        elif confidence in {"text_only", "missing"}:
+            if len(location_quality["strict_violations"]) < 25:
+                location_quality["strict_violations"].append(
+                    f"meeting_id={m.get('meeting_id')} has unresolved location confidence={confidence}"
+                )
         minutes_url = _resolve_minutes_url_for_row(m, type_name, doc, minutes_index)
         if minutes_url:
             with_pdf += 1
@@ -216,6 +272,7 @@ def build_gold() -> dict[str, Any]:
         "with_minutes_url": with_pdf,
         "path": str(config.GOLD_MEETINGS_PUBLIC.relative_to(config.DATA_DIR.parent.parent)),
         "actions": action_report,
+        "location_quality": location_quality,
     }
 
 

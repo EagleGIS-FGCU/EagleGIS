@@ -59,6 +59,24 @@ def test_geocode_address_cache_miss_uses_fetcher_then_caches():
     assert again == (26.43, -81.80)
 
 
+def test_geocode_address_force_refresh_bypasses_cache():
+    cache = {"123 Main St, Estero FL": {"latitude": 26.1, "longitude": -81.1}}
+    calls: list[str] = []
+
+    def fake_fetcher(url: str) -> dict:
+        calls.append(url)
+        return {"result": {"addressMatches": [{"coordinates": {"x": -81.80, "y": 26.43}}]}}
+
+    refreshed = geocode_address(
+        "123 Main St, Estero FL",
+        cache,
+        fetcher=fake_fetcher,
+        force_refresh=True,
+    )
+    assert refreshed == (26.43, -81.80)
+    assert len(calls) == 1
+
+
 def test_run_geocode_is_noop_when_all_locations_have_coords():
     # Sanity: the seeded reference data has coordinates for every location.
     assert all(
@@ -75,3 +93,20 @@ def test_run_geocode_is_noop_when_all_locations_have_coords():
     assert report["missing"] == 0
     assert report["filled"] == 0
     assert report["checked"] == len(reference.locations())
+
+
+def test_run_geocode_reports_live_drift_when_verifying_existing():
+    def fake_fetcher(url: str) -> dict:
+        return {"result": {"addressMatches": [{"coordinates": {"x": -82.50, "y": 28.50}}]}}
+
+    report = run_geocode(
+        fetcher=fake_fetcher,
+        cache={},
+        write_cache=False,
+        write_locations=False,
+        verify_existing=True,
+        force_refresh=True,
+        mismatch_threshold_meters=10.0,
+    )
+    assert report["verified"] >= 1
+    assert report["mismatch_over_threshold"] >= 1

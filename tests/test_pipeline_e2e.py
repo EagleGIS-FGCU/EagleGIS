@@ -14,7 +14,7 @@ def _read_csv(path: Path) -> list[dict]:
 
 
 def test_pipeline_produces_silver_and_manifest():
-    rc = run(strict=False)
+    rc = run(strict=False, write_geocode_cache=False)
     assert rc == 0
 
     assert config.SILVER_MEETINGS.exists()
@@ -42,3 +42,6 @@ def test_pipeline_produces_silver_and_manifest():
     manifest = json.loads(runs[-1].read_text())
     assert "stages" in manifest and "silver" in manifest["stages"]
     assert manifest["stages"]["silver"]["meetings"]["out"] == len(meetings)
+    assert "geocode" in manifest["stages"]
+    assert "gold" in manifest["stages"]
+    assert "location_quality" in manifest

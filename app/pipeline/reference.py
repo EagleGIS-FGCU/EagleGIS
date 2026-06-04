@@ -14,6 +14,7 @@ from typing import Any
 import yaml
 
 from app.pipeline import config
+from app.pipeline.validate.schemas import LocationRow, validate_rows
 
 
 def _read_yaml(path: Path) -> Any:
@@ -33,7 +34,25 @@ def meeting_types() -> list[dict]:
 
 @lru_cache(maxsize=1)
 def locations() -> list[dict]:
-    return list(_read_yaml(config.REF_LOCATIONS) or [])
+    raw = list(_read_yaml(config.REF_LOCATIONS) or [])
+    valid, rejects = validate_rows(raw, LocationRow)
+    if rejects:
+        preview = rejects[:3]
+        raise ValueError(
+            f"Invalid reference locations in {config.REF_LOCATIONS}: {preview}"
+        )
+
+    project_fk_errors = [
+        f"location_id={loc.location_id} references unknown project_id={loc.project_id}"
+        for loc in valid
+        if loc.project_id not in project_ids()
+    ]
+    if project_fk_errors:
+        raise ValueError(
+            f"Invalid reference locations project_id values: {project_fk_errors[:3]}"
+        )
+
+    return [loc.model_dump() for loc in valid]
 
 
 @lru_cache(maxsize=1)

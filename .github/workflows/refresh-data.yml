@@ -37,7 +37,7 @@ jobs:
         run: python scripts/scrape_minutes_index.py
 
       - name: Rebuild silver + gold
-        run: python -m app.pipeline.run
+        run: python -m app.pipeline.run --strict --live-geocode --verify-pdf-locations
 
       - name: Commit refreshed artifacts
         run: |
@@ -53,7 +53,7 @@ jobs:
           fi
 
       - name: Publish + verify Supabase (strict)
-        run: python -m app.pipeline.run --publish --verify --strict
+        run: python -m app.pipeline.run --publish --verify --strict --live-geocode --verify-pdf-locations
 
       - name: Upload run manifest
         if: always()

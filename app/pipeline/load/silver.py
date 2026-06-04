@@ -294,6 +294,22 @@ def build_silver() -> dict:
         {"row": d, "errors": [f"unknown meeting_id={d['meeting_id']} (kept anyway)"]}
         for d in document_dicts if d["meeting_id"] not in valid_meeting_ids
     ]
+    location_warnings = [
+        {
+            "row": m,
+            "errors": ["missing location_id (using fallback resolution in gold)"],
+        }
+        for m in meeting_dicts
+        if m.get("location_id") in (None, "") and (m.get("location") or "").strip()
+    ]
+    location_errors = [
+        {
+            "row": m,
+            "errors": ["missing both location_id and location text"],
+        }
+        for m in meeting_dicts
+        if m.get("location_id") in (None, "") and not (m.get("location") or "").strip()
+    ]
 
     real_docs = [d for d in document_dicts if not _is_future_placeholder_dict(d)]
     planned_docs = [d for d in document_dicts if _is_future_placeholder_dict(d)]
@@ -312,6 +328,8 @@ def build_silver() -> dict:
             "meetings": meeting_rejects,
             "documents": document_rejects,
             "document_fk_warnings": fk_warnings,
+            "location_warnings": location_warnings,
+            "location_errors": location_errors,
         },
     )
 
@@ -334,6 +352,10 @@ def build_silver() -> dict:
         },
         "meeting_actions": {
             "out": len(meeting_actions),
+        },
+        "locations": {
+            "warnings": len(location_warnings),
+            "errors": len(location_errors),
         },
     }
 

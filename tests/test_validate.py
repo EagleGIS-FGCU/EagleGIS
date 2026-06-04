@@ -3,6 +3,7 @@ import pytest
 
 from app.pipeline.validate.schemas import (
     DocumentRow,
+    LocationRow,
     MeetingRow,
     validate_rows,
 )
@@ -54,6 +55,26 @@ def test_unknown_type_id_rejected():
     bad = _good_meeting_row() | {"type_id": "999"}
     valid, rejects = validate_rows([bad], MeetingRow)
     assert not valid
+
+
+def test_unknown_location_id_rejected():
+    bad = _good_meeting_row() | {"location_id": "999"}
+    valid, rejects = validate_rows([bad], MeetingRow)
+    assert not valid
+    assert any("unknown location_id=999" in e for e in rejects[0]["errors"])
+
+
+def test_location_row_outside_bbox_rejected():
+    bad_location = {
+        "location_id": 1,
+        "project_id": 1,
+        "location_name": "Outside",
+        "latitude": 28.0,
+        "longitude": -81.8,
+    }
+    valid, rejects = validate_rows([bad_location], LocationRow)
+    assert not valid
+    assert any("outside ESTERO_BBOX" in e for e in rejects[0]["errors"])
 
 
 def test_document_row_accepts_minimal():

@@ -43,7 +43,7 @@ jobs:
   # is always a deterministic function of bronze + reference + pipeline code.
   # ---------------------------------------------------------------------------
   pipeline:
-    name: pipeline build (offline)
+    name: pipeline build (strict location)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,8 +56,8 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Build silver (strict; fail on any reject)
-        run: python -m app.pipeline.run --strict
+      - name: Build silver+gold (strict + live geocode)
+        run: python -m app.pipeline.run --strict --live-geocode --verify-pdf-locations --no-geocode-cache-write
 
       - name: Verify committed silver matches rebuild
         run: |
@@ -65,6 +65,15 @@ jobs:
             echo ""
             echo "::error::Silver layer is out of date. Run:" \
                  "python -m app.pipeline.run, then commit app/data/silver/"
+            exit 1
+          fi
+
+      - name: Verify committed gold matches rebuild
+        run: |
+          if ! git diff --exit-code --stat -- app/data/gold/; then
+            echo ""
+            echo "::error::Gold layer is out of date. Run:" \
+                 "python -m app.pipeline.run, then commit app/data/gold/"
             exit 1
           fi
 

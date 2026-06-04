@@ -5,3 +5,4 @@ python-dotenv>=1.0.0
 supabase>=2.0.0
 PyYAML>=6.0
 pytest>=8.0
+pypdf

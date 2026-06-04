@@ -20,7 +20,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
-from app.pipeline import reference
+from app.pipeline import config
 
 NULL_TOKENS = {"", "null", "NULL", "None", "NA", "N/A"}
 
@@ -53,6 +53,43 @@ def _parse_date(v: Any) -> Optional[date]:
         return date.fromisoformat(str(v).strip())
     except (ValueError, TypeError):
         raise ValueError(f"not an ISO date (YYYY-MM-DD): {v!r}")
+
+
+def _parse_float(v: Any) -> Optional[float]:
+    v = _none_if_null(v)
+    if v is None:
+        return None
+    if isinstance(v, (int, float)):
+        return float(v)
+    try:
+        return float(str(v).strip())
+    except (ValueError, TypeError):
+        raise ValueError(f"not a float: {v!r}")
+
+
+def _reference_module():
+    # Lazy import avoids circular import when reference.py validates locations.
+    from app.pipeline import reference
+    return reference
+
+
+def in_estero_bbox(lat: float, lon: float) -> bool:
+    bbox = config.ESTERO_BBOX
+    return (
+        bbox["min_lat"] <= lat <= bbox["max_lat"]
+        and bbox["min_lon"] <= lon <= bbox["max_lon"]
+    )
+
+
+def validate_coordinates(lat: float, lon: float) -> None:
+    if not (-90.0 <= lat <= 90.0):
+        raise ValueError(f"latitude out of range: {lat}")
+    if not (-180.0 <= lon <= 180.0):
+        raise ValueError(f"longitude out of range: {lon}")
+    if not in_estero_bbox(lat, lon):
+        raise ValueError(
+            f"coordinates outside ESTERO_BBOX: lat={lat}, lon={lon}"
+        )
 
 
 class MeetingRow(BaseModel):
@@ -106,6 +143,7 @@ class MeetingRow(BaseModel):
 
     @model_validator(mode="after")
     def _check(self) -> "MeetingRow":
+        reference = _reference_module()
         if self.meeting_year != self.meeting_date.year:
             raise ValueError(
                 f"meeting_year {self.meeting_year} does not match "
@@ -117,6 +155,49 @@ class MeetingRow(BaseModel):
             raise ValueError(f"unknown type_id={self.type_id}")
         if self.location_id is not None and self.location_id not in reference.location_ids():
             raise ValueError(f"unknown location_id={self.location_id}")
+        return self
+
+
+class LocationRow(BaseModel):
+    """A validated row for app/data/reference/locations.yaml."""
+
+    model_config = {"str_strip_whitespace": True}
+
+    location_id: int
+    project_id: int
+    location_name: str
+    location_type: Optional[str] = None
+    address: Optional[str] = None
+    description: Optional[str] = None
+    latitude: float
+    longitude: float
+
+    @field_validator("location_id", "project_id", mode="before")
+    @classmethod
+    def _ints(cls, v: Any) -> Any:
+        return _parse_int(v)
+
+    @field_validator("latitude", "longitude", mode="before")
+    @classmethod
+    def _floats(cls, v: Any) -> Any:
+        return _parse_float(v)
+
+    @field_validator("location_name", mode="before")
+    @classmethod
+    def _name(cls, v: Any) -> Any:
+        v = _none_if_null(v)
+        if not v:
+            raise ValueError("location_name is required")
+        return v
+
+    @field_validator("location_type", "address", "description", mode="before")
+    @classmethod
+    def _strs(cls, v: Any) -> Any:
+        return _none_if_null(v)
+
+    @model_validator(mode="after")
+    def _check(self) -> "LocationRow":
+        validate_coordinates(self.latitude, self.longitude)
         return self
 
 

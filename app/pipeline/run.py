@@ -29,6 +29,7 @@ Exit codes (with ``--strict``):
   * ``2`` — silver build had rejected rows.
   * ``3`` — verify reported drift.
   * ``4`` — publish recorded a per-table error (e.g. PostgREST 23505).
+  * ``5`` — location validation failed (gold quality / geocode mismatch).
 
 The manifest records git SHA (when available), input/output row counts per
 stage, reject counts, output file hashes, the elapsed wall time, and (when
@@ -50,8 +51,10 @@ from pathlib import Path
 from typing import Optional
 
 from app.pipeline import config
+from app.pipeline.enrich.geocode import run_geocode
 from app.pipeline.load.silver import build_silver
 from app.pipeline.publish.gold import build_gold
+from app.pipeline.validate.pdf_location import verify_locations_from_minutes_pdfs
 from app.pipeline.publish.supabase import (
     has_publish_errors,
     publish as publish_to_supabase,
@@ -172,6 +175,9 @@ def run(
     do_verify: bool = False,
     do_reset_reference: bool = False,
     dry_run: bool = False,
+    live_geocode: bool = False,
+    write_geocode_cache: bool = True,
+    verify_pdf_locations: bool = False,
 ) -> int:
     logging.basicConfig(
         level=logging.INFO,
@@ -190,9 +196,25 @@ def run(
         silver_report.get("meeting_actions", {}).get("out", 0),
     )
 
-    gold_report = build_gold()
+    geocode_report = run_geocode(
+        verify_existing=live_geocode,
+        force_refresh=live_geocode,
+        write_cache=write_geocode_cache,
+    )
+    stages["geocode"] = geocode_report
+    logger.info("geocode stage complete: %s", geocode_report)
+
+    gold_report = build_gold(
+        geocoded_location_ids=set(geocode_report.get("geocoded_location_ids", [])),
+    )
     stages["gold"] = gold_report
     logger.info("gold build complete: %s", gold_report)
+
+    pdf_location_report: dict = {"checked": 0, "strict_violations": []}
+    if verify_pdf_locations:
+        pdf_location_report = verify_locations_from_minutes_pdfs()
+        stages["pdf_location"] = pdf_location_report
+        logger.info("pdf location verification complete: %s", pdf_location_report)
 
     drift_detected, publish_errors = _maybe_run_supabase_stages(
         do_publish=do_publish,
@@ -209,6 +231,35 @@ def run(
         "elapsed_ms": elapsed_ms,
         "git_sha": _git_sha(),
         "stages": stages,
+        "location_quality": {
+            "gold_confidence_counts": {
+                k: v
+                for k, v in gold_report.get("location_quality", {}).items()
+                if k in {
+                    "exact_location_id",
+                    "project_fallback",
+                    "geocoded",
+                    "text_only",
+                    "missing",
+                    "with_coords",
+                    "outside_bbox_or_invalid",
+                }
+            },
+            "geocode_mismatch_over_threshold": geocode_report.get("mismatch_over_threshold", 0),
+            "geocode_outside_bbox": geocode_report.get("outside_bbox", 0),
+            "strict_failure_reasons": (
+                geocode_report.get("strict_violations", [])
+                + gold_report.get("location_quality", {}).get("strict_violations", [])
+                + pdf_location_report.get("strict_violations", [])
+            )[:50],
+            "pdf_location": {
+                "checked": pdf_location_report.get("checked", 0),
+                "mismatched": pdf_location_report.get("mismatched", 0),
+                "no_pdf_url": pdf_location_report.get("no_pdf_url", 0),
+                "pdf_fetch_errors": pdf_location_report.get("pdf_fetch_errors", 0),
+                "pdf_parse_errors": pdf_location_report.get("pdf_parse_errors", 0),
+            },
+        },
         "outputs": [
             _file_hash(config.SILVER_MEETINGS),
             _file_hash(config.SILVER_DOCUMENTS),
@@ -227,10 +278,22 @@ def run(
         silver_report["meetings"]["rejects"]
         + silver_report["documents"]["rejects"]
     )
+    location_strict_violations = (
+        len(geocode_report.get("strict_violations", []))
+        + len(gold_report.get("location_quality", {}).get("strict_violations", []))
+        + len(pdf_location_report.get("strict_violations", []))
+    )
     if rejects:
         logger.warning("pipeline finished with %d rejected rows", rejects)
         if strict:
             return 2
+    if location_strict_violations:
+        logger.warning(
+            "pipeline finished with %d location strict violations",
+            location_strict_violations,
+        )
+        if strict:
+            return 5
     if drift_detected and strict:
         return 3
     if publish_errors and strict:
@@ -244,8 +307,29 @@ def main(argv: Optional[list[str]] = None) -> int:
         "--strict",
         action="store_true",
         help=(
-            "Exit non-zero on rejects (code 2), drift (code 3), or "
-            "publish errors (code 4)"
+            "Exit non-zero on rejects (2), location validation failures (5), "
+            "drift (3), or publish errors (4)"
+        ),
+    )
+    parser.add_argument(
+        "--live-geocode",
+        action="store_true",
+        help=(
+            "Cross-check reference locations against live Census geocoder "
+            "responses and fail strict mode on excessive drift."
+        ),
+    )
+    parser.add_argument(
+        "--no-geocode-cache-write",
+        action="store_true",
+        help="Do not persist geocode cache updates to disk for this run.",
+    )
+    parser.add_argument(
+        "--verify-pdf-locations",
+        action="store_true",
+        help=(
+            "Fetch minutes PDFs and verify expected location text appears in "
+            "document content."
         ),
     )
     parser.add_argument(
@@ -284,6 +368,9 @@ def main(argv: Optional[list[str]] = None) -> int:
         do_verify=args.verify,
         do_reset_reference=args.reset_reference,
         dry_run=args.dry_run,
+        live_geocode=args.live_geocode,
+        write_geocode_cache=not args.no_geocode_cache_write,
+        verify_pdf_locations=args.verify_pdf_locations,
     )
 
 

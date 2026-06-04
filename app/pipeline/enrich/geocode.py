@@ -22,6 +22,7 @@ returns ``result.addressMatches[*].coordinates = {"x": <lon>, "y": <lat>}``.
 from __future__ import annotations
 
 import json
+import math
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -30,6 +31,7 @@ from typing import Callable, Optional
 import yaml
 
 from app.pipeline import config, reference
+from app.pipeline.validate.schemas import in_estero_bbox
 
 CENSUS_ONELINE_URL = "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress"
 BENCHMARK = "Public_AR_Current"
@@ -95,6 +97,7 @@ def geocode_address(
     address: str,
     cache: dict,
     fetcher: Fetcher = _default_fetcher,
+    force_refresh: bool = False,
 ) -> Optional[tuple[float, float]]:
     """Resolve ``address`` to ``(latitude, longitude)``, cache-first.
 
@@ -105,7 +108,7 @@ def geocode_address(
     key = (address or "").strip()
     if not key:
         return None
-    if key in cache:
+    if not force_refresh and key in cache:
         cached = cache[key]
         if not cached:
             return None
@@ -125,12 +128,34 @@ def _missing_coords(loc: dict) -> bool:
     return loc.get("latitude") in (None, "") or loc.get("longitude") in (None, "")
 
 
+def _haversine_meters(
+    lat1: float,
+    lon1: float,
+    lat2: float,
+    lon2: float,
+) -> float:
+    radius_m = 6_371_000
+    d_lat = math.radians(lat2 - lat1)
+    d_lon = math.radians(lon2 - lon1)
+    a = (
+        math.sin(d_lat / 2) ** 2
+        + math.cos(math.radians(lat1))
+        * math.cos(math.radians(lat2))
+        * math.sin(d_lon / 2) ** 2
+    )
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return radius_m * c
+
+
 def run_geocode(
     *,
     fetcher: Fetcher = _default_fetcher,
     cache: Optional[dict] = None,
     write_cache: bool = True,
     write_locations: bool = True,
+    verify_existing: bool = False,
+    mismatch_threshold_meters: float = config.GEOCODE_MISMATCH_THRESHOLD_METERS,
+    force_refresh: bool = False,
 ) -> dict:
     """Fill missing lat/long on reference locations via the geocoder.
 
@@ -141,7 +166,18 @@ def run_geocode(
     cache = load_cache() if cache is None else cache
     locations = reference.locations()
 
-    report = {"checked": len(locations), "missing": 0, "filled": 0, "unresolved": 0}
+    report = {
+        "checked": len(locations),
+        "missing": 0,
+        "filled": 0,
+        "unresolved": 0,
+        "resolved": 0,
+        "verified": 0,
+        "mismatch_over_threshold": 0,
+        "outside_bbox": 0,
+        "strict_violations": [],
+        "geocoded_location_ids": [],
+    }
     updated: list[dict] = []
     changed = False
 
@@ -150,13 +186,61 @@ def run_geocode(
         if _missing_coords(loc):
             report["missing"] += 1
             address = loc.get("address") or loc.get("location_name") or ""
-            coords = geocode_address(address, cache, fetcher=fetcher) if address else None
+            coords = (
+                geocode_address(
+                    address,
+                    cache,
+                    fetcher=fetcher,
+                    force_refresh=force_refresh,
+                )
+                if address else None
+            )
             if coords:
                 loc["latitude"], loc["longitude"] = coords
                 report["filled"] += 1
+                report["resolved"] += 1
+                report["geocoded_location_ids"].append(int(loc["location_id"]))
                 changed = True
+                if not in_estero_bbox(float(loc["latitude"]), float(loc["longitude"])):
+                    report["outside_bbox"] += 1
+                    if len(report["strict_violations"]) < 25:
+                        report["strict_violations"].append(
+                            f"location_id={loc['location_id']} geocoded outside ESTERO_BBOX"
+                        )
             else:
                 report["unresolved"] += 1
+                if len(report["strict_violations"]) < 25:
+                    report["strict_violations"].append(
+                        f"location_id={loc.get('location_id')} unresolved geocode"
+                    )
+        elif verify_existing:
+            address = loc.get("address") or loc.get("location_name") or ""
+            if address:
+                coords = geocode_address(
+                    address,
+                    cache,
+                    fetcher=fetcher,
+                    force_refresh=force_refresh,
+                )
+                report["verified"] += 1
+                if coords:
+                    report["resolved"] += 1
+                    lat, lon = coords
+                    source_lat = float(loc["latitude"])
+                    source_lon = float(loc["longitude"])
+                    drift_m = _haversine_meters(source_lat, source_lon, lat, lon)
+                    if drift_m > mismatch_threshold_meters:
+                        report["mismatch_over_threshold"] += 1
+                        if len(report["strict_violations"]) < 25:
+                            report["strict_violations"].append(
+                                f"location_id={loc['location_id']} geocode drift {drift_m:.1f}m exceeds {mismatch_threshold_meters:.1f}m"
+                            )
+                    if not in_estero_bbox(lat, lon):
+                        report["outside_bbox"] += 1
+                        if len(report["strict_violations"]) < 25:
+                            report["strict_violations"].append(
+                                f"location_id={loc['location_id']} live geocode outside ESTERO_BBOX"
+                            )
         updated.append(loc)
 
     if write_cache:
