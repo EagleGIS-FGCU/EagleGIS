@@ -7,6 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.30/"></script>
     <style>
         :root {
             --bg:            #f0f2f5;
@@ -1041,12 +1043,19 @@
 
     <!-- MAP -->
     <main id="map-spot">
-        <iframe
-            src="https://www.arcgis.com/apps/Embed/index.html?webmap=586954199d83492896abf247343a33ee&amp;home=true&amp;zoom=true&amp;scale=false&amp;search=false&amp;basemap_gallery=false&amp;disable_scroll=false&amp;theme=light"
-            allow="geolocation" title="EagleGIS Community Map"
-            style="width:100%;height:100%;border:none;display:block;">
-        </iframe>
+        <div id="arcgis-map" style="width:100%;height:100%;"></div>
     </main>
+    <script>
+    require(["esri/WebMap", "esri/views/MapView"], function (WebMap, MapView) {
+        const webmap = new WebMap({
+            portalItem: { id: "586954199d83492896abf247343a33ee" }
+        });
+        new MapView({
+            container: "arcgis-map",
+            map: webmap
+        });
+    });
+    </script>
 
     <!-- Back to top -->
     <button id="back-top" title="Back to top"><i class="fa-solid fa-chevron-up"></i></button>
