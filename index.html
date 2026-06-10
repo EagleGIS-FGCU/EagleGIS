@@ -1041,12 +1041,135 @@
 
     <!-- MAP -->
     <main id="map-spot">
-        <iframe
-            src="https://eccl-swfl-safety.maps.arcgis.com/apps/mapviewer/index.html?webmap=586954199d83492896abf247343a33ee&ui=min&chrome=false&logo=false&scale=false&search=false&basemap=false&overview=false&legend=false"
+        <iframe id="arcgis-frame"
+            src="https://www.arcgis.com/apps/Embed/index.html?webmap=586954199d83492896abf247343a33ee&amp;home=true&amp;zoom=true&amp;scale=false&amp;search=false&amp;basemap_gallery=false&amp;disable_scroll=false&amp;theme=light"
             allow="geolocation" title="EagleGIS Community Map"
             style="width:100%;height:100%;border:none;display:block;">
         </iframe>
     </main>
+
+    <!-- #region agent log: ArcGIS iframe instrumentation (debug session 703cb3) -->
+    <script>
+    (function(){
+      var EP='http://127.0.0.1:7613/ingest/5467bad6-3105-44c5-bc12-c7cda06fe6bf';
+      var SID='703cb3';
+      function dlog(loc,msg,data,hyp){
+        try{
+          fetch(EP,{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':SID},
+            body:JSON.stringify({sessionId:SID,runId:(window.__DBG_RUN||'post-fix'),location:loc,message:msg,data:data||{},hypothesisId:hyp||null,timestamp:Date.now()})
+          }).catch(function(){});
+        }catch(e){}
+      }
+      window.__DBG_RUN='post-fix';
+      var ARC_URL='https://www.arcgis.com/apps/Embed/index.html?webmap=586954199d83492896abf247343a33ee';
+      var RUN_ID='post-fix';
+      var iframe=document.getElementById('arcgis-frame');
+      var tStart=Date.now();
+
+      // H-ENV: environment snapshot
+      var gl=null; try{var c=document.createElement('canvas'); gl=!!(c.getContext('webgl2')||c.getContext('webgl'));}catch(e){gl='err:'+e.message;}
+      dlog('index.html:env','page load env',{
+        href:location.href,origin:location.origin,protocol:location.protocol,
+        ua:navigator.userAgent, language:navigator.language,
+        cookieEnabled:navigator.cookieEnabled, doNotTrack:navigator.doNotTrack,
+        webgl:gl, online:navigator.onLine,
+        hasStorageAccessAPI: typeof document.hasStorageAccess==='function',
+        brave: !!(navigator.brave&&navigator.brave.isBrave)
+      },'H3');
+
+      // H1: iframe lifecycle
+      var loadFired=false, errorFired=false;
+      iframe.addEventListener('load',function(){
+        loadFired=true;
+        var crossOriginAccess='unknown';
+        try{ var d=iframe.contentDocument; crossOriginAccess=d?'accessible(unexpected)':'null'; }
+        catch(e){ crossOriginAccess='blocked:'+e.name+':'+e.message; }
+        dlog('index.html:iframe.load','iframe load event fired',{
+          elapsedMs:Date.now()-tStart, src:iframe.src, crossOriginAccess:crossOriginAccess
+        },'H1');
+      });
+      iframe.addEventListener('error',function(e){
+        errorFired=true;
+        dlog('index.html:iframe.error','iframe error event',{
+          elapsedMs:Date.now()-tStart, type:e&&e.type
+        },'H1');
+      });
+
+      // H1/H3: CSP violations
+      document.addEventListener('securitypolicyviolation',function(e){
+        dlog('index.html:csp','SecurityPolicyViolation',{
+          blockedURI:e.blockedURI, violatedDirective:e.violatedDirective,
+          effectiveDirective:e.effectiveDirective, sourceFile:e.sourceFile,
+          documentURI:e.documentURI, disposition:e.disposition
+        },'H1');
+      });
+
+      // global errors
+      window.addEventListener('error',function(e){
+        dlog('index.html:windowerror','window.onerror',{
+          msg:String(e.message||''), filename:e.filename, line:e.lineno
+        },'H1');
+      });
+
+      // H1 vs H3 vs H4: network reachability via no-cors HEAD (will be opaque if reachable)
+      fetch(ARC_URL,{mode:'no-cors',redirect:'follow'}).then(function(r){
+        dlog('index.html:fetch.arcgis','no-cors fetch resolved',{
+          type:r.type, status:r.status, ok:r.ok
+        },'H3');
+      }).catch(function(err){
+        dlog('index.html:fetch.arcgis','no-cors fetch REJECTED',{
+          name:err&&err.name, message:String(err&&err.message)
+        },'H3');
+      });
+
+      // H4: probe item sharing via public ArcGIS REST (CORS-enabled)
+      fetch('https://www.arcgis.com/sharing/rest/content/items/586954199d83492896abf247343a33ee?f=json')
+        .then(function(r){ return r.json().then(function(j){ return {status:r.status,json:j}; }); })
+        .then(function(o){
+          dlog('index.html:fetch.itemmeta','arcgis item metadata',{
+            status:o.status,
+            access:o.json&&o.json.access,
+            owner:o.json&&o.json.owner,
+            title:o.json&&o.json.title,
+            type:o.json&&o.json.type,
+            error:o.json&&o.json.error
+          },'H4');
+        })
+        .catch(function(err){
+          dlog('index.html:fetch.itemmeta','arcgis item metadata fetch FAILED',{
+            name:err&&err.name,message:String(err&&err.message)
+          },'H4');
+        });
+
+      // H2: storage access (third-party cookies indicator)
+      try{
+        if(typeof document.hasStorageAccess==='function'){
+          document.hasStorageAccess().then(function(has){
+            dlog('index.html:storageaccess','hasStorageAccess result',{has:has},'H2');
+          }).catch(function(err){
+            dlog('index.html:storageaccess','hasStorageAccess error',{msg:String(err&&err.message)},'H2');
+          });
+        }
+      }catch(e){}
+
+      // postMessage from the iframe (may never fire, but worth listening)
+      window.addEventListener('message',function(e){
+        if(e&&e.origin&&e.origin.indexOf('arcgis')!==-1){
+          dlog('index.html:postmessage','message from arcgis origin',{origin:e.origin,dataKind:typeof e.data},'H1');
+        }
+      });
+
+      // timeout check: did iframe load within 10s?
+      setTimeout(function(){
+        dlog('index.html:timeout10s','iframe state at 10s',{
+          loadFired:loadFired, errorFired:errorFired,
+          offsetW:iframe.offsetWidth, offsetH:iframe.offsetHeight,
+          srcStill:iframe.src===iframe.getAttribute('src')
+        },'H1');
+      },10000);
+    })();
+    </script>
+    <!-- #endregion -->
 
     <!-- Back to top -->
     <button id="back-top" title="Back to top"><i class="fa-solid fa-chevron-up"></i></button>
