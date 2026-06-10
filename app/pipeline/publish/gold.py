@@ -10,13 +10,20 @@ minutes_index.json) into the 14-column schema expected by index.html:
 """
 from __future__ import annotations
 
-import csv
+import hashlib
+import json
+import os
+import tempfile
+from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from app.pipeline import config, reference
-from app.pipeline.collect.minutes import load_minutes_index, minutes_body_key, resolve_minutes_url
+from app.pipeline.collect.minutes import load_minutes_index, resolve_minutes_url
 from app.pipeline.load.silver import _atomic_write_csv, _read_csv
+
+SITE_MANIFEST_VERSION = 1
 
 # Frontend filter chips / colors key off these display names (see index.html TYPES).
 TYPE_DISPLAY_NAMES: dict[str, str] = {
@@ -57,6 +64,105 @@ GOLD_ACTION_FIELDS = [
     "AmountUSD",
     "RawText",
 ]
+
+
+def _atomic_write_json_compact(path: Path, payload: Any) -> None:
+    """Write compact JSON atomically (smaller deliverable for the static site)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_path = tempfile.mkstemp(prefix=f".{path.name}.", dir=str(path.parent))
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(payload, f, separators=(",", ":"), default=str)
+        os.replace(tmp_path, path)
+    except Exception:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
+
+
+def _file_fingerprint(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {"path": _rel(path), "exists": False}
+    h = hashlib.sha256()
+    size = 0
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+            size += len(chunk)
+    return {
+        "path": _rel(path),
+        "exists": True,
+        "sha256": h.hexdigest(),
+        "bytes": size,
+    }
+
+
+def _rel(path: Path) -> str:
+    return str(path.relative_to(config.DATA_DIR.parent.parent))
+
+
+def _clear_year_shards() -> None:
+    """Remove stale shard files when the dataset is below the shard threshold."""
+    if not config.GOLD_SHARDS_DIR.exists():
+        return
+    for path in config.GOLD_SHARDS_DIR.glob("*.json"):
+        path.unlink()
+    try:
+        config.GOLD_SHARDS_DIR.rmdir()
+    except OSError:
+        pass
+
+
+def _write_year_shards(rows: list[dict[str, str]]) -> list[dict[str, Any]]:
+    """Emit per-year JSON shards when the dataset exceeds GOLD_SHARD_THRESHOLD."""
+    by_year: dict[str, list[dict[str, str]]] = defaultdict(list)
+    for row in rows:
+        by_year[str(row.get("MeetingYear") or "unknown")].append(row)
+
+    shards: list[dict[str, Any]] = []
+    config.GOLD_SHARDS_DIR.mkdir(parents=True, exist_ok=True)
+    for year in sorted(by_year.keys(), reverse=True):
+        year_rows = by_year[year]
+        shard_path = config.GOLD_SHARDS_DIR / f"{year}.json"
+        _atomic_write_json_compact(shard_path, year_rows)
+        shards.append({
+            "year": year,
+            "rows": len(year_rows),
+            "path": _rel(shard_path),
+        })
+    return shards
+
+
+def _build_site_manifest(
+    rows: list[dict[str, str]],
+    *,
+    shard_report: list[dict[str, Any]] | None,
+) -> dict[str, Any]:
+    meetings_csv = _file_fingerprint(config.GOLD_MEETINGS_PUBLIC)
+    meetings_json = _file_fingerprint(config.GOLD_MEETINGS_JSON)
+    minutes = _file_fingerprint(config.MINUTES_INDEX)
+    years = sorted({str(r["MeetingYear"]) for r in rows if r.get("MeetingYear")}, reverse=True)
+    types = sorted({str(r["MeetingType"]) for r in rows if r.get("MeetingType")})
+    delivery = "sharded" if shard_report else "monolith"
+
+    return {
+        "version": SITE_MANIFEST_VERSION,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "delivery": delivery,
+        "meetings": {
+            "rows": len(rows),
+            "years": years,
+            "types": types,
+            "csv": _rel(config.GOLD_MEETINGS_PUBLIC),
+            "json": _rel(config.GOLD_MEETINGS_JSON),
+            "sha256": meetings_json.get("sha256") or meetings_csv.get("sha256"),
+            "bytes": meetings_json.get("bytes") or meetings_csv.get("bytes"),
+            "shards": shard_report,
+        },
+        "minutes_index": minutes,
+    }
 
 
 def _index_by_id(rows: list[dict], key: str) -> dict[int, dict]:
@@ -208,13 +314,27 @@ def build_gold() -> dict[str, Any]:
 
     rows.sort(key=lambda r: (r["MeetingDate"], r["ProjectName"]), reverse=True)
     _atomic_write_csv(config.GOLD_MEETINGS_PUBLIC, GOLD_FIELDS, rows)
+    _atomic_write_json_compact(config.GOLD_MEETINGS_JSON, rows)
+
+    shard_report = None
+    if len(rows) >= config.GOLD_SHARD_THRESHOLD:
+        shard_report = _write_year_shards(rows)
+    else:
+        _clear_year_shards()
+
+    site_manifest = _build_site_manifest(rows, shard_report=shard_report)
+    _atomic_write_json_compact(config.GOLD_SITE_MANIFEST, site_manifest)
 
     action_report = _build_gold_actions(meetings, projects, types)
 
     return {
         "rows": len(rows),
         "with_minutes_url": with_pdf,
-        "path": str(config.GOLD_MEETINGS_PUBLIC.relative_to(config.DATA_DIR.parent.parent)),
+        "path": _rel(config.GOLD_MEETINGS_PUBLIC),
+        "json_path": _rel(config.GOLD_MEETINGS_JSON),
+        "manifest_path": _rel(config.GOLD_SITE_MANIFEST),
+        "delivery": site_manifest["delivery"],
+        "shards": len(shard_report or []),
         "actions": action_report,
     }
 

@@ -25,7 +25,14 @@ SILVER_REJECTS = SILVER_DIR / "_rejects.json"
 
 GOLD_DIR = DATA_DIR / "gold"
 GOLD_MEETINGS_PUBLIC = GOLD_DIR / "meetings_public.csv"
+GOLD_MEETINGS_JSON = GOLD_DIR / "meetings_public.json"
+GOLD_SITE_MANIFEST = GOLD_DIR / "site_manifest.json"
+GOLD_SHARDS_DIR = GOLD_DIR / "shards"
 GOLD_MEETING_ACTIONS_PUBLIC = GOLD_DIR / "meeting_actions_public.csv"
+
+# When public meeting rows reach this count, gold also emits per-year JSON shards
+# so the GitHub Pages frontend can fetch data incrementally.
+GOLD_SHARD_THRESHOLD = 500
 
 MINUTES_INDEX = DATA_DIR / "minutes_index.json"
 

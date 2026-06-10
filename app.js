@@ -25,9 +25,13 @@
    1. SETTINGS YOU MIGHT WANT TO CHANGE
    ────────────────────────────────────────────────────────────────────────── */
 
-// Where the meeting records come from. This is a CSV (spreadsheet) file in
-// this repository, rebuilt by the data pipeline (see README).
+// Public data deliverables (rebuilt by `python -m app.pipeline.run`).
+// The site loads site_manifest.json first, then JSON (or year-shards when large).
+const MANIFEST_URL = 'app/data/gold/site_manifest.json';
 const CSV_URL = 'app/data/gold/meetings_public.csv';
+const DATA_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+let siteManifest = null;
 
 // Every meeting type and how its "chip" looks in the sidebar:
 //   color = text color, bg = background, bd = border (hex color codes)
@@ -50,6 +54,113 @@ const TYPES = {
 };
 const FALLBACK_TYPE = {color:"#0052a5",bg:"#eff6ff",bd:"#93c5fd",short:"Other",icon:"fa-file"};
 const t = type => TYPES[type] || FALLBACK_TYPE;
+
+/** Run work after first paint when the browser is idle (with a timeout fallback). */
+function scheduleIdle(fn, timeoutMs = 2000) {
+    if ('requestIdleCallback' in window) requestIdleCallback(fn, { timeout: timeoutMs });
+    else setTimeout(fn, 100);
+}
+
+/** Defer the heavy ArcGIS embed until after the meeting list has painted. */
+function loadDeferredMap() {
+    const iframe = document.getElementById('map-iframe');
+    if (!iframe || iframe.dataset.loaded || !iframe.dataset.src) return;
+    iframe.src = iframe.dataset.src;
+    iframe.dataset.loaded = '1';
+}
+
+const MEETINGS_PAGE_SIZE = 50;
+let meetingsDisplayLimit = MEETINGS_PAGE_SIZE;
+let _meetingsScrollObserver = null;
+
+function versionedUrl(path, sha256) {
+    const v = sha256 ? String(sha256).slice(0, 12) : String(Date.now());
+    return `${path}?v=${v}`;
+}
+
+function readDataCache(key) {
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+        const { ts, data } = JSON.parse(raw);
+        if (Date.now() - ts > DATA_CACHE_TTL_MS) return null;
+        return data;
+    } catch (e) { return null; }
+}
+
+function writeDataCache(key, data) {
+    try {
+        localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data }));
+    } catch (e) { /* quota exceeded */ }
+}
+
+async function fetchJson(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+}
+
+function compareMeetingRows(a, b) {
+    const byDate = (b.MeetingDate || '').localeCompare(a.MeetingDate || '');
+    if (byDate !== 0) return byDate;
+    return (a.ProjectName || '').localeCompare(b.ProjectName || '');
+}
+
+async function loadSiteManifest() {
+    siteManifest = await fetchJson(MANIFEST_URL);
+    return siteManifest;
+}
+
+async function loadMeetingsRecords(manifest) {
+    const meta = manifest.meetings || {};
+    const sha = meta.sha256 || '';
+    const cacheKey = `eaglegis:meetings:v1:${sha}`;
+    const cached = readDataCache(cacheKey);
+    if (cached) return cached;
+
+    let rows = null;
+    if (meta.shards && meta.shards.length) {
+        const parts = await Promise.all(
+            meta.shards.map(s => fetchJson(versionedUrl(s.path, sha)))
+        );
+        rows = parts.flat().sort(compareMeetingRows);
+    } else if (meta.json) {
+        rows = await fetchJson(versionedUrl(meta.json, sha));
+    }
+
+    if (rows) {
+        writeDataCache(cacheKey, rows);
+        return rows;
+    }
+
+    return new Promise((resolve, reject) => {
+        if (typeof Papa === 'undefined') {
+            reject(new Error('PapaParse unavailable'));
+            return;
+        }
+        Papa.parse(versionedUrl(meta.csv || CSV_URL, sha), {
+            download: true, header: true, skipEmptyLines: true,
+            complete: ({ data }) => resolve(data),
+            error: reject,
+        });
+    });
+}
+
+function onMeetingsLoaded(data) {
+    allData = data;
+    populateYears();
+    buildTypeFilters();
+    run();
+    setupSearch();
+    setupFilters();
+    setupControls();
+    setupBackTop();
+    setupRecordListDelegation();
+    setupMeetingsInfiniteScroll();
+    scheduleIdle(() => buildMeetingSearchIndex());
+    scheduleIdle(() => loadMinutesIndex(), 3000);
+    scheduleIdle(loadDeferredMap, 1500);
+}
 
 /* ──────────────────────────────────────────────────────────────────────────
    2. MEETINGS TAB — load the CSV, then search / filter / sort / render
@@ -103,24 +214,26 @@ function showSkeleton() {
 
 async function init() {
     showSkeleton();
-    Papa.parse(CSV_URL, {
-        download:true, header:true, skipEmptyLines:true,
-        complete:({data}) => {
-            allData = data;
-            buildMeetingSearchIndex();
-            populateYears();
-            buildTypeFilters();
-            run();
-            setupSearch();
-            setupFilters();
-            setupControls();
-            setupBackTop();
-        },
-        error:()=>{
-            document.getElementById('data-list').innerHTML=
-                `<div class="empty"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i><p style="color:#ef4444;">Could not load data.<br>The meetings file (app/data/gold/meetings_public.csv) failed to load.</p></div>`;
+    try {
+        const manifest = await loadSiteManifest();
+        const data = await loadMeetingsRecords(manifest);
+        onMeetingsLoaded(data);
+    } catch (err) {
+        console.warn('Manifest/JSON load failed; falling back to CSV:', err);
+        if (typeof Papa === 'undefined') {
+            document.getElementById('data-list').innerHTML =
+                `<div class="empty"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i><p style="color:#ef4444;">Could not load data.<br>Meeting records failed to load.</p></div>`;
+            return;
         }
-    });
+        Papa.parse(CSV_URL, {
+            download: true, header: true, skipEmptyLines: true,
+            complete: ({ data }) => onMeetingsLoaded(data),
+            error: () => {
+                document.getElementById('data-list').innerHTML =
+                    `<div class="empty"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i><p style="color:#ef4444;">Could not load data.<br>The meetings file (app/data/gold/meetings_public.csv) failed to load.</p></div>`;
+            },
+        });
+    }
 }
 
 /**
@@ -296,6 +409,7 @@ function run() {
     }
 
     current = rows.map(x => x.r);
+    meetingsDisplayLimit = MEETINGS_PAGE_SIZE;
     stats(current);
     render(current);
 }
@@ -356,6 +470,9 @@ function render(data) {
         return;
     }
 
+    const visible = data.slice(0, meetingsDisplayLimit);
+    const hasMore = data.length > meetingsDisplayLimit;
+
     // When sorted "By Meeting Type", emit a sticky header before each new
     // type group so the grouping is visually obvious.
     if (sortMode === 'type') {
@@ -366,7 +483,7 @@ function render(data) {
             acc[k] = (acc[k] || 0) + 1;
             return acc;
         }, {});
-        data.forEach((row, i) => {
+        visible.forEach((row, i) => {
             const type = row.MeetingType || 'Other';
             if (type !== lastType) {
                 const meta = t(type);
@@ -379,22 +496,50 @@ function render(data) {
             }
             html += renderCard(row, i);
         });
-        list.innerHTML = html;
+        list.innerHTML = html + (hasMore ? meetingsScrollSentinelHtml() : '');
     } else {
-        list.innerHTML = data.map(renderCard).join('');
+        list.innerHTML = visible.map(renderCard).join('') + (hasMore ? meetingsScrollSentinelHtml() : '');
     }
 
-    list.querySelectorAll('.record-card').forEach(card=>{
-        card.addEventListener('click', e=>{
-            if(e.target.closest('a')||e.target.closest('.detail-btn')) return;
-            openDetail(parseInt(card.dataset.idx));
-        });
-    });
-    list.querySelectorAll('.detail-btn').forEach(btn=>{
-        btn.addEventListener('click', e=>{
+    observeMeetingsSentinel();
+}
+
+function meetingsScrollSentinelHtml() {
+    return `<div class="meetings-scroll-sentinel" aria-hidden="true"></div>`;
+}
+
+function setupMeetingsInfiniteScroll() {
+    const list = document.getElementById('data-list');
+    if (!list || _meetingsScrollObserver) return;
+    _meetingsScrollObserver = new IntersectionObserver(entries => {
+        if (!entries.some(e => e.isIntersecting)) return;
+        if (currentView !== 'meetings' || meetingsDisplayLimit >= current.length) return;
+        meetingsDisplayLimit += MEETINGS_PAGE_SIZE;
+        render(current);
+    }, { root: list, rootMargin: '160px' });
+}
+
+function observeMeetingsSentinel() {
+    if (!_meetingsScrollObserver) return;
+    const list = document.getElementById('data-list');
+    _meetingsScrollObserver.disconnect();
+    const sentinel = list.querySelector('.meetings-scroll-sentinel');
+    if (sentinel) _meetingsScrollObserver.observe(sentinel);
+}
+
+/** One delegated listener for all meeting cards (avoids N listeners per render). */
+function setupRecordListDelegation() {
+    document.getElementById('data-list').addEventListener('click', e => {
+        if (currentView !== 'meetings') return;
+        const detailBtn = e.target.closest('.detail-btn');
+        if (detailBtn) {
             e.stopPropagation();
-            openDetail(parseInt(btn.dataset.idx));
-        });
+            openDetail(parseInt(detailBtn.dataset.idx, 10));
+            return;
+        }
+        if (e.target.closest('a')) return;
+        const card = e.target.closest('.record-card');
+        if (card) openDetail(parseInt(card.dataset.idx, 10));
     });
 }
 
@@ -1004,7 +1149,9 @@ let minutesIndex = null;
 async function loadMinutesIndex() {
     if (minutesIndex) return minutesIndex;
     try {
-        const res = await fetch('app/data/minutes_index.json', { cache: 'force-cache' });
+        const sha = siteManifest?.minutes_index?.sha256 || '';
+        const url = versionedUrl('app/data/minutes_index.json', sha);
+        const res = await fetch(url, { cache: 'force-cache' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         minutesIndex = await res.json();
     } catch (e) {
@@ -1527,6 +1674,12 @@ setupViewTabs();
 setupNewsControls();
 setupUpcomingControls();
 setupReportsPanel();
-loadMinutesIndex();
+
+// Fallback: ensure the map loads even if CSV parsing is slow or idle never fires.
+window.addEventListener('load', () => {
+    if (!document.getElementById('map-iframe')?.dataset.loaded) {
+        scheduleIdle(loadDeferredMap, 800);
+    }
+});
 
 init();

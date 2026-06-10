@@ -91,6 +91,49 @@ def test_build_gold_emits_exact_schema_and_all_rows():
     assert header == GOLD_FIELDS
 
 
+def test_build_gold_emits_json_and_site_manifest():
+    build_silver()
+    report = build_gold()
+
+    assert config.GOLD_MEETINGS_JSON.exists()
+    assert config.GOLD_SITE_MANIFEST.exists()
+    assert report["json_path"] == "app/data/gold/meetings_public.json"
+    assert report["manifest_path"] == "app/data/gold/site_manifest.json"
+    assert report["delivery"] == "monolith"
+
+    import json
+
+    json_rows = json.loads(config.GOLD_MEETINGS_JSON.read_text(encoding="utf-8"))
+    csv_rows = _read_gold()
+    assert len(json_rows) == len(csv_rows) == report["rows"]
+
+    manifest = json.loads(config.GOLD_SITE_MANIFEST.read_text(encoding="utf-8"))
+    assert manifest["version"] >= 1
+    assert manifest["meetings"]["rows"] == report["rows"]
+    assert manifest["meetings"]["sha256"]
+    assert manifest["meetings"]["json"] == "app/data/gold/meetings_public.json"
+    assert manifest["meetings"]["shards"] is None
+
+
+def test_build_gold_emits_year_shards_when_threshold_low(monkeypatch):
+    monkeypatch.setattr(config, "GOLD_SHARD_THRESHOLD", 1)
+    build_silver()
+    report = build_gold()
+
+    assert report["delivery"] == "sharded"
+    assert report["shards"] >= 1
+
+    import json
+
+    manifest = json.loads(config.GOLD_SITE_MANIFEST.read_text(encoding="utf-8"))
+    assert manifest["delivery"] == "sharded"
+    assert manifest["meetings"]["shards"]
+    for shard in manifest["meetings"]["shards"]:
+        shard_path = config.DATA_DIR.parent.parent / shard["path"]
+        assert shard_path.exists()
+        assert shard["rows"] >= 1
+
+
 def test_build_gold_rows_are_sorted_newest_first():
     build_silver()
     build_gold()
