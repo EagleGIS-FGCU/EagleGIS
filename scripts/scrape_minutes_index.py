@@ -2,6 +2,12 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
+
+# Allow `python scripts/scrape_minutes_index.py` from repo root (CI + local).
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
 from app.pipeline.collect.minutes import collect_minutes_index
 
