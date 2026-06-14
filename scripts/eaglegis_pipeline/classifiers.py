@@ -70,11 +70,18 @@ def match_locations(text: str, fallback_location: str | None = None) -> list[str
     matches = []
     for name, data in LOCATION_SEEDS.items():
         aliases = [name, *(data.get("aliases") or [])]
-        if any(re.search(rf"\b{re.escape(alias.lower())}\b", lo) for alias in aliases):
+        if any(_location_alias_matches(lo, alias) for alias in aliases):
             matches.append(name)
     if fallback_location and fallback_location not in matches:
         matches.append(fallback_location)
     return matches
+
+
+def _location_alias_matches(text: str, alias: str) -> bool:
+    alias = alias.lower()
+    if alias == "bert" and re.search(r"\bbert\s+harris\b", text):
+        return False
+    return bool(re.search(rf"\b{re.escape(alias)}\b", text))
 
 
 def extract_address_candidates(text: str) -> list[str]:

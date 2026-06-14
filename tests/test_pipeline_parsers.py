@@ -11,12 +11,14 @@ sys.path.insert(0, str(SCRIPTS))
 
 from build_normalized_csvs import (
     NormalizedBuilder,
+    ensure_estero_address,
     infer_application_id,
     infer_vote_counts,
     normalize_address_candidate,
+    should_suppress_arcgis_item,
 )
-from eaglegis_pipeline.classifiers import extract_address_candidates
-from eaglegis_pipeline.extractors import extract_agenda_entries
+from eaglegis_pipeline.classifiers import extract_address_candidates, match_locations
+from eaglegis_pipeline.extractors import extract_agenda_entries, raw_pdf_url
 from eaglegis_pipeline.sources import PdfAsset, iter_local_pdfs
 
 
@@ -102,6 +104,12 @@ class PipelineParserTests(unittest.TestCase):
 
     def test_address_candidate_normalizes_ocr_dropped_digit(self) -> None:
         self.assertEqual(normalize_address_candidate("0251 Arcos Avenue"), "10251 Arcos Avenue")
+
+    def test_ensure_estero_address_does_not_treat_street_name_as_city(self) -> None:
+        self.assertEqual(
+            ensure_estero_address("9170 Estero River Ct"),
+            "9170 Estero River Ct, Estero, FL",
+        )
 
     def test_vote_count_parses_aye_nay_abstentions(self) -> None:
         yes, no, abstain = infer_vote_counts(
@@ -202,6 +210,36 @@ class PipelineParserTests(unittest.TestCase):
         self.assertEqual(builder.agenda_items[0]["address_raw"], "Corkscrew Road Widening Corridor")
         self.assertEqual(len(builder.locations_v2), 2)
 
+    def test_council_text_override_promotes_bella_terra_site_address(self) -> None:
+        builder = NormalizedBuilder(source_rows=[])
+        builder._add_action(
+            meeting_id=1,
+            item_order=1,
+            meeting_type="Village Council Regular Meeting",
+            item_title=(
+                "Ordinance No. 2024-05 Bella Terra Cell Tower "
+                "Approving an Amendment to the Commercial Planned Development Zoning "
+                "to Allow the use of Wireless Communication Facility"
+            ),
+            action_text="Passed first reading and set public hearing and second reading for April 17, 2024.",
+            vote_text=None,
+            staff_code=None,
+            needs_ocr=False,
+            date_missing=False,
+            used_csv_fallback=False,
+            fallback_projects=[],
+            fallback_locations=[],
+            asset=PdfAsset(path="test.pdf", filename="test.pdf", data=b""),
+        )
+
+        self.assertEqual(
+            builder.agenda_items[0]["address_raw"],
+            "19980 Bella Terra Boulevard, Estero, FL",
+        )
+        self.assertEqual(len(builder.locations_v2), 1)
+        self.assertEqual(builder.locations_v2[0]["latitude"], 26.450582796918)
+        self.assertEqual(builder.locations_v2[0]["longitude"], -81.73115952021)
+
     def test_long_public_comment_context_keeps_agenda_heading(self) -> None:
         text = (
             "(a) Estero Townhomes EPD - Rezoning (DCI2024-E003) (District 4) "
@@ -252,6 +290,77 @@ class PipelineParserTests(unittest.TestCase):
         self.assertEqual(len(entries), 2)
         self.assertIn("Land Development Code Amendment", entries[1].title)
         self.assertNotIn("10500 Corkscrew Road", entries[1].title)
+
+    def test_arcgis_suppresses_public_input_narrative_spillover(self) -> None:
+        item = {
+            "item_type": "No Action",
+            "project_title": "approved by the ECCL members present at the August 28, 2015 meeting",
+            "summary": (
+                "approved by the ECCL members present at the August 28, 2015 meeting related to "
+                "including civic assets near Koreshan State Site."
+            ),
+            "outcome": (
+                "approved by the ECCL members present at the August 28, 2015 meeting related to "
+                "including civic assets near Koreshan State Site. 10. COUNCIL COMMUNICATIONS AND "
+                "FUTURE AGENDA ITEMS Councilmember Ribble reported that five offices have been "
+                "located at The Brooks Executive Suites. 11. VILLAGE MANAGER COMMENTS Village "
+                "Manager Peter Lombardi reported that all minutes would be abbreviated."
+            ),
+        }
+        item_locations = [
+            {"item_id": 23, "location_name": "Koreshan State Park"},
+            {"item_id": 23, "location_name": "Estero River"},
+            {"item_id": 23, "location_name": "The Brooks"},
+        ]
+
+        self.assertTrue(should_suppress_arcgis_item(item, item_locations))
+
+    def test_arcgis_suppresses_single_location_approved_minutes_spillover(self) -> None:
+        item = {
+            "item_type": "Administrative",
+            "project_title": "approved as presented: October 7, 2015 VILLAGE COUNCIL WORKSHOP",
+            "summary": (
+                "approved as presented: October 7, 2015 Village Council Workshop "
+                "The Village Council Workshop was held at 21500 Three Oaks Parkway. "
+                "1. CALL TO ORDER 2. ROLLCALL"
+            ),
+            "outcome": "approved as presented",
+        }
+        item_locations = [{"item_id": 25, "location_name": "21500 Three Oaks Parkway"}]
+
+        self.assertTrue(should_suppress_arcgis_item(item, item_locations))
+
+    def test_arcgis_suppresses_non_spatial_policy_testimony_location(self) -> None:
+        item = {
+            "item_type": "Ordinance",
+            "project_title": "Ordinance regarding hydraulic fracturing and well stimulation",
+            "summary": (
+                "Council considered a general ordinance regarding hydraulic fracturing. "
+                "A resident from Shadow Wood provided public testimony."
+            ),
+            "outcome": "Adopted the ordinance.",
+        }
+        item_locations = [{"item_id": 28, "location_name": "Shadow Wood"}]
+
+        self.assertTrue(should_suppress_arcgis_item(item, item_locations))
+
+    def test_location_matching_does_not_map_bert_harris_to_bert_trail(self) -> None:
+        self.assertNotIn(
+            "BERT Rail Trail Corridor",
+            match_locations("Discussion followed regarding possible Bert Harris lawsuits."),
+        )
+        self.assertIn("BERT Rail Trail Corridor", match_locations("BERT Memorandum of Agreement"))
+
+    def test_arcgis_keeps_site_specific_item_without_spillover(self) -> None:
+        item = {
+            "item_type": "Resolution",
+            "project_title": "Resolution No. 2016-17 Supporting Collaborative Planning Efforts",
+            "summary": "Resolution No. 2016-17 supporting collaborative planning efforts with Koreshan State Park.",
+            "outcome": "Adopted Resolution No. 2016-17.",
+        }
+        item_locations = [{"item_id": 120, "location_name": "Koreshan State Park"}]
+
+        self.assertFalse(should_suppress_arcgis_item(item, item_locations))
 
 
 if __name__ == "__main__":

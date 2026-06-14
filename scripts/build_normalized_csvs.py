@@ -615,7 +615,19 @@ class NormalizedBuilder:
                 "created_at": None,
             })
 
-        address_candidates = [normalize_address_candidate(a) for a in extract_address_candidates(item_text)]
+        address_candidates = [
+            normalize_address_candidate(a)
+            for a in extract_address_candidates(item_text)
+        ]
+        address_candidates = filter_address_candidates(
+            address_candidates,
+            text=item_text,
+            action_type=action_type,
+            application_id=application_id,
+            project_names=project_names,
+        )
+        if override_location:
+            address_candidates = []
 
         for project in project_names:
             self.agenda_item_projects.append({
@@ -757,13 +769,18 @@ class NormalizedBuilder:
         loc = self._location_by_id(location_id)
         if not loc:
             return
+        seed = LOCATION_SEEDS.get(str(loc.get("location_name") or ""), {})
+        has_coordinates = loc.get("latitude") not in (None, "") and loc.get("longitude") not in (None, "")
+        geocode_confidence = seed.get("confidence")
+        if geocode_confidence is None:
+            geocode_confidence = 0.75 if has_coordinates else 0.4
         self._add_location_v2(
             item_id=item_id,
             address_raw=str(loc.get("address") or loc.get("location_name") or ""),
             address_normalized=str(loc.get("address") or ensure_estero_address(str(loc.get("location_name") or ""))),
             latitude=loc.get("latitude"),
             longitude=loc.get("longitude"),
-            geocode_confidence=0.75 if loc.get("latitude") not in (None, "") and loc.get("longitude") not in (None, "") else 0.4,
+            geocode_confidence=float(geocode_confidence),
             location_name=str(loc.get("location_name") or ""),
             project_name=(self._legacy_location_lookup.get(str(loc.get("location_name") or "").lower()) or {}).get("project_name"),
         )
@@ -1039,9 +1056,9 @@ class NormalizedBuilder:
         rows: list[dict] = []
         missing: list[dict] = []
         for item in self.agenda_items:
-            if is_arcgis_header_spillover(item):
-                continue
             item_locations = [loc for loc in self.locations_v2 if str(loc["item_id"]) == str(item["item_id"])]
+            if should_suppress_arcgis_item(item, item_locations):
+                continue
             if not item_locations:
                 continue
             meeting = meetings.get(str(item["meeting_id"]), {})
@@ -1103,7 +1120,7 @@ class NormalizedBuilder:
             return
         with cache_path.open(encoding="utf-8") as handle:
             cached = {
-                row["Location"]: row
+                normalize_geocode_key(row["Location"]): row
                 for row in csv.DictReader(handle)
                 if row.get("Location") and row.get("Latitude") and row.get("Longitude")
             }
@@ -1111,8 +1128,20 @@ class NormalizedBuilder:
             return
         for row in self.locations_v2:
             key = row.get("address_normalized") or row.get("address_raw")
-            hit = cached.get(str(key))
+            hit = cached.get(normalize_geocode_key(key))
             if not hit:
+                continue
+            try:
+                row_confidence = float(row.get("geocode_confidence") or 0)
+            except (TypeError, ValueError):
+                row_confidence = 0.0
+            try:
+                hit_confidence = float(hit.get("GeocodeConfidence") or 0)
+            except (TypeError, ValueError):
+                hit_confidence = 0.0
+            if row_confidence >= 0.95:
+                continue
+            if row.get("latitude") not in (None, "") and row.get("longitude") not in (None, "") and row_confidence > hit_confidence:
                 continue
             row["latitude"] = hit["Latitude"]
             row["longitude"] = hit["Longitude"]
@@ -1287,18 +1316,74 @@ def is_arcgis_header_spillover(item: dict) -> bool:
     text = f"{item.get('project_title') or ''} {item.get('summary') or ''} {item.get('outcome') or ''}".lower()
     bad_starts = (
         "approved minutes",
+        "approved as presented:",
+        "approved as submitted:",
         "approved by council",
+        "approved in item",
+        "adopted prior to december 31, 2014",
+        "adopted rules or policies",
         "no action required",
+        "council communications",
+        "village manager comments",
+        "village manager's comments",
+        "village attorney comments",
+        "village attorney's comments",
     )
     if any(text.startswith(prefix) for prefix in bad_starts):
         return True
-    return "call to order" in text[:700] and "roll call" in text[:900]
+    return "call to order" in text[:1200] and ("roll call" in text[:1400] or "rollcall" in text[:1400])
+
+
+def is_non_spatial_arcgis_item(item: dict) -> bool:
+    text = f"{item.get('project_title') or ''} {item.get('summary') or ''} {item.get('outcome') or ''}".lower()
+    non_spatial_markers = (
+        "bert harris lawsuits",
+        "senior homestead exemption",
+        "hydraulic fracturing",
+        "well stimulation",
+        "fracking",
+        "village council liaison assignments",
+        "liaison assignments to outside organizations",
+    )
+    return any(marker in text for marker in non_spatial_markers)
+
+
+def should_suppress_arcgis_item(item: dict, item_locations: list[dict]) -> bool:
+    if is_arcgis_header_spillover(item):
+        return True
+    if is_non_spatial_arcgis_item(item):
+        return True
+
+    action_type = str(item.get("item_type") or "")
+    if action_type not in {"No Action", "Unknown", "Public Comment", "Discussion"}:
+        return False
+    if len(item_locations) < 2:
+        return False
+
+    text = f"{item.get('project_title') or ''} {item.get('summary') or ''} {item.get('outcome') or ''}".lower()
+    narrative_markers = (
+        "public input on non-agenda items",
+        "public input on any issue",
+        "council communications and future agenda items",
+        "council communications / future agenda items",
+        "council communications i future agenda items",
+        "board communications",
+        "village manager comments",
+        "village manager's comments",
+        "village attorney comments",
+        "village attorney's comments",
+        "adjourn a motion to adjourn",
+        "adjourned the meeting",
+    )
+    return any(marker in text for marker in narrative_markers)
 
 
 def ensure_estero_address(value: str) -> str:
     if not value:
         return "Estero, FL"
-    if "estero" in value.lower():
+    if re.search(r",\s*[^,]+,\s*(?:fl|florida)\b", value, flags=re.I):
+        return value
+    if re.search(r",\s*estero\b", value, flags=re.I):
         return value
     return f"{value}, Estero, FL"
 
@@ -1307,6 +1392,71 @@ def normalize_address_candidate(value: str) -> str:
     value = value.replace("Design Pare Lane", "Design Parc Lane")
     value = re.sub(r"\b0251\s+Arcos\s+Avenue\b", "10251 Arcos Avenue", value, flags=re.I)
     return value
+
+
+def filter_address_candidates(
+    addresses: list[str],
+    *,
+    text: str,
+    action_type: str,
+    application_id: str | None,
+    project_names: list[str],
+) -> list[str]:
+    if not addresses:
+        return []
+
+    # Contract award narratives often embed vendor office addresses that are not
+    # the agenda item's map target.
+    if (
+        action_type == "Contract Approval"
+        and len(addresses) > 1
+        and not application_id
+        and not project_names
+        and re.search(r"\b(?:Fort Myers|Bonita Springs)\b", text, flags=re.I)
+    ):
+        return []
+
+    filtered: list[str] = []
+    for address in addresses:
+        lo = address.lower()
+        if re.match(r"^(?:19|20)\d{2}\s+to\b", lo):
+            continue
+        if "office of green ways" in lo or "office of greenways" in lo:
+            continue
+        if address not in filtered:
+            filtered.append(address)
+    return filtered
+
+
+def normalize_geocode_key(value: object) -> str:
+    text = str(value or "").strip().lower()
+    text = text.replace("&", " and ")
+    text = text.replace("#", " ")
+    text = re.sub(r"[.,]", "", text)
+    text = re.sub(r"\b(and)\b", "and", text)
+    replacements = {
+        r"\bsouth\b": "s",
+        r"\bnorth\b": "n",
+        r"\beast\b": "e",
+        r"\bwest\b": "w",
+        r"\bavenue\b": "ave",
+        r"\bstreet\b": "st",
+        r"\broad\b": "rd",
+        r"\broadway avenue west\b": "broadway ave w",
+        r"\broadway avenue east\b": "broadway ave e",
+        r"\bboulevard\b": "blvd",
+        r"\bparkway\b": "pkwy",
+        r"\blane\b": "ln",
+        r"\bdrive\b": "dr",
+        r"\bcourt\b": "ct",
+        r"\bcircle\b": "cir",
+        r"\bplace\b": "pl",
+        r"\btrail\b": "trl",
+    }
+    for pattern, replacement in replacements.items():
+        text = re.sub(pattern, replacement, text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
 
 
 def confidence_score(
