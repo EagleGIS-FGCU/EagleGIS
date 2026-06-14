@@ -207,8 +207,12 @@ class PipelineParserTests(unittest.TestCase):
             asset=PdfAsset(path="test.pdf", filename="test.pdf", data=b""),
         )
 
-        self.assertEqual(builder.agenda_items[0]["address_raw"], "Corkscrew Road Widening Corridor")
-        self.assertEqual(len(builder.locations_v2), 2)
+        self.assertEqual(
+            builder.agenda_items[0]["address_raw"],
+            "Estero Townhomes EPD site, 9301 Corkscrew Road, Estero, FL",
+        )
+        self.assertEqual(len(builder.locations_v2), 1)
+        self.assertEqual(builder.locations_v2[0]["geocode_confidence"], 1.0)
 
     def test_council_text_override_promotes_bella_terra_site_address(self) -> None:
         builder = NormalizedBuilder(source_rows=[])

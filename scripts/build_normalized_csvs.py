@@ -16,7 +16,12 @@ from eaglegis_pipeline.classifiers import (
     needs_review,
     vote_detected,
 )
-from eaglegis_pipeline.config import LOCATION_SEEDS, PROJECT_ALIASES
+from eaglegis_pipeline.config import (
+    LOCATION_SEEDS,
+    PROJECT_ALIASES,
+    SITE_LOCATION_OVERRIDES,
+    SITE_TEXT_LOCATION_OVERRIDES,
+)
 from eaglegis_pipeline.extractors import (
     extract_actions,
     extract_agenda_entries,
@@ -572,16 +577,20 @@ class NormalizedBuilder:
             return
         motion_text = infer_motion_text(action_text)
         vote_context = f"Vote: {vote_text}" if vote_text else action_text
+        application_id = infer_application_id(item_text)
+        override_location = site_location_override(application_id, item_text)
+        if override_location:
+            location_names = []
         self.agenda_items.append({
             "item_id": item_id,
             "meeting_id": meeting_id,
             "item_number": str(item_order),
             "item_type": action_type,
-            "application_id": infer_application_id(item_text),
+            "application_id": application_id,
             "applicant_name": infer_applicant_name(item_text),
             "project_title": display_title[:500],
             "district": infer_district(item_text),
-            "address_raw": first_address_or_location(item_text, location_names),
+            "address_raw": str(override_location.get("address")) if override_location else first_address_or_location(item_text, location_names),
             "summary": item_text,
             "outcome": action_text,
             "motion_text": motion_text,
@@ -674,7 +683,30 @@ class NormalizedBuilder:
                 candidate_source="address_regex",
                 evidence=action_text,
             )
-        if not location_names and not address_candidates:
+        if override_location:
+            address = str(override_location["address"])
+            location_id = self._location_id(
+                address,
+                location_type="Project Site",
+                address=address,
+                latitude=override_location.get("latitude"),
+                longitude=override_location.get("longitude"),
+            )
+            self.agenda_item_locations.append({
+                "item_id": item_id,
+                "location_id": location_id,
+            })
+            self._add_location_v2(
+                item_id=item_id,
+                address_raw=address,
+                address_normalized=address,
+                latitude=override_location.get("latitude"),
+                longitude=override_location.get("longitude"),
+                geocode_confidence=float(override_location.get("confidence") or 0.9),
+                location_name=address,
+                project_name=project_names[0] if project_names else None,
+            )
+        if not location_names and not address_candidates and not override_location:
             self.unmapped_agenda_items.append({
                 "item_id": item_id,
                 "meeting_id": meeting_id,
@@ -1252,6 +1284,17 @@ def infer_motion_text(text: str) -> str | None:
 def infer_motion_person(text: str, label: str) -> str | None:
     match = re.search(rf"{re.escape(label)}:\s*(.*?)(?=\s+(?:Seconded by|Action:|Vote:|$))", text, flags=re.I)
     return match.group(1).strip(" .;:") if match else None
+
+
+def site_location_override(application_id: str | None, text: str) -> dict[str, object] | None:
+    if application_id and application_id in SITE_LOCATION_OVERRIDES:
+        return SITE_LOCATION_OVERRIDES[application_id]
+    lo = text.lower()
+    for override in SITE_TEXT_LOCATION_OVERRIDES:
+        marker = str(override.get("text") or "").lower()
+        if marker and marker in lo:
+            return override
+    return None
 
 
 def infer_application_id(text: str) -> str | None:
