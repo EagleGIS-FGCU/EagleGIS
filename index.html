@@ -1,24 +1,4 @@
 <!DOCTYPE html>
-<!-- ==========================================================================
-     index.html — the EagleGIS site's page structure
-     ==========================================================================
-
-     New to the project? The site is three files:
-
-       - index.html  = THIS file: what is on the page (header, sidebar, map)
-       - styles.css  = how it looks (colors, sizes, spacing)
-       - app.js      = how it behaves (loading data, search, filters, tabs)
-
-     Common edits and where to make them:
-       - Change a heading or label  -> edit the text right here in this file
-       - Change colors              -> styles.css (top of the file)
-       - Change the embedded map    -> the MAP section below (look for "MAP")
-       - Change meeting-type chips  -> app.js (the TYPES table at the top)
-
-     To preview changes, open this file in a web browser. The live site at
-     https://eaglegis-fgcu.github.io/EagleGIS/ updates automatically a minute
-     or two after changes are pushed to the main branch on GitHub.
-     ========================================================================== -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -48,7 +28,7 @@
     <div class="header-divider"></div>
     <div class="header-titles">
         <div class="header-title">EagleGIS &mdash; Meeting Document Tracker</div>
-        <div class="header-sub">Village of Estero, Florida &nbsp;·&nbsp; Municipal Records Database</div>
+        <div class="header-sub">Village of Estero, Florida &nbsp;·&nbsp; Municipal Records Database</div>       
     </div>
     <a class="header-dashboard-link" href="./dashboard.html" title="Open the accessible dashboard">
         <i class="fa-solid fa-table-columns"></i> Dashboard
@@ -60,7 +40,7 @@
 <div id="main-layout">
 
     <!-- SIDEBAR -->
-    <aside id="sidebar">
+    <aside id="sidebar" aria-label="Meeting search and records">
 
         <!--
             View tabs:
@@ -69,15 +49,15 @@
               - News:      live WP REST API from esterotoday.com
         -->
         <div class="view-tabs" role="tablist">
-            <button class="view-tab active" data-view="meetings" role="tab" aria-selected="true">
+            <button class="view-tab active" data-view="meetings" role="tab" aria-selected="true" id="tab-meetings">
                 <i class="fa-solid fa-gavel"></i> Meetings
                 <span class="tab-badge" id="tab-count-meetings">—</span>
             </button>
-            <button class="view-tab" data-view="upcoming" role="tab" aria-selected="false">
+            <button class="view-tab" data-view="upcoming" role="tab" aria-selected="false" id="tab-upcoming">
                 <i class="fa-regular fa-calendar"></i> Upcoming
                 <span class="tab-badge" id="tab-count-upcoming">—</span>
             </button>
-            <button class="view-tab" data-view="news" role="tab" aria-selected="false">
+            <button class="view-tab" data-view="news" role="tab" aria-selected="false" id="tab-news">
                 <i class="fa-solid fa-newspaper"></i> News
                 <span class="tab-badge" id="tab-count-news">—</span>
             </button>
@@ -86,8 +66,8 @@
         <!-- Search -->
         <div class="search-section">
             <div class="search-box">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="main-search" class="search-input" placeholder="Search minutes, projects, locations, titles…">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <input type="text" id="main-search" class="search-input" placeholder="Search minutes, projects, locations, titles…" aria-label="Search meetings, news, and upcoming events">
             </div>
         </div>
 
@@ -139,22 +119,23 @@
 
         <!-- Year + Sort controls -->
         <div class="controls-row">
-            <select id="year-filter" class="ctrl-select">
+            <select id="year-filter" class="ctrl-select" aria-label="Filter meetings by year">
                 <option value="all">All Years</option>
             </select>
-            <select id="sort-select" class="ctrl-select">
+            <select id="sort-select" class="ctrl-select" aria-label="Sort meetings">
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
                 <option value="type">By Meeting Type</option>
             </select>
             <button onclick="document.getElementById('about-panel').classList.toggle('open')"
+                aria-expanded="false" aria-controls="about-panel"
                 style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:4px;">
                 <i class="fa-solid fa-circle-info"></i>About
             </button>
         </div>
 
         <!-- Stats -->
-        <div class="stats-section">
+        <div class="stats-section" aria-live="polite">
             <div class="stat-box"><div class="stat-num" id="s-count">—</div><div class="stat-lbl"><i class="fa-solid fa-file-lines"></i> Records</div></div>
             <div class="stat-box"><div class="stat-num" id="s-years">—</div><div class="stat-lbl"><i class="fa-regular fa-calendar"></i> Years</div></div>
             <div class="stat-box"><div class="stat-num" id="s-types">—</div><div class="stat-lbl"><i class="fa-solid fa-tags"></i> Types</div></div>
@@ -162,35 +143,35 @@
         </div>
 
         <!-- Reports & Documents (Engage Estero) — News tab only -->
-        <div id="reports-panel" style="display:none;margin:8px 12px 0;">
-            <div class="reports-head">
-                <div class="reports-title">
+        <div id="reports-panel" style="display:none;margin:8px 12px 0;" role="region" aria-labelledby="reports-title">
+            <div class="reports-head" role="button" tabindex="0" aria-expanded="false" aria-controls="reports-body">
+                <div class="reports-title" id="reports-title">
                     <i class="fa-solid fa-book-bookmark"></i>Reports & Governing Docs
                 </div>
-                <i class="fa-solid fa-chevron-right reports-chevron"></i>
+                <i class="fa-solid fa-chevron-right reports-chevron" aria-hidden="true"></i>
             </div>
-            <div class="reports-body">
+            <div class="reports-body" id="reports-body">
                 <div class="reports-strip" id="reports-strip"></div>
                 <div id="reports-governing"></div>
             </div>
         </div>
 
         <!-- List -->
-        <div id="data-list">
-            <div class="empty"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading records...</p></div>
+        <div id="data-list" role="region" aria-label="Records list">
+            <div class="empty"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading records...</p></div>       
         </div>
 
         <!-- Footer -->
-        <div class="sidebar-footer">
+        <footer class="sidebar-footer">
             <span class="footer-text">Supabase · ArcGIS · <a href="https://esterotoday.com/" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:600;">EsteroToday</a></span>
             <a href="https://github.com/EagleGIS-FGCU/EagleGIS" target="_blank" class="footer-link">
                 <i class="fa-brands fa-github"></i> Source
             </a>
-        </div>
+        </footer>
     </aside>
 
     <!-- DETAIL PANEL -->
-    <div id="detail-panel">
+    <section id="detail-panel" aria-labelledby="detail-header-title" role="dialog" aria-modal="false">
         <div class="detail-header">
             <div class="detail-header-left">
                 <div class="detail-header-icon" id="detail-header-icon"><i class="fa-solid fa-file-lines"></i></div>
@@ -199,20 +180,15 @@
                     <div class="detail-header-sub" id="detail-header-sub">Village of Estero Municipal Record</div>
                 </div>
             </div>
-            <div class="close-btn" id="close-detail"><i class="fa-solid fa-xmark"></i></div>
+            <div class="close-btn" id="close-detail" role="button" tabindex="0" aria-label="Close details"><i class="fa-solid fa-xmark"></i></div>
         </div>
         <div id="detail-content"></div>
-    </div>
+    </section>
 
-    <!-- MAP — the embedded ArcGIS map.
-         IMPORTANT if you ever swap the map: the src URL below MUST come from
-         ArcGIS Online's "Share -> Embed map" button (it contains /apps/Embed/).
-         Do NOT paste the URL from your browser's address bar (/apps/mapviewer/) —
-         that page refuses to load inside other websites and the map will appear
-         broken for visitors. -->
+    <!-- MAP — the embedded ArcGIS map. -->
     <main id="map-spot">
-        <!-- Map src is injected after first paint so the sidebar + data load aren't competing with ArcGIS -->
-        <iframe id="map-iframe" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" title="Engage Estero"
+        <!-- Map src is injected after first paint so the sidebar + data load aren't competing with ArcGIS -->  
+        <iframe id="map-iframe" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" title="Engage Estero Community Map"
             data-src="https://eccl-swfl-safety.maps.arcgis.com/apps/instant/basic/index.html?appid=0a9cfa7faa4f4a7d8964c6fa90ecada4"
             src="about:blank"
             allow="geolocation"
@@ -222,11 +198,11 @@
     </main>
 
     <!-- Back to top -->
-    <button id="back-top" title="Back to top"><i class="fa-solid fa-chevron-up"></i></button>
+    <button id="back-top" title="Back to top" aria-label="Back to top"><i class="fa-solid fa-chevron-up"></i></button>
 
     <!-- About Panel -->
-    <div id="about-panel">
-        <div class="about-title"><i class="fa-solid fa-circle-info"></i>About EagleGIS</div>
+    <div id="about-panel" role="region" aria-labelledby="about-title">
+        <div class="about-title" id="about-title"><i class="fa-solid fa-circle-info"></i>About EagleGIS</div>
         <div class="about-text">
             EagleGIS is a municipal meeting document tracker built for the Village of Estero, Florida.
             It provides searchable access to Village Council and Planning, Zoning &amp; Design Board
@@ -241,7 +217,7 @@
             Built by <strong>FGCU Team 4</strong> as part of COP 3710 Database Systems, Spring 2026.
             Community partner: <strong>Engage Estero</strong>.
         </div>
-        <span class="about-close" onclick="document.getElementById('about-panel').classList.remove('open')">Close</span>
+        <span class="about-close" role="button" tabindex="0" onclick="document.getElementById('about-panel').classList.remove('open')">Close</span>
     </div>
 
 </div><!-- end main-layout -->
