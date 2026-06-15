@@ -4,9 +4,9 @@ Gold-layer publish step: denormalized public CSV for the GitHub Pages frontend.
 Joins silver meetings + reference YAML + silver documents (+ optional
 minutes_index.json) into the 14-column schema expected by index.html:
 
-  ProjectName, MeetingType, MeetingDate, MeetingYear, Status, ActionTaken,
-  StartTime, StaffCode, Title, MinutesURL, DocDate, LocationName,
-  Latitude, Longitude
+  ProjectName, MeetingType, MeetingDate, MeetingYear, Status, Finalized,
+  InProgress, InProgressNote, ActionTaken, StartTime, StaffCode, Title,
+  MinutesURL, DocDate, LocationName, Latitude, Longitude
 """
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ from typing import Any
 from app.pipeline import config, reference
 from app.pipeline.collect.minutes import load_minutes_index, minutes_body_key, resolve_minutes_url
 from app.pipeline.load.silver import _atomic_write_csv, _read_csv
+from app.pipeline.extract.in_progress import gold_in_progress_columns
 from app.pipeline.validate.schemas import in_estero_bbox
 
 # Frontend filter chips / colors key off these display names (see index.html TYPES).
@@ -33,6 +34,9 @@ GOLD_FIELDS = [
     "MeetingDate",
     "MeetingYear",
     "Status",
+    "Finalized",
+    "InProgress",
+    "InProgressNote",
     "ActionTaken",
     "StartTime",
     "StaffCode",
@@ -112,6 +116,18 @@ def _resolve_location(
     if meeting.get("location"):
         return (meeting.get("location") or "", "", "", "text_only")
     return ("", "", "", "missing")
+
+
+def _meeting_finalized(status: str, minutes_url: str) -> str:
+    """Whether official minutes are posted (public-facing plain label).
+
+    Returns ``Yes``, ``No``, or ``Cancelled``.
+    """
+    if (status or "").strip().lower() == "cancelled":
+        return "Cancelled"
+    if (minutes_url or "").strip().startswith("http"):
+        return "Yes"
+    return "No"
 
 
 def _fmt_coord(val: Any) -> str:
@@ -239,6 +255,8 @@ def build_gold(*, geocoded_location_ids: set[int] | None = None) -> dict[str, An
         if minutes_url:
             with_pdf += 1
 
+        in_progress, in_progress_note = gold_in_progress_columns(m, doc)
+
         doc_date = ""
         if doc and doc.get("doc_date"):
             doc_date = str(doc["doc_date"])[:10]
@@ -251,6 +269,9 @@ def build_gold(*, geocoded_location_ids: set[int] | None = None) -> dict[str, An
             "MeetingDate": meeting_date,
             "MeetingYear": str(m.get("meeting_year", "")),
             "Status": m.get("status") or "Accepted",
+            "Finalized": _meeting_finalized(m.get("status") or "", minutes_url),
+            "InProgress": in_progress,
+            "InProgressNote": in_progress_note,
             "ActionTaken": m.get("action_taken") or "",
             "StartTime": m.get("start_time") or "",
             "StaffCode": m.get("doc_ref_code") or "",

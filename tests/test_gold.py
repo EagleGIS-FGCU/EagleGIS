@@ -2,7 +2,7 @@
 Tests for the gold-layer public CSV builder (``app/pipeline/publish/gold.py``).
 
 The gold builder denormalizes silver + reference + documents into the exact
-14-column schema the GitHub Pages frontend (``index.html``) parses. These
+public schema the GitHub Pages frontend (``index.html``) parses. These
 tests lock the schema and the join behaviour so the public site never
 silently breaks.
 """
@@ -16,6 +16,7 @@ from app.pipeline.publish.gold import (
     GOLD_FIELDS,
     _documents_by_meeting,
     _fmt_coord,
+    _meeting_finalized,
     _meeting_type_display,
     _resolve_location,
     build_gold,
@@ -76,6 +77,12 @@ def test_resolve_location_falls_back_to_project_then_text():
 # End-to-end: real silver + reference data
 # ---------------------------------------------------------------------------
 
+def test_meeting_finalized_labels():
+    assert _meeting_finalized("Accepted", "https://estero-fl.gov/x.pdf") == "Yes"
+    assert _meeting_finalized("Accepted", "") == "No"
+    assert _meeting_finalized("Cancelled", "https://estero-fl.gov/x.pdf") == "Cancelled"
+
+
 def test_build_gold_emits_exact_schema_and_all_rows():
     silver_report = build_silver()
     report = build_gold()
@@ -107,6 +114,10 @@ def test_build_gold_populates_minutes_urls_and_coords():
 
     assert report["with_minutes_url"] >= 1
     assert any(r["MinutesURL"].startswith("http") for r in rows)
+    assert all(r["Finalized"] in {"Yes", "No", "Cancelled"} for r in rows)
+    assert all(r["InProgress"] in {"Yes", "No"} for r in rows)
+    assert sum(1 for r in rows if r["Finalized"] == "No") == 4
+    assert sum(1 for r in rows if r["InProgress"] == "Yes") >= 76
     # PZ&DB synthesized meetings map to Council Chambers (location_id 6),
     # which carries coordinates in locations.yaml.
     assert any(r["Latitude"] and r["Longitude"] for r in rows)

@@ -307,8 +307,8 @@ def diff_against_bronze(
 # --------------------------------------------------------------------------- #
 # I/O wrappers
 # --------------------------------------------------------------------------- #
-EXTRACT_DIR = config.DATA_DIR / "extract"
-CANDIDATE_MEETINGS = EXTRACT_DIR / "candidate_meetings.csv"
+EXTRACT_DIR = config.EXTRACT_DIR
+CANDIDATE_MEETINGS = config.CANDIDATE_MEETINGS
 
 CANDIDATE_FIELDS = [
     "body",

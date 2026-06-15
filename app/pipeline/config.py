@@ -29,6 +29,10 @@ GOLD_MEETING_ACTIONS_PUBLIC = GOLD_DIR / "meeting_actions_public.csv"
 
 MINUTES_INDEX = DATA_DIR / "minutes_index.json"
 
+EXTRACT_DIR = DATA_DIR / "extract"
+CANDIDATE_MEETINGS = EXTRACT_DIR / "candidate_meetings.csv"
+IN_PROGRESS_MEETINGS = EXTRACT_DIR / "in_progress_meetings.csv"
+
 REF_PROJECTS = REFERENCE_DIR / "projects.yaml"
 REF_MEETING_TYPES = REFERENCE_DIR / "meeting_types.yaml"
 REF_LOCATIONS = REFERENCE_DIR / "locations.yaml"

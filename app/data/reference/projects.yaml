@@ -29,6 +29,9 @@
   project_name: "PZ&DB General Meeting Records"
   description: >-
     Administrative meeting records for the Village of Estero Planning,
-    Zoning & Design Board.
+    Zoning & Design Board. EagleGIS project mapping for PZ&DB is still
+    in progress — residents may share input via Engage Estero or Village
+    public comment while this work continues.
   start_year: 2021
   status: "Active"
+  data_status: "in_progress"
