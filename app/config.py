@@ -15,5 +15,8 @@ class Settings:
     # CORS — tighten this to your ArcGIS domain in production
     allowed_origins: list[str] = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 
+    # Admin-only features (pin comments). Leave unset to disable admin API writes.
+    admin_key: str = os.getenv("EAGLE_ADMIN_KEY", "")
+
 
 settings = Settings()

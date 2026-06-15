@@ -10,6 +10,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from app.data import pin_comments_store
 from app.routers import (
     documents,
     layers,
@@ -80,3 +81,25 @@ def test_roads_layer_has_at_least_two_linestrings():
     assert fc["type"] == "FeatureCollection"
     line_features = [f for f in fc["features"] if f["geometry"]["type"] == "LineString"]
     assert len(line_features) >= 2
+
+
+def test_admin_pin_comments_require_key(tmp_path, monkeypatch):
+    comments_path = tmp_path / "pin_comments.json"
+    comments_path.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(pin_comments_store, "_PIN_COMMENTS_PATH", comments_path)
+    monkeypatch.setattr(locations.settings, "admin_key", "test-admin-key")
+
+    client = _client()
+    assert client.get("/locations/admin/verify").status_code == 401
+
+    headers = {"X-Admin-Key": "test-admin-key"}
+    assert client.get("/locations/admin/verify", headers=headers).json() == {"ok": True}
+
+    res = client.put(
+        "/locations/admin/pin-comments/2",
+        headers=headers,
+        json={"text": "Check geocode", "updated_by": "admin"},
+    )
+    assert res.status_code == 200
+    assert res.json()["text"] == "Check geocode"
+    assert client.get("/locations/admin/pin-comments", headers=headers).json()["2"]["text"] == "Check geocode"
