@@ -260,6 +260,29 @@
     .badge.rejected  { color: #8a1c1c; background: #fbe9e9; }
     .badge.tabled    { color: #334155; background: #eef2f7; }
     .badge.cancelled { color: #3b3b3b; background: #ededed; }
+    .badge.finalized-yes { color: #1b5e20; background: #e6f4ea; }
+    .badge.finalized-no { color: #8a5a00; background: #fdf3e1; }
+    .badge.finalized-cancelled { color: #8a1c1c; background: #fbe9e9; }
+    .badge.progress-badge { color: #6d28d9; background: #f5f3ff; }
+
+    .civic-notice {
+      margin: 1rem 0;
+      padding: 1rem 1.1rem;
+      background: #f5f3ff;
+      border: 2px solid #c4b5fd;
+      border-radius: 10px;
+      font-size: 1.05rem;
+      line-height: 1.55;
+    }
+    .civic-notice[hidden] { display: none !important; }
+    .civic-notice-title { font-weight: 800; color: #6d28d9; margin-bottom: 0.5rem; }
+    .civic-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      min-height: 44px; margin-top: 0.5rem; margin-right: 0.5rem;
+      padding: 0.45rem 0.9rem; border-radius: 8px; font-weight: 700; text-decoration: none;
+    }
+    .civic-btn.primary { background: #6d28d9; color: #fff; }
+    .civic-btn.secondary { background: #fff; color: #0b4f6c; border: 2px solid #0b4f6c; }
 
     .pdf-link {
       display: inline-flex;
@@ -371,6 +394,12 @@
         <label for="meetingSearch">Search meetings (by project, type, date, or status)</label>
         <input type="search" id="meetingSearch" placeholder="Type to search, for example: Corkscrew" />
       </div>
+      <div id="pzdbCivicNotice" class="civic-notice" hidden>
+        <div class="civic-notice-title">PZ&amp;DB — project data in progress</div>
+        <p>Planning &amp; Zoning records are still being mapped. Your opinion matters while these projects are underway.</p>
+        <a class="civic-btn primary" href="https://esterotoday.com/contact/" target="_blank" rel="noopener">Share your view with Engage Estero</a>
+        <a class="civic-btn secondary" href="https://estero-fl.gov/ecomment-cards/" target="_blank" rel="noopener">Village eComment</a>
+      </div>
       <p id="meetingCount" role="status" aria-live="polite">Loading meetings…</p>
       <ul class="meetings" id="meetingList" aria-labelledby="meetings-heading"></ul>
     </section>
@@ -389,6 +418,7 @@
 
     const API = "/api/v1";
     const ESTERO_CENTER = [26.438, -81.81];
+    const PZDB_PROJECT_ID = "4";
 
     // --- State -------------------------------------------------------------
     let map, pointLayer, roadLayer;
@@ -416,6 +446,37 @@
       const s = (status || "").toLowerCase();
       if (["accepted", "pending", "rejected", "tabled", "cancelled"].includes(s)) return s;
       return "tabled";
+    }
+
+    function meetingFinalizedState(meeting, pdfUrl) {
+      const st = (meeting.status || "").toLowerCase();
+      if (st === "cancelled") return "Cancelled";
+      return pdfUrl ? "Yes" : "No";
+    }
+
+    function finalizedLabel(state) {
+      if (state === "Yes") return "Finalized — minutes posted";
+      if (state === "Cancelled") return "Cancelled meeting";
+      return "Not finalized — minutes not posted yet";
+    }
+
+    function finalizedClass(state) {
+      if (state === "Yes") return "finalized-yes";
+      if (state === "Cancelled") return "finalized-cancelled";
+      return "finalized-no";
+    }
+
+    function isPzdbMeeting(meeting) {
+      const typeName = (typesById[meeting.type_id]?.type_name || "").toLowerCase();
+      const projName = (projectsById[meeting.project_id]?.project_name || "").toLowerCase();
+      return typeName.includes("planning zoning") || projName.includes("pz&db") || projName.includes("pzdb");
+    }
+
+    function updatePzdbCivicNotice(rows) {
+      const el = document.getElementById("pzdbCivicNotice");
+      if (!el) return;
+      const show = currentProjectId === PZDB_PROJECT_ID || (rows || []).some(isPzdbMeeting);
+      el.hidden = !show;
     }
 
     // --- Map ---------------------------------------------------------------
@@ -509,6 +570,7 @@
       }
 
       countEl.textContent = `${rows.length} meeting${rows.length === 1 ? "" : "s"} shown`;
+      updatePzdbCivicNotice(rows);
 
       const frag = document.createDocumentFragment();
       rows.forEach((m) => {
@@ -516,18 +578,25 @@
         const typeName = typesById[m.type_id]?.type_name || "Meeting";
         const doc = docsByMeeting[m.meeting_id];
         const pdfUrl = doc && doc.file_url ? doc.file_url : null;
+        const fin = meetingFinalizedState(m, pdfUrl);
+        const pzdb = isPzdbMeeting(m);
 
         const li = document.createElement("li");
         li.innerHTML = `
           <div class="m-date">${esc(m.meeting_date || "Date unknown")}</div>
           <div class="m-meta"><span class="label">Type:</span> ${esc(typeName)}</div>
           <div class="m-meta"><span class="label">Project:</span> ${esc(projName)}</div>
-          <div class="m-meta"><span class="label">Status:</span>
+          ${pzdb ? `<div class="m-meta" style="color:#6d28d9;font-weight:700;">Project data in progress — your input is welcome</div>` : ""}
+          <div class="m-meta"><span class="label">Minutes:</span>
+            <span class="badge ${finalizedClass(fin)}">${esc(fin === "Yes" && pzdb ? "Minutes posted" : finalizedLabel(fin))}</span>
+            ${pzdb ? `<span class="badge progress-badge">In progress</span>` : ""}</div>
+          <div class="m-meta"><span class="label">Council action:</span>
             <span class="badge ${badgeClass(m.status)}">${esc(m.status || "Unknown")}</span></div>
           ${pdfUrl
             ? `<a class="pdf-link" href="${esc(pdfUrl)}" target="_blank" rel="noopener"
                  title="Open meeting minutes (opens in a new tab)">Open minutes (PDF)</a>`
-            : `<div class="no-pdf">No minutes document on file</div>`}
+            : `<div class="no-pdf">Official minutes are not posted yet.</div>`}
+          ${pzdb ? `<a class="civic-btn primary" href="https://esterotoday.com/contact/" target="_blank" rel="noopener">Share your opinion with Engage Estero</a>` : ""}
         `;
         frag.appendChild(li);
       });

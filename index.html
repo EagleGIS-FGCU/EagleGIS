@@ -339,6 +339,76 @@
         .s-pending   { background: #fef9c3; color: #92400e; }
         .s-cancelled { background: #fee2e2; color: #b91c1c; }
 
+        .finalized-chip {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700;
+            white-space: nowrap;
+        }
+        .finalized-chip i { font-size: 9px; }
+        .f-yes { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+        .f-no { background: #fef9c3; color: #92400e; border: 1px solid #fde047; }
+        .f-cancelled { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+        .progress-chip {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700;
+            background: #f5f3ff; color: #6d28d9; border: 1px solid #c4b5fd;
+            white-space: nowrap;
+        }
+        .progress-chip i { font-size: 9px; }
+
+        .civic-notice {
+            margin: 0 12px 10px;
+            padding: 14px 14px;
+            background: #f5f3ff;
+            border: 2px solid #c4b5fd;
+            border-radius: 10px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text);
+        }
+        .civic-notice[hidden] { display: none !important; }
+        .civic-notice-title {
+            font-size: 13px; font-weight: 800; color: #6d28d9;
+            margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+        }
+        .civic-notice p { color: var(--muted); margin-bottom: 10px; }
+        .civic-btns { display: flex; flex-direction: column; gap: 8px; }
+        .civic-btn {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            min-height: 44px; padding: 10px 12px; border-radius: 8px;
+            font-size: 12px; font-weight: 700; text-decoration: none;
+            border: 2px solid transparent; text-align: center;
+        }
+        .civic-btn.primary { background: #6d28d9; color: #fff; border-color: #5b21b6; }
+        .civic-btn.primary:hover { background: #5b21b6; }
+        .civic-btn.secondary { background: #fff; color: #0052a5; border-color: #93c5fd; }
+        .civic-btn.secondary:hover { background: #eff6ff; }
+
+        .pzdb-progress-strip {
+            margin: 0 0 8px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: #faf5ff;
+            border: 1px solid #ddd6fe;
+            font-size: 11px;
+            line-height: 1.45;
+            color: #5b21b6;
+        }
+        .pzdb-voice-box {
+            margin-bottom: 14px;
+            padding: 14px;
+            border-radius: 10px;
+            background: #f5f3ff;
+            border: 2px solid #c4b5fd;
+        }
+        .pzdb-voice-box h3 {
+            font-size: 14px; font-weight: 800; color: #6d28d9;
+            margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+        }
+        .pzdb-voice-box p { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+        .pzdb-voice-box ul { margin: 0 0 10px 18px; font-size: 12px; color: var(--muted); line-height: 1.55; }
+        .pzdb-voice-box .civic-btns { margin-top: 4px; }
+
         .action-section { margin-bottom: 14px; }
         .action-header { font-size: 10px; font-weight: 700; color: var(--subtle); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 7px; display: flex; align-items: center; gap: 5px; }
         .action-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; max-height: 200px; overflow-y: auto; }
@@ -972,6 +1042,41 @@
             </div>
         </div>
 
+        <div class="filter-section">
+            <div class="filter-label"><i class="fa-solid fa-stamp" style="margin-right:4px;"></i>Official minutes posted?</div>
+            <div class="filter-row" id="finalized-filter-row">
+                <button class="filter-btn" data-finalized="all" style="background:#eff6ff;color:#1d4ed8;border-color:#93c5fd;">
+                    <i class="fa-solid fa-layer-group"></i> All
+                </button>
+                <button class="filter-btn" data-finalized="yes" style="background:#f0fdf4;color:#15803d;border-color:#86efac;">
+                    <i class="fa-solid fa-circle-check"></i> Finalized
+                </button>
+                <button class="filter-btn" data-finalized="no" style="background:#fefce8;color:#92400e;border-color:#fde047;">
+                    <i class="fa-solid fa-clock"></i> Not yet
+                </button>
+                <button class="filter-btn" data-finalized="cancelled" style="background:#fef2f2;color:#b91c1c;border-color:#fca5a5;">
+                    <i class="fa-solid fa-ban"></i> Cancelled
+                </button>
+            </div>
+        </div>
+
+        <div id="pzdb-civic-notice" class="civic-notice" hidden>
+            <div class="civic-notice-title"><i class="fa-solid fa-hard-hat"></i> PZ&amp;DB projects — still being mapped</div>
+            <p>
+                Planning &amp; Zoning (PZ&amp;DB) project details in EagleGIS are <strong>not finished yet</strong>.
+                Minutes may be posted, but individual projects and locations are still being added.
+                <strong>Your opinion still matters</strong> — you can speak up while these projects are underway.
+            </p>
+            <div class="civic-btns">
+                <a class="civic-btn primary" href="https://esterotoday.com/contact/" target="_blank" rel="noopener">
+                    <i class="fa-solid fa-comments"></i> Share your view with Engage Estero
+                </a>
+                <a class="civic-btn secondary" href="https://estero-fl.gov/ecomment-cards/" target="_blank" rel="noopener">
+                    <i class="fa-solid fa-envelope-open-text"></i> Official Village comment (eComment)
+                </a>
+            </div>
+        </div>
+
         <!-- Year + Sort controls -->
         <div class="controls-row">
             <select id="year-filter" class="ctrl-select">
@@ -1078,6 +1183,13 @@
 <script>
 const CSV_URL = 'app/data/gold/meetings_public.csv';
 
+const CIVIC_LINKS = {
+    engageContact: 'https://esterotoday.com/contact/',
+    villageEComment: 'https://estero-fl.gov/ecomment-cards/',
+    villageParticipate: 'https://estero-fl.gov/how-do-i-participate-menu/',
+    engageEmail: 'mailto:info@esterotoday.com?subject=PZ%26DB%20project%20feedback%20(EagleGIS)',
+};
+
 // Full-text index (MiniSearch) — built once per CSV load. Row identity is the
 // array index in allData (stable for this session). Indexed fields mirror
 // Estero_Meetings_Final.csv: ProjectName, MeetingType, MeetingDate, MeetingYear,
@@ -1103,7 +1215,7 @@ const TYPES = {
 const FALLBACK_TYPE = {color:"#0052a5",bg:"#eff6ff",bd:"#93c5fd",short:"Other",icon:"fa-file"};
 const t = type => TYPES[type] || FALLBACK_TYPE;
 
-let allData=[], active=new Set(['all']), sortMode='newest', yearFilter='all', current=[];
+let allData=[], active=new Set(['all']), activeFinalized=new Set(['all']), sortMode='newest', yearFilter='all', current=[];
 
 const fmtDate = d => {
     if (!d) return '—';
@@ -1115,6 +1227,104 @@ const sCls = s => {
     const l=s.toLowerCase();
     return l==='accepted'?'s-accepted':l==='pending'?'s-pending':l==='cancelled'?'s-cancelled':'';
 };
+
+function meetingFinalizedState(row) {
+    const raw = (row.Finalized || '').trim();
+    if (raw === 'Yes' || raw === 'No' || raw === 'Cancelled') return raw;
+    const st = (row.Status || '').toLowerCase();
+    if (st === 'cancelled') return 'Cancelled';
+    const pdf = row.MinutesURL || resolveMinutesPdf(row.MeetingType, row.MeetingDate);
+    return pdf ? 'Yes' : 'No';
+}
+
+function finalizedUi(state) {
+    if (state === 'Yes') {
+        return { label: 'Finalized', cls: 'f-yes', icon: 'fa-circle-check', hint: 'Official minutes are posted.' };
+    }
+    if (state === 'Cancelled') {
+        return { label: 'Cancelled', cls: 'f-cancelled', icon: 'fa-ban', hint: 'This meeting was cancelled.' };
+    }
+    return { label: 'Not finalized', cls: 'f-no', icon: 'fa-clock', hint: 'Official minutes are not posted yet.' };
+}
+
+function finalizedChipHtml(row) {
+    const isPzdb = isInProgressRecord(row);
+    const state = meetingFinalizedState(row);
+    let minsUi;
+    if (state === 'Yes') {
+        minsUi = isPzdb
+            ? { label: 'Minutes posted', cls: 'f-yes', icon: 'fa-file-pdf', hint: 'Official minutes PDF is available.' }
+            : finalizedUi('Yes');
+    } else if (state === 'Cancelled') {
+        minsUi = finalizedUi('Cancelled');
+    } else {
+        minsUi = finalizedUi('No');
+    }
+    const minsChip = `<span class="finalized-chip ${minsUi.cls}" title="${minsUi.hint}"><i class="fa-solid ${minsUi.icon}"></i>${minsUi.label}</span>`;
+    if (!isPzdb) return minsChip;
+    return `${minsChip}<span class="progress-chip" title="EagleGIS is still adding PZ&amp;DB project details — public input is welcome."><i class="fa-solid fa-hard-hat"></i>Project in progress</span>`;
+}
+
+function isInProgressRecord(row) {
+    const flag = (row.InProgress || '').trim().toLowerCase();
+    if (flag === 'yes') return true;
+    if (flag === 'no') return false;
+    return isPzdbRecord(row);
+}
+
+function isPzdbRecord(row) {
+    const type = (row.MeetingType || '').toLowerCase();
+    const proj = (row.ProjectName || '').toLowerCase();
+    return type.includes('pzdb') || proj.includes('pz&db') || proj.includes('pzdb');
+}
+
+function pzdbProgressStripHtml(row) {
+    const note = (row && row.InProgressNote) ? row.InProgressNote : 'Project data is still being added in EagleGIS.';
+    return `<div class="pzdb-progress-strip"><i class="fa-solid fa-circle-info" style="margin-right:4px;"></i>
+        <strong>In progress:</strong> ${note}</div>`;
+}
+
+function pzdbVoiceOpinionHtml(row) {
+    const note = (row && row.InProgressNote)
+        ? `<p>${row.InProgressNote}</p>`
+        : `<p>
+                This PZ&amp;DB (Planning, Zoning &amp; Design Board) record is part of a
+                <strong>work-in-progress</strong> area of EagleGIS. Individual development
+                projects are still being mapped — but <strong>you can still weigh in</strong>
+                on planning and zoning decisions that affect Estero.
+            </p>`;
+    return `
+        <div class="pzdb-voice-box">
+            <h3><i class="fa-solid fa-bullhorn"></i> Your voice matters</h3>
+            ${note}
+            <ul>
+                <li>Attend PZ&amp;DB or Village Council meetings at the Council Chambers</li>
+                <li>Submit an official eComment to the Village (due by noon the day before a meeting)</li>
+                <li>Contact Engage Estero to connect with neighbors and share your perspective</li>
+            </ul>
+            <div class="civic-btns">
+                <a class="civic-btn primary" href="${CIVIC_LINKS.engageContact}" target="_blank" rel="noopener">
+                    <i class="fa-solid fa-comments"></i> Contact Engage Estero
+                </a>
+                <a class="civic-btn secondary" href="${CIVIC_LINKS.villageEComment}" target="_blank" rel="noopener">
+                    <i class="fa-solid fa-envelope-open-text"></i> Village eComment form
+                </a>
+                <a class="civic-btn secondary" href="${CIVIC_LINKS.villageParticipate}" target="_blank" rel="noopener">
+                    <i class="fa-solid fa-people-group"></i> How to participate (Village)
+                </a>
+            </div>
+        </div>`;
+}
+
+function updatePzdbCivicNotice(rows) {
+    const el = document.getElementById('pzdb-civic-notice');
+    if (!el) return;
+    const pzdbFilterOn = active.has('PZDB Meeting') || active.has('PZDB Public Hearing')
+        || active.has('PZDB Public Information Meeting') || active.has('PZDB Workshop');
+    const hasPzdbInView = (rows || []).some(isInProgressRecord);
+    el.hidden = !(pzdbFilterOn || hasPzdbInView);
+}
+
 const noAct = t => !t||['No action found','Meeting Cancelled','No action extracted - verify PDF'].includes(t);
 
 function highlight(text, termRaw) {
@@ -1180,6 +1390,7 @@ function buildMeetingSearchIndex() {
                 'meetingDate',
                 'meetingYear',
                 'status',
+                'finalized',
                 'actionTaken',
                 'startTime',
                 'staffCode',
@@ -1197,6 +1408,7 @@ function buildMeetingSearchIndex() {
             meetingDate: row.MeetingDate || '',
             meetingYear: row.MeetingYear || '',
             status: row.Status || '',
+            finalized: row.Finalized || meetingFinalizedState(row),
             actionTaken: row.ActionTaken || '',
             startTime: row.StartTime || '',
             staffCode: row.StaffCode || '',
@@ -1269,10 +1481,12 @@ function run() {
     // logic lives in this function.
     if (typeof currentView !== 'undefined') {
         if (currentView === 'news') {
+            updatePzdbCivicNotice([]);
             if (typeof renderNews === 'function') renderNews();
             return;
         }
         if (currentView === 'upcoming') {
+            updatePzdbCivicNotice([]);
             if (typeof renderUpcoming === 'function') renderUpcoming();
             return;
         }
@@ -1304,6 +1518,11 @@ function run() {
     let rows = allData.map((r, idx) => ({ r, idx })).filter(({ r, idx }) => {
         const matchesType = active.has('all') || active.has((r.MeetingType || '').trim() || 'Other');
         const matchesYear = yearFilter === 'all' || r.MeetingYear === yearFilter;
+        const fin = meetingFinalizedState(r);
+        const matchesFinalized = activeFinalized.has('all')
+            || (activeFinalized.has('yes') && fin === 'Yes')
+            || (activeFinalized.has('no') && fin === 'No')
+            || (activeFinalized.has('cancelled') && fin === 'Cancelled');
         let matchesText = true;
         if (q) {
             if (useIndex && idSet) {
@@ -1322,7 +1541,7 @@ function run() {
                     (r.DocDate || '').toLowerCase().includes(q);
             }
         }
-        return matchesType && matchesYear && matchesText;
+        return matchesType && matchesYear && matchesFinalized && matchesText;
     });
 
     if (useIndex && scores.size) {
@@ -1338,6 +1557,7 @@ function run() {
 
     current = rows.map(x => x.r);
     stats(current);
+    updatePzdbCivicNotice(current);
     render(current);
 }
 
@@ -1371,8 +1591,12 @@ function renderCard(row, i) {
             <span class="project-pill" style="background:${bg};color:${color};border-color:${bd};" title="${row.MeetingType||''}">
                 <i class="fa-solid ${icon}"></i>${short}
             </span>
-            <span class="card-date">${highlight(row.MeetingDate||'—', qForHl)}</span>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+                ${finalizedChipHtml(row)}
+                <span class="card-date">${highlight(row.MeetingDate||'—', qForHl)}</span>
+            </div>
         </div>
+        ${isInProgressRecord(row) ? pzdbProgressStripHtml(row) : ''}
         <div class="card-action">${displayAction}</div>
         <div class="card-footer">
             <span class="card-loc"><i class="fa-solid fa-location-dot" style="color:${color};font-size:10px;"></i>${highlight(row.LocationName||'—', qForHl)}</span>
@@ -1466,6 +1690,8 @@ function openDetail(idx) {
             <div class="detail-banner-meta" style="color:${color};margin-top:4px;">${fmtDate(row.MeetingDate)}</div>
         </div>
 
+        ${isInProgressRecord(row) ? pzdbVoiceOpinionHtml(row) : ''}
+
         <div class="detail-grid">
             <div class="detail-cell full">
                 <div class="dcl"><i class="fa-solid fa-diagram-project"></i>Project</div>
@@ -1474,6 +1700,15 @@ function openDetail(idx) {
             <div class="detail-cell">
                 <div class="dcl"><i class="fa-solid fa-circle-check"></i>Status</div>
                 <span class="status-chip ${sCls(row.Status)}">${row.Status||'—'}</span>
+            </div>
+            <div class="detail-cell">
+                <div class="dcl"><i class="fa-solid fa-stamp"></i>Minutes</div>
+                <div class="dcv">${finalizedChipHtml(row)}</div>
+            </div>
+            <div class="detail-cell full" style="padding-top:7px;padding-bottom:7px;">
+                <div style="font-size:12px;color:var(--muted);line-height:1.5;">
+                    ${finalizedUi(meetingFinalizedState(row)).hint}
+                </div>
             </div>
             <div class="detail-cell">
                 <div class="dcl"><i class="fa-solid fa-user"></i>Staff Code</div>
@@ -1558,6 +1793,17 @@ function setupFilters() {
                 document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('inactive'));
             }
         }
+        run();
+    });
+
+    document.getElementById('finalized-filter-row').addEventListener('click', ev => {
+        const btn = ev.target.closest('.filter-btn');
+        if (!btn) return;
+        const fin = btn.dataset.finalized;
+        activeFinalized = new Set([fin]);
+        document.querySelectorAll('#finalized-filter-row .filter-btn').forEach(b => {
+            b.classList.toggle('inactive', b.dataset.finalized !== fin);
+        });
         run();
     });
 }
