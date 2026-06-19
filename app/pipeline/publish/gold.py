@@ -22,8 +22,11 @@ from typing import Any
 from app.pipeline import config, reference
 from app.pipeline.collect.minutes import load_minutes_index, resolve_minutes_url
 from app.pipeline.load.silver import _atomic_write_csv, _read_csv
+from app.pipeline.publish.ai_gold import build_ai_gold
+from app.pipeline.publish.arcgis_clean import clean_meetings_public_rows
+from app.pipeline.publish.arcgis_gold import build_arcgis_gold
 
-SITE_MANIFEST_VERSION = 1
+SITE_MANIFEST_VERSION = 2
 
 # Frontend filter chips / colors key off these display names (see index.html TYPES).
 TYPE_DISPLAY_NAMES: dict[str, str] = {
@@ -139,6 +142,8 @@ def _build_site_manifest(
     rows: list[dict[str, str]],
     *,
     shard_report: list[dict[str, Any]] | None,
+    arcgis_report: dict[str, Any] | None = None,
+    ai_report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     meetings_csv = _file_fingerprint(config.GOLD_MEETINGS_PUBLIC)
     meetings_json = _file_fingerprint(config.GOLD_MEETINGS_JSON)
@@ -147,9 +152,10 @@ def _build_site_manifest(
     types = sorted({str(r["MeetingType"]) for r in rows if r.get("MeetingType")})
     delivery = "sharded" if shard_report else "monolith"
 
-    return {
+    manifest: dict[str, Any] = {
         "version": SITE_MANIFEST_VERSION,
         "generated_at": datetime.now(timezone.utc).isoformat(),
+        "primary": "arcgis",
         "delivery": delivery,
         "meetings": {
             "rows": len(rows),
@@ -163,6 +169,33 @@ def _build_site_manifest(
         },
         "minutes_index": minutes,
     }
+
+    if arcgis_report is not None:
+        arcgis_csv = _file_fingerprint(config.GOLD_ARCGIS_PUBLIC)
+        manifest["arcgis"] = {
+            "rows": arcgis_report.get("rows", 0),
+            "categories": arcgis_report.get("categories", {}),
+            "csv": _rel(config.GOLD_ARCGIS_PUBLIC),
+            "sha256": arcgis_csv.get("sha256"),
+            "bytes": arcgis_csv.get("bytes"),
+            "sources": arcgis_report.get("sources", []),
+        }
+
+    if ai_report is not None:
+        ai_csv = _file_fingerprint(config.GOLD_AI_PUBLIC)
+        ai_jsonl = _file_fingerprint(config.GOLD_AI_JSONL)
+        manifest["ai"] = {
+            "rows": ai_report.get("rows", 0),
+            "ai_ready": ai_report.get("ai_ready", 0),
+            "review_required": ai_report.get("review_required", 0),
+            "csv": _rel(config.GOLD_AI_PUBLIC),
+            "jsonl": _rel(config.GOLD_AI_JSONL),
+            "sha256": ai_jsonl.get("sha256") or ai_csv.get("sha256"),
+            "bytes": ai_jsonl.get("bytes") or ai_csv.get("bytes"),
+            "sources": ai_report.get("sources", []),
+        }
+
+    return manifest
 
 
 def _index_by_id(rows: list[dict], key: str) -> dict[int, dict]:
@@ -313,6 +346,11 @@ def build_gold() -> dict[str, Any]:
         })
 
     rows.sort(key=lambda r: (r["MeetingDate"], r["ProjectName"]), reverse=True)
+
+    arcgis_report = build_arcgis_gold()
+    arcgis_rows = _read_csv(config.GOLD_ARCGIS_PUBLIC) if config.GOLD_ARCGIS_PUBLIC.exists() else []
+    rows, clean_stats = clean_meetings_public_rows(rows, arcgis_rows)
+
     _atomic_write_csv(config.GOLD_MEETINGS_PUBLIC, GOLD_FIELDS, rows)
     _atomic_write_json_compact(config.GOLD_MEETINGS_JSON, rows)
 
@@ -322,7 +360,13 @@ def build_gold() -> dict[str, Any]:
     else:
         _clear_year_shards()
 
-    site_manifest = _build_site_manifest(rows, shard_report=shard_report)
+    ai_report = build_ai_gold(arcgis_rows=arcgis_rows)
+    site_manifest = _build_site_manifest(
+        rows,
+        shard_report=shard_report,
+        arcgis_report=arcgis_report,
+        ai_report=ai_report,
+    )
     _atomic_write_json_compact(config.GOLD_SITE_MANIFEST, site_manifest)
 
     action_report = _build_gold_actions(meetings, projects, types)
@@ -336,6 +380,9 @@ def build_gold() -> dict[str, Any]:
         "delivery": site_manifest["delivery"],
         "shards": len(shard_report or []),
         "actions": action_report,
+        "arcgis": arcgis_report,
+        "arcgis_clean": clean_stats,
+        "ai": ai_report,
     }
 
 

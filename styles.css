@@ -256,8 +256,8 @@ body {
 }
 .record-card:hover { border-color: var(--accent-border); box-shadow: 0 2px 8px rgba(0,82,165,0.08); background: var(--accent-light); }
 .record-card.active { border-color: var(--accent); box-shadow: 0 2px 12px rgba(0,82,165,0.15); background: var(--accent-light); }
-
-.card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; } 
+.record-card.record-cancelled { opacity: 0.88; border-style: dashed; }
+.card-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 6px; }
 .project-pill {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 3px 8px; border-radius: 5px; font-size: 10px;

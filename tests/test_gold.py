@@ -108,7 +108,9 @@ def test_build_gold_emits_json_and_site_manifest():
     assert len(json_rows) == len(csv_rows) == report["rows"]
 
     manifest = json.loads(config.GOLD_SITE_MANIFEST.read_text(encoding="utf-8"))
-    assert manifest["version"] >= 1
+    assert manifest["version"] >= 2
+    assert manifest["primary"] == "arcgis"
+    assert manifest["arcgis"]["rows"] > 0
     assert manifest["meetings"]["rows"] == report["rows"]
     assert manifest["meetings"]["sha256"]
     assert manifest["meetings"]["json"] == "app/data/gold/meetings_public.json"

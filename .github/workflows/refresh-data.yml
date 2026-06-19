@@ -47,6 +47,9 @@ jobs:
           git add app/data/gold/meetings_public.csv
           git add app/data/gold/meetings_public.json
           git add app/data/gold/site_manifest.json
+          git add app/data/gold/meetings_ai_public.csv
+          git add app/data/gold/meetings_ai_public.jsonl
+          git add app/data/gold/arcgis_agenda_map_data.csv
           git add app/data/silver/
           if git diff --staged --quiet; then
             echo "No artifact changes to commit."

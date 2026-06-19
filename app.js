@@ -15,7 +15,7 @@
 
 const GITHUB_BASE = 'https://raw.githubusercontent.com/EagleGIS-FGCU/EagleGIS/main/';
 const MANIFEST_URL = GITHUB_BASE + 'app/data/gold/site_manifest.json';
-const CSV_URL = GITHUB_BASE + 'app/data/gold/meetings_public.csv';
+const ARCGIS_CSV_URL = GITHUB_BASE + 'app/data/gold/arcgis_agenda_map_data.csv';
 const DATA_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 let siteManifest = null;
@@ -35,6 +35,43 @@ const TYPES = {
 };
 const FALLBACK_TYPE = {color:"#0052a5",bg:"#eff6ff",bd:"#93c5fd",short:"Other",icon:"fa-file"};
 const t = type => TYPES[type] || FALLBACK_TYPE;
+
+const LAND_USE = {
+    residential:    {color:"#15803d",bg:"#f0fdf4",bd:"#86efac",short:"Residential",icon:"fa-house"},
+    commercial:     {color:"#c2410c",bg:"#fff7ed",bd:"#fdba74",short:"Commercial",icon:"fa-store"},
+    mixed_use:      {color:"#7c3aed",bg:"#f5f3ff",bd:"#c4b5fd",short:"Mixed Use",icon:"fa-city"},
+    industrial:     {color:"#57534e",bg:"#fafaf9",bd:"#d6d3d1",short:"Industrial",icon:"fa-industry"},
+    institutional:  {color:"#0369a1",bg:"#f0f9ff",bd:"#7dd3fc",short:"Institutional",icon:"fa-school"},
+    infrastructure: {color:"#b45309",bg:"#fffbeb",bd:"#fcd34d",short:"Infrastructure",icon:"fa-road"},
+    open_space:     {color:"#047857",bg:"#ecfdf5",bd:"#6ee7b7",short:"Open Space",icon:"fa-tree"},
+    administrative: {color:"#64748b",bg:"#f8fafc",bd:"#cbd5e1",short:"Administrative",icon:"fa-clipboard"},
+    other:          {color:"#6b7280",bg:"#f9fafb",bd:"#d1d5db",short:"Other",icon:"fa-tag"},
+};
+const lu = cat => LAND_USE[cat] || LAND_USE.other;
+
+function mapArcgisMeetingType(meetingType, board) {
+    if ((board || '').includes('Planning')) return 'PZDB Meeting';
+    const map = {
+        'Village Council': 'Regular Council Meeting',
+        'Planning Zoning & Design Board': 'PZDB Meeting',
+        'Public Hearing': 'Public Hearing',
+        'Workshop': 'Council Workshop',
+    };
+    return map[meetingType] || meetingType || 'Other';
+}
+
+/** Normalize ArcGIS gold row into fields the UI expects. */
+function normalizeArcgisRow(row) {
+    const meetingType = mapArcgisMeetingType(row.MeetingType, row.Board);
+    return {
+        ...row,
+        Title: row.ProjectTitle || row.ProjectName || '',
+        MinutesURL: row.Document_Link || '',
+        LocationName: row.Location || row.LocationName || '',
+        MeetingType: meetingType,
+        LandUseCategory: (row.LandUseCategory || 'other').trim() || 'other',
+    };
+}
 
 function scheduleIdle(fn, timeoutMs = 2000) {
     if ('requestIdleCallback' in window) requestIdleCallback(fn, { timeout: timeoutMs });
@@ -84,7 +121,9 @@ async function fetchJson(url) {
 function compareMeetingRows(a, b) {
     const byDate = (b.MeetingDate || '').localeCompare(a.MeetingDate || '');
     if (byDate !== 0) return byDate;
-    return (a.ProjectName || '').localeCompare(b.ProjectName || '');
+    const byItem = String(a.AgendaItemNumber || '').localeCompare(String(b.AgendaItemNumber || ''), undefined, { numeric: true });
+    if (byItem !== 0) return byItem;
+    return (a.ProjectTitle || a.ProjectName || '').localeCompare(b.ProjectTitle || b.ProjectName || '');
 }
 
 async function loadSiteManifest() {
@@ -92,36 +131,26 @@ async function loadSiteManifest() {
     return siteManifest;
 }
 
-async function loadMeetingsRecords(manifest) {
-    const meta = manifest.meetings || {};
+async function loadArcgisRecords(manifest) {
+    const meta = manifest.arcgis || {};
     const sha = meta.sha256 || '';
-    const cacheKey = `eaglegis:meetings:v1:${sha}`;
+    const cacheKey = `eaglegis:arcgis:v2:${sha}`;
     const cached = readDataCache(cacheKey);
     if (cached) return cached;
 
-    let rows = null;
-    if (meta.shards && meta.shards.length) {
-        const parts = await Promise.all(
-            meta.shards.map(s => fetchJson(versionedUrl(s.path, sha)))
-        );
-        rows = parts.flat().sort(compareMeetingRows);
-    } else if (meta.json) {
-        rows = await fetchJson(versionedUrl(meta.json, sha));
-    }
-
-    if (rows) {
-        writeDataCache(cacheKey, rows);
-        return rows;
-    }
-
+    const csvPath = meta.csv || 'app/data/gold/arcgis_agenda_map_data.csv';
     return new Promise((resolve, reject) => {
         if (typeof Papa === 'undefined') {
             reject(new Error('PapaParse unavailable'));
             return;
         }
-        Papa.parse(versionedUrl(meta.csv || CSV_URL, sha), {
+        Papa.parse(versionedUrl(csvPath, sha), {
             download: true, header: true, skipEmptyLines: true,
-            complete: ({ data }) => resolve(data),
+            complete: ({ data }) => {
+                const rows = data.map(normalizeArcgisRow).sort(compareMeetingRows);
+                writeDataCache(cacheKey, rows);
+                resolve(rows);
+            },
             error: reject,
         });
     });
@@ -131,9 +160,11 @@ function onMeetingsLoaded(data) {
     allData = data;
     populateYears();
     buildTypeFilters();
+    buildLandUseFilters();
     run();
     setupSearch();
     setupFilters();
+    setupLandUseFilters();
     setupControls();
     setupBackTop();
     setupRecordListDelegation();
@@ -148,7 +179,7 @@ function onMeetingsLoaded(data) {
    ────────────────────────────────────────────────────────────────────────── */
 
 let meetingSearch = null;
-let allData=[], active=new Set(['all']), sortMode='newest', yearFilter='all', current=[];
+let allData=[], active=new Set(['all']), landUseActive=new Set(['all']), sortMode='newest', yearFilter='all', current=[];
 
 const fmtDate = d => {
     if (!d) return '—';
@@ -191,21 +222,21 @@ async function init() {
     showSkeleton();
     try {
         const manifest = await loadSiteManifest();
-        const data = await loadMeetingsRecords(manifest);
+        const data = await loadArcgisRecords(manifest);
         onMeetingsLoaded(data);
     } catch (err) {
-        console.warn('Manifest/JSON load failed; falling back to CSV:', err);
+        console.warn('Manifest/ArcGIS load failed; falling back to CSV:', err);
         if (typeof Papa === 'undefined') {
             document.getElementById('data-list').innerHTML =
-                `<div class="empty"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i><p style="color:#ef4444;">Could not load data.<br>Meeting records failed to load.</p></div>`;
+                `<div class="empty"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i><p style="color:#ef4444;">Could not load data.<br>Agenda records failed to load.</p></div>`;
             return;
         }
-        Papa.parse(CSV_URL, {
+        Papa.parse(ARCGIS_CSV_URL, {
             download: true, header: true, skipEmptyLines: true,
-            complete: ({ data }) => onMeetingsLoaded(data),
+            complete: ({ data }) => onMeetingsLoaded(data.map(normalizeArcgisRow).sort(compareMeetingRows)),
             error: () => {
                 document.getElementById('data-list').innerHTML =
-                    `<div class="empty"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i><p style="color:#ef4444;">Could not load data.<br>The meetings file failed to load.</p></div>`;
+                    `<div class="empty"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i><p style="color:#ef4444;">Could not load data.<br>The ArcGIS gold file failed to load.</p></div>`;
             },
         });
     }
@@ -218,25 +249,27 @@ function buildMeetingSearchIndex() {
         const ms = new MiniSearch({
             idField: 'id',
             fields: [
-                'projectName', 'meetingType', 'meetingDate', 'meetingYear', 'status',
-                'actionTaken', 'startTime', 'staffCode', 'title', 'minutesUrl',
-                'docDate', 'locationName', 'coordinates',
+                'projectName', 'projectTitle', 'meetingType', 'meetingDate', 'meetingYear', 'status',
+                'actionTaken', 'summary', 'staffCode', 'title', 'minutesUrl',
+                'locationName', 'landUse', 'agendaItemType', 'coordinates',
             ],
         });
         const docs = allData.map((row, i) => ({
             id: String(i),
             projectName: row.ProjectName || '',
+            projectTitle: row.ProjectTitle || '',
             meetingType: row.MeetingType || '',
             meetingDate: row.MeetingDate || '',
             meetingYear: row.MeetingYear || '',
             status: row.Status || '',
             actionTaken: row.ActionTaken || '',
-            startTime: row.StartTime || '',
+            summary: row.Summary || '',
             staffCode: row.StaffCode || '',
             title: row.Title || '',
             minutesUrl: row.MinutesURL || '',
-            docDate: row.DocDate || '',
             locationName: row.LocationName || '',
+            landUse: row.LandUseCategory || '',
+            agendaItemType: row.AgendaItemType || '',
             coordinates: [row.Latitude, row.Longitude].filter(Boolean).join(' '),
         }));
         ms.addAll(docs);
@@ -284,6 +317,36 @@ function buildTypeFilters() {
     });
 }
 
+function buildLandUseFilters() {
+    const row = document.getElementById('landuse-filter-row');
+    if (!row) return;
+    row.querySelectorAll('[data-landuse]:not([data-landuse="all"])').forEach(el => el.remove());
+
+    const counts = new Map();
+    allData.forEach(r => {
+        const k = r.LandUseCategory || 'other';
+        counts.set(k, (counts.get(k) || 0) + 1);
+    });
+    const ordered = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+
+    const allBtn = row.querySelector('[data-landuse="all"]');
+    if (allBtn) {
+        const html = `<span class="chip-count">${allData.length}</span>`;
+        const existing = allBtn.querySelector('.chip-count');
+        if (existing) existing.outerHTML = html; else allBtn.insertAdjacentHTML('beforeend', html);
+    }
+
+    ordered.forEach(([cat, n]) => {
+        const meta = lu(cat);
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn inactive';
+        btn.dataset.landuse = cat;
+        btn.style.cssText = `background:${meta.bg};color:${meta.color};border-color:${meta.bd};`;
+        btn.innerHTML = `<i class="fa-solid ${meta.icon}" aria-hidden="true"></i> ${meta.short}<span class="chip-count">${n}</span>`;
+        row.appendChild(btn);
+    });
+}
+
 function compareRowsBySortMode(a, b) {
     if (sortMode === 'newest') return new Date(b.MeetingDate) - new Date(a.MeetingDate);
     if (sortMode === 'oldest') return new Date(a.MeetingDate) - new Date(b.MeetingDate);
@@ -320,6 +383,7 @@ function run() {
 
     let rows = allData.map((r, idx) => ({ r, idx })).filter(({ r, idx }) => {
         const matchesType = active.has('all') || active.has((r.MeetingType || '').trim() || 'Other');
+        const matchesLandUse = landUseActive.has('all') || landUseActive.has(r.LandUseCategory || 'other');
         const matchesYear = yearFilter === 'all' || r.MeetingYear === yearFilter;
         let matchesText = true;
         if (q) {
@@ -328,18 +392,20 @@ function run() {
             } else {
                 matchesText =
                     (r.ActionTaken || '').toLowerCase().includes(q) ||
+                    (r.Summary || '').toLowerCase().includes(q) ||
                     (r.MeetingDate || '').toLowerCase().includes(q) ||
                     (r.MeetingType || '').toLowerCase().includes(q) ||
                     (r.ProjectName || '').toLowerCase().includes(q) ||
+                    (r.ProjectTitle || '').toLowerCase().includes(q) ||
                     (r.LocationName || '').toLowerCase().includes(q) ||
                     (r.StaffCode || '').toLowerCase().includes(q) ||
                     (r.Title || '').toLowerCase().includes(q) ||
                     (r.Status || '').toLowerCase().includes(q) ||
-                    (r.MinutesURL || '').toLowerCase().includes(q) ||
-                    (r.DocDate || '').toLowerCase().includes(q);
+                    (r.LandUseCategory || '').toLowerCase().includes(q) ||
+                    (r.MinutesURL || '').toLowerCase().includes(q);
             }
         }
-        return matchesType && matchesYear && matchesText;
+        return matchesType && matchesLandUse && matchesYear && matchesText;
     });
 
     if (useIndex && scores.size) {
@@ -362,7 +428,7 @@ function run() {
 function stats(d) {
     document.getElementById('s-count').textContent = d.length;
     document.getElementById('s-years').textContent = new Set(d.map(r=>r.MeetingYear).filter(Boolean)).size||'—';
-    document.getElementById('s-types').textContent = new Set(d.map(r=>r.MeetingType).filter(Boolean)).size||'—';
+    document.getElementById('s-types').textContent = new Set(d.map(r=>r.LandUseCategory).filter(Boolean)).size||'—';
     const pdfCount = d.filter(r => r.MinutesURL || resolveMinutesPdf(r.MeetingType, r.MeetingDate)).length;
     document.getElementById('s-pdfs').textContent  = pdfCount;
     const badge = document.getElementById('tab-count-meetings');
@@ -371,23 +437,30 @@ function stats(d) {
 
 function renderCard(row, i) {
     const {color,bg,bd,short,icon}=t(row.MeetingType);
-    const rawAction = noAct(row.ActionTaken) ? null : row.ActionTaken;
+    const landMeta = lu(row.LandUseCategory || 'other');
+    const rawAction = noAct(row.ActionTaken) ? (row.Summary || null) : row.ActionTaken;
     const qForHl = document.getElementById('main-search').value.trim();
     const displayAction = rawAction
         ? highlight(rawAction.length>130?rawAction.slice(0,130)+'...':rawAction, qForHl)
-        : `<span style="font-style:italic;color:#9ca3af;">View PDF for full meeting details.</span>`;
+        : `<span style="font-style:italic;color:#9ca3af;">View PDF for full item details.</span>`;
     const pdfUrl = row.MinutesURL || resolveMinutesPdf(row.MeetingType, row.MeetingDate);
     const fromManifest = !row.MinutesURL && pdfUrl;
-    
-    // Accessibility: Added role="button" and tabindex="0" for keyboard support
+    const cancelled = (row.Status || '').toLowerCase() === 'cancelled';
+    const itemLabel = row.AgendaItemNumber ? `Item ${row.AgendaItemNumber}` : 'Agenda item';
+
     return `
-    <div class="record-card" data-idx="${i}" role="button" tabindex="0" aria-label="Meeting on ${row.MeetingDate}: ${short}">
+    <div class="record-card${cancelled ? ' record-cancelled' : ''}" data-idx="${i}" role="button" tabindex="0" aria-label="${itemLabel} on ${row.MeetingDate}: ${short}">
         <div class="card-top">
             <span class="project-pill" style="background:${bg};color:${color};border-color:${bd};" title="${row.MeetingType||''}">
                 <i class="fa-solid ${icon}" aria-hidden="true"></i>${short}
             </span>
+            ${cancelled ? `<span class="status-chip s-cancelled">Cancelled</span>` : ''}
+            <span class="project-pill" style="background:${landMeta.bg};color:${landMeta.color};border-color:${landMeta.bd};font-size:10px;" title="Land use">
+                <i class="fa-solid ${landMeta.icon}" aria-hidden="true"></i>${landMeta.short}
+            </span>
             <span class="card-date">${highlight(row.MeetingDate||'—', qForHl)}</span>
         </div>
+        <div class="card-title" style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px;">${highlight(row.Title || row.ProjectName || itemLabel, qForHl)}</div>
         <div class="card-action">${displayAction}</div>
         <div class="card-footer">
             <span class="card-loc"><i class="fa-solid fa-location-dot" style="color:${color};font-size:10px;" aria-hidden="true"></i>${highlight(row.LocationName||'—', qForHl)}</span>
@@ -396,7 +469,7 @@ function renderCard(row, i) {
                     <i class="fa-solid fa-circle-info" aria-hidden="true"></i>Details
                 </button>
                 ${pdfUrl
-                    ?`<a class="btn-sm btn-solid" href="${pdfUrl}" target="_blank" rel="noopener" style="background:${color};" title="${fromManifest ? 'Canonical estero-fl.gov copy' : 'Mirror copy'}" aria-label="View PDF for meeting on ${row.MeetingDate}">
+                    ?`<a class="btn-sm btn-solid" href="${pdfUrl}" target="_blank" rel="noopener" style="background:${color};" title="${fromManifest ? 'Canonical estero-fl.gov copy' : 'Mirror copy'}" aria-label="View PDF for ${row.MeetingDate}">
                         <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>PDF${fromManifest ? '<sup style="font-size:7px;opacity:0.85;margin-left:2px;">VOE</sup>' : ''}
                       </a>`
                     :''}
@@ -502,9 +575,12 @@ function openDetail(idx) {
     if (card) { card.classList.add('active'); card.scrollIntoView({behavior:'smooth',block:'nearest'}); }
 
     const {color,bg,bd,icon} = t(row.MeetingType);
+    const landMeta = lu(row.LandUseCategory || 'other');
     const qForHl = document.getElementById('main-search').value.trim();
     const actions = noAct(row.ActionTaken)
-        ? `<div class="action-empty"><i class="fa-solid fa-circle-info" style="margin-right:5px;" aria-hidden="true"></i>No action text available — view the PDF for full meeting details.</div>`
+        ? (row.Summary
+            ? `<div class="action-item">${highlight(row.Summary, qForHl)}</div>`
+            : `<div class="action-empty"><i class="fa-solid fa-circle-info" style="margin-right:5px;" aria-hidden="true"></i>No action text available — view the PDF for full details.</div>`)
         : row.ActionTaken.split(' | ').filter(Boolean).map(a=>`<div class="action-item">${highlight(a.trim(), qForHl)}</div>`).join('');
 
     document.getElementById('detail-content').innerHTML=`
@@ -512,12 +588,10 @@ function openDetail(idx) {
             <div class="detail-banner-name" style="color:${color};">
                 <i class="fa-solid ${icon}" aria-hidden="true"></i>${row.MeetingType||'Meeting'}
             </div>
-            ${row.ProjectName
-                ? `<div style="margin-top:6px;font-size:13px;font-weight:600;color:${color};display:flex;align-items:center;gap:6px;">
-                       <i class="fa-solid fa-diagram-project" style="font-size:11px;opacity:0.8;" aria-hidden="true"></i>${row.ProjectName}
-                   </div>`
+            ${row.Title
+                ? `<div style="margin-top:6px;font-size:13px;font-weight:600;color:${color};">${highlight(row.Title, qForHl)}</div>`
                 : ''}
-            <div class="detail-banner-meta" style="color:${color};margin-top:4px;">${fmtDate(row.MeetingDate)}</div>
+            <div class="detail-banner-meta" style="color:${color};margin-top:4px;">${fmtDate(row.MeetingDate)} · Item ${row.AgendaItemNumber || '—'}</div>
         </div>
 
         <div class="detail-grid">
@@ -530,14 +604,22 @@ function openDetail(idx) {
                 <span class="status-chip ${sCls(row.Status)}">${row.Status||'—'}</span>
             </div>
             <div class="detail-cell">
+                <div class="dcl"><i class="fa-solid fa-tag" aria-hidden="true"></i>Land Use</div>
+                <span class="status-chip" style="background:${landMeta.bg};color:${landMeta.color};border:1px solid ${landMeta.bd};">${landMeta.short}</span>
+            </div>
+            <div class="detail-cell">
+                <div class="dcl"><i class="fa-solid fa-list-ol" aria-hidden="true"></i>Item Type</div>
+                <div class="dcv">${row.AgendaItemType||'—'}</div>
+            </div>
+            <div class="detail-cell">
                 <div class="dcl"><i class="fa-solid fa-user" aria-hidden="true"></i>Staff Code</div>
                 <div class="dcv" style="font-family:'IBM Plex Mono',monospace;font-size:12px;">${row.StaffCode||'—'}</div>
             </div>
             <div class="detail-cell full">
-                <div class="dcl"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>Location <span style="color:#9ca3af;font-weight:500;">(ArcGIS)</span></div>
+                <div class="dcl"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>Location</div>
                 <div class="dcv" style="font-weight:500;font-size:12px;">${row.LocationName||'—'}</div>
                 ${(row.Latitude && row.Longitude)
-                    ? `<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9ca3af;margin-top:3px;">${row.Latitude}, ${row.Longitude}</div>`
+                    ? `<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9ca3af;margin-top:3px;">${row.Latitude}, ${row.Longitude}${row.GeocodeConfidence ? ` · conf ${row.GeocodeConfidence}` : ''}</div>`
                     : ''}
             </div>
             <div class="detail-cell">
@@ -545,8 +627,8 @@ function openDetail(idx) {
                 <div class="dcv">${row.MeetingYear||'—'}</div>
             </div>
             <div class="detail-cell">
-                <div class="dcl"><i class="fa-solid fa-file-lines" aria-hidden="true"></i>Doc Date</div>
-                <div class="dcv" style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${row.DocDate||'—'}</div>
+                <div class="dcl"><i class="fa-solid fa-building-columns" aria-hidden="true"></i>Board</div>
+                <div class="dcv">${row.Board||'—'}</div>
             </div>
         </div>
 
@@ -623,6 +705,47 @@ function setupFilters() {
             if (active.size === 0) {
                 active = new Set(['all']);
                 document.querySelectorAll('.filter-btn').forEach(b=>{
+                    b.classList.remove('inactive');
+                    b.setAttribute('aria-pressed', 'true');
+                });
+            }
+        }
+        run();
+    });
+}
+
+function setupLandUseFilters() {
+    const row = document.getElementById('landuse-filter-row');
+    if (!row) return;
+    row.addEventListener('click', ev => {
+        const btn = ev.target.closest('.filter-btn');
+        if (!btn) return;
+        const cat = btn.dataset.landuse;
+        if (cat === 'all') {
+            landUseActive = new Set(['all']);
+            row.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('inactive');
+                b.setAttribute('aria-pressed', 'true');
+            });
+        } else {
+            landUseActive.delete('all');
+            const allBtn = row.querySelector('[data-landuse="all"]');
+            if (allBtn) {
+                allBtn.classList.add('inactive');
+                allBtn.setAttribute('aria-pressed', 'false');
+            }
+            if (landUseActive.has(cat)) {
+                landUseActive.delete(cat);
+                btn.classList.add('inactive');
+                btn.setAttribute('aria-pressed', 'false');
+            } else {
+                landUseActive.add(cat);
+                btn.classList.remove('inactive');
+                btn.setAttribute('aria-pressed', 'true');
+            }
+            if (landUseActive.size === 0) {
+                landUseActive = new Set(['all']);
+                row.querySelectorAll('.filter-btn').forEach(b => {
                     b.classList.remove('inactive');
                     b.setAttribute('aria-pressed', 'true');
                 });

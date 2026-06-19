@@ -8,6 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+REPO_ROOT = DATA_DIR.parent.parent
 
 BRONZE_DIR = DATA_DIR
 REFERENCE_DIR = DATA_DIR / "reference"
@@ -29,6 +30,13 @@ GOLD_MEETINGS_JSON = GOLD_DIR / "meetings_public.json"
 GOLD_SITE_MANIFEST = GOLD_DIR / "site_manifest.json"
 GOLD_SHARDS_DIR = GOLD_DIR / "shards"
 GOLD_MEETING_ACTIONS_PUBLIC = GOLD_DIR / "meeting_actions_public.csv"
+GOLD_AI_PUBLIC = GOLD_DIR / "meetings_ai_public.csv"
+GOLD_AI_JSONL = GOLD_DIR / "meetings_ai_public.jsonl"
+GOLD_ARCGIS_PUBLIC = GOLD_DIR / "arcgis_agenda_map_data.csv"
+
+# Normalized extraction inputs for the AI gold layer (agenda-item grain).
+NORMALIZED_COUNCIL_DIR = REPO_ROOT / "normalized_csv_council"
+NORMALIZED_PZDB_DIR = REPO_ROOT / "normalized_csv_pilot" / "pzdb_from_raw_verify"
 
 # When public meeting rows reach this count, gold also emits per-year JSON shards
 # so the GitHub Pages frontend can fetch data incrementally.

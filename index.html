@@ -115,6 +115,12 @@
                 </button>
                 <!-- Type buttons populated from CSV data at runtime -->
             </div>
+            <div class="filter-label" style="margin-top:10px;"><i class="fa-solid fa-map-location-dot" style="margin-right:4px;"></i>Filter by Land Use</div>
+            <div class="filter-row" id="landuse-filter-row">
+                <button class="filter-btn" data-landuse="all" style="background:#eff6ff;color:#1d4ed8;border-color:#93c5fd;">
+                    <i class="fa-solid fa-layer-group"></i> All
+                </button>
+            </div>
         </div>
 
         <!-- Year + Sort controls -->
@@ -136,9 +142,9 @@
 
         <!-- Stats -->
         <div class="stats-section" aria-live="polite">
-            <div class="stat-box"><div class="stat-num" id="s-count">—</div><div class="stat-lbl"><i class="fa-solid fa-file-lines"></i> Records</div></div>
+            <div class="stat-box"><div class="stat-num" id="s-count">—</div><div class="stat-lbl"><i class="fa-solid fa-file-lines"></i> Agenda Items</div></div>
             <div class="stat-box"><div class="stat-num" id="s-years">—</div><div class="stat-lbl"><i class="fa-regular fa-calendar"></i> Years</div></div>
-            <div class="stat-box"><div class="stat-num" id="s-types">—</div><div class="stat-lbl"><i class="fa-solid fa-tags"></i> Types</div></div>
+            <div class="stat-box"><div class="stat-num" id="s-types">—</div><div class="stat-lbl"><i class="fa-solid fa-tags"></i> Land Uses</div></div>
             <div class="stat-box"><div class="stat-num" id="s-pdfs">—</div><div class="stat-lbl"><i class="fa-solid fa-file-pdf"></i> PDFs</div></div>
         </div>
 
@@ -176,7 +182,7 @@
             <div class="detail-header-left">
                 <div class="detail-header-icon" id="detail-header-icon"><i class="fa-solid fa-file-lines"></i></div>
                 <div>
-                    <div class="detail-header-title" id="detail-header-title">Meeting Detail</div>
+                    <div class="detail-header-title" id="detail-header-title">Agenda Item Detail</div>
                     <div class="detail-header-sub" id="detail-header-sub">Village of Estero Municipal Record</div>
                 </div>
             </div>

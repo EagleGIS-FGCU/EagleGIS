@@ -9,7 +9,7 @@ If you only read one section, read **"Mental model"** and **"Daily commands"**.
 
 ---
 
-## Status (last updated 2026-05-28)
+## Status (last updated 2026-06-19)
 
 The pipeline is **up to date and fully wired**. Everything described below
 is live on `main` and operational:
@@ -19,10 +19,13 @@ is live on `main` and operational:
 - **Bronze → silver refinement**: validation, cleaning, FK checks, atomic
   writes, run manifest, rejects file; now also confirms/replaces document
   URLs and sets `link_status` from the minutes index. ✅
-- **Silver → gold public CSV**: `build_gold()` joins silver + reference +
-  documents + minutes into the denormalized 14-column CSV the public
-  GitHub Pages site parses (`app/data/gold/meetings_public.csv`). Runs
-  offline on every pipeline run. ✅
+- **Silver → gold (multi-deliverable)**: `build_gold()` emits several gold
+  artifacts; the **GitHub Pages site loads ArcGIS gold**
+  (`app/data/gold/arcgis_agenda_map_data.csv`) via `site_manifest.json`
+  (`primary: arcgis`). Legacy meeting-level `meetings_public.csv` remains
+  for silver-derived summaries. ✅
+- **ArcGIS gold**: merged council + PZDB agenda items with item-level
+  geocoded locations and `LandUseCategory`. ✅
 - **Silver → Supabase publish**: idempotent, non-destructive, FK-safe,
   field-sliced upsert. Resilient to per-table failures and to secondary
   `UNIQUE(name)` collisions on reference tables (see "Recovering from
@@ -45,22 +48,30 @@ are intentionally deferred for follow-up work, not bugs.
 
 > If you re-run `python -m app.pipeline.run` right now you should see
 > `meetings: in=100 out=176` (100 bronze Village Council + 76 synthesized
-> PZ&DB) and `gold ... rows: 176`. The committed silver/gold should match
-> byte-for-byte (`git diff --exit-code app/data/silver/ app/data/gold/`),
-> modulo minutes-index churn when estero-fl.gov posts new PDFs.
+> PZ&DB), `arcgis ... rows: 321`, and `gold ... rows: 176` for the legacy
+> meeting CSV. The committed gold artifacts should match
+> (`git diff --exit-code app/data/silver/ app/data/gold/`), modulo
+> minutes-index churn when estero-fl.gov posts new PDFs.
 
 ---
 
 ## Mental model
 
 The repo follows a **medallion architecture**. Note the two serving copies:
-a denormalized **gold CSV** for the public GitHub Pages site, and **Supabase**
-for ArcGIS.
+a **gold layer** (multiple CSVs — see below) for the public GitHub Pages
+site, and **Supabase** for ArcGIS API exports.
 
 ```
-bronze (raw)        →   silver (validated, cleaned)   →   gold (public CSV)        →  index.html (GitHub Pages)
+bronze (raw)        →   silver (validated, cleaned)   →   gold (public deliverables)
 app/data/*.csv          app/data/silver/*.csv             app/data/gold/
-                                                          meetings_public.csv
+                                                          arcgis_agenda_map_data.csv  ← website (primary)
+                                                          meetings_public.csv         ← legacy meeting summary
+                                                          meetings_ai_public.*        ← ML / RAG
+                                                          meeting_actions_public.csv
+
+normalized scripts  →   (source for ArcGIS gold)
+normalized_csv_council/arcgis_agenda_map_data.csv
+normalized_csv_pilot/.../arcgis_agenda_map_data.csv
 
                                                       →   Supabase Postgres         →  ArcGIS (export + feature_service)
                                                           projects, meeting_types,
@@ -70,10 +81,28 @@ reference (curated YAML, used by all stages)             minutes index (canonica
 app/data/reference/*.yaml                                 app/data/minutes_index.json
 ```
 
-`gold` is a single denormalized 14-column CSV (`build_gold()` in
-`app/pipeline/publish/gold.py`) joining silver + reference + documents +
-the minutes index. It is what the public site actually parses — see
-`CSV_URL` in `index.html`. Supabase remains the serving copy for ArcGIS.
+### Gold deliverables (read `app/data/gold/README.md`)
+
+| File | Grain | Used by |
+|------|-------|---------|
+| **`arcgis_agenda_map_data.csv`** | Agenda item + geocoded site | **GitHub Pages** (`app.js`), map, ArcGIS |
+| `meetings_public.csv` / `.json` | Meeting | Legacy summary; locations cleaned from ArcGIS |
+| `meetings_ai_public.csv` / `.jsonl` | Agenda item + ML metadata | RAG / training |
+| `meeting_actions_public.csv` | Action clause | Additive structured actions |
+| `site_manifest.json` | Index | Frontend cache keys; `"primary": "arcgis"` |
+
+`build_gold()` (`app/pipeline/publish/gold.py`) orchestrates:
+
+1. **`build_arcgis_gold()`** — merge council + PZDB normalized ArcGIS CSVs,
+   add `LandUseCategory`, write `arcgis_agenda_map_data.csv`.
+2. **Legacy meeting CSV** — silver + reference + documents → `meetings_public.csv`,
+   then **`clean_meetings_public_rows()`** overlays ArcGIS locations where matched.
+3. **`build_ai_gold()`** — enriched agenda-item CSV/JSONL from ArcGIS gold.
+4. **`site_manifest.json`** — registry with hashes; frontend loads ArcGIS via
+   `manifest.arcgis.csv`.
+
+The public site (`index.html` / `app.js`) loads **`manifest.arcgis`** (not
+`meetings_public`). Supabase remains the serving copy for ArcGIS API routers.
 
 Three rules to keep in your head:
 
@@ -106,8 +135,11 @@ app/
 │   │   ├── documents_planned.csv  (future placeholders, isolated)
 │   │   ├── meeting_actions.csv    parsed clauses from action_taken blobs
 │   │   └── _rejects.json          (rows that failed validation, with reasons)
-│   ├── gold/                      GENERATED  do not hand-edit
-│   │   ├── meetings_public.csv    denormalized 14-col CSV the public site parses
+│   ├── gold/                      GENERATED  do not hand-edit (see gold/README.md)
+│   │   ├── site_manifest.json     index; primary=arcgis for the website
+│   │   ├── arcgis_agenda_map_data.csv  PRIMARY public dataset (agenda items)
+│   │   ├── meetings_public.csv    legacy meeting-level summary
+│   │   ├── meetings_ai_public.csv / .jsonl  ML / RAG deliverables
 │   │   └── meeting_actions_public.csv  additive structured actions feed
 │   ├── minutes_index.json         GENERATED  canonical PDF URLs scraped from estero-fl.gov
 │   ├── extract/
@@ -127,7 +159,10 @@ app/
 │   ├── enrich/geocode.py          optional US Census geocoder with JSON cache
 │   ├── validate/schemas.py        Pydantic models + FK checks + reject collection
 │   ├── load/silver.py             bronze → silver (atomic writes, dup checks, minutes enrich)
-│   ├── publish/gold.py            silver+reference+docs+minutes → gold public CSV
+│   ├── publish/gold.py            orchestrates gold build + site manifest
+│   ├── publish/arcgis_gold.py     normalized ArcGIS → gold arcgis_agenda_map_data.csv
+│   ├── publish/arcgis_clean.py    overlay ArcGIS locations onto meetings_public
+│   ├── publish/ai_gold.py         ArcGIS gold → ML/RAG CSV + JSONL
 │   ├── publish/supabase.py        silver+reference → Supabase (idempotent upsert)
 │   ├── verify/supabase.py         Supabase → diff vs silver+reference (drift report)
 │   ├── recover/cleanup_sql.py     emits "delete remote extras" SQL (operator tool)
@@ -595,15 +630,15 @@ than ad-hoc — please push back on PRs that try to undo them.
   as `publish/supabase.py`: a module under `app/pipeline/<stage>/`, a
   function that takes a client/config and returns a report dict, plus a
   flag in `run.py` and a manifest section. Keep stages pure if possible.
-- **GitHub Pages** (`index.html`) does **not** read Supabase. It loads the
-  denormalized gold CSV at `CSV_URL`, which now points to the
-  pipeline-generated `app/data/gold/meetings_public.csv` on `main` (no more
-  `script/pdfs` side branch). Full-text search in the browser uses
-  MiniSearch against that file only. The gold CSV is regenerated on every
-  `python -m app.pipeline.run` and committed to `main` by the weekly
-  `refresh-data.yml` workflow, so the Pages dataset tracks canonical data
-  automatically. If you build silver/gold locally, commit the regenerated
-  `app/data/gold/meetings_public.csv` to update the live site.
+- **GitHub Pages** (`index.html` / `app.js`) loads **ArcGIS gold** from
+  `site_manifest.json` → `manifest.arcgis.csv`
+  (`app/data/gold/arcgis_agenda_map_data.csv`). Each row is one agenda item
+  with geocoded address, lat/lon, land-use category, and PDF link. Full-text
+  search uses MiniSearch over that dataset. Fallback URL:
+  `ARCGIS_CSV_URL` in `app.js`. The legacy `meetings_public.csv` is still
+  generated for meeting-level summaries but is **not** what the site loads.
+  Regenerate gold with `python -m app.pipeline.run`; the weekly
+  `refresh-data.yml` workflow commits all gold artifacts to `main`.
 - **The `Estero bounding box`** is `app/pipeline/config.py::ESTERO_BBOX`.
   Use it in any new geo-validation code so the bounds stay consistent.
 
