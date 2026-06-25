@@ -2,10 +2,15 @@
 # All targets work from the repo root. Run `make help` for a menu.
 
 .PHONY: help install install-dev test build publish publish-dry verify check \
-        run-server clean clean-runs hooks ci
+        run-server clean clean-runs hooks ci \
+        docker-build docker-run gcp-deploy
 
 PYTHON ?= python3
 VENV   ?= .venv
+
+# --- Cloud Run / Docker (RAG model service) ---
+RAG_IMAGE       ?= eaglegis-rag
+OLLAMA_BASE_URL ?=
 
 # ---------------------------------------------------------------------------
 # Help
@@ -67,6 +72,19 @@ run-server:  ## Run the FastAPI app locally on :8000 (needs SUPABASE_*)
 
 ci: check test  ## What CI runs: strict pipeline + tests
 	@echo "ci ok"
+
+# ---------------------------------------------------------------------------
+# Cloud Run / Docker (RAG model service)
+# ---------------------------------------------------------------------------
+
+docker-build:  ## Build the RAG model service image locally
+	docker build -t $(RAG_IMAGE) rag_service
+
+docker-run:  ## Run the RAG model service container on :8080
+	docker run --rm -p 8080:8080 -e OLLAMA_BASE_URL=$(OLLAMA_BASE_URL) $(RAG_IMAGE)
+
+gcp-deploy:  ## Build + push + deploy to Cloud Run via Cloud Build
+	gcloud builds submit --config cloudbuild.yaml
 
 clean-runs:  ## Remove generated run manifests
 	@rm -rf app/data/runs/
