@@ -13,3 +13,9 @@ build/
 # only intentionally (they're regeneratable from bronze + reference).
 app/data/runs/
 .cursor/debug-*.log
+
+# Local geocoder response cache (regeneratable; not canonical data).
+app/data/reference/geocode_cache.json
+
+# Local test bootstrap scratch file.
+tests/_bootstrap_in_progress.py
