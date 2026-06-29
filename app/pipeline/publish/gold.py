@@ -15,7 +15,6 @@ import json
 import os
 import tempfile
 from collections import defaultdict
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -159,7 +158,6 @@ def _build_site_manifest(
 
     manifest: dict[str, Any] = {
         "version": SITE_MANIFEST_VERSION,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
         "primary": "arcgis",
         "delivery": delivery,
         "meetings": {
@@ -512,5 +510,5 @@ def _build_gold_actions(
     _atomic_write_csv(config.GOLD_MEETING_ACTIONS_PUBLIC, GOLD_ACTION_FIELDS, rows)
     return {
         "rows": len(rows),
-        "path": str(config.GOLD_MEETING_ACTIONS_PUBLIC.relative_to(config.DATA_DIR.parent.parent)),
+        "path": _rel(config.GOLD_MEETING_ACTIONS_PUBLIC),
     }

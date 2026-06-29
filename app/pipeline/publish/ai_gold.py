@@ -142,7 +142,7 @@ class SourceEnrichment:
 
 
 def _rel(path: Path) -> str:
-    return str(path.relative_to(config.REPO_ROOT))
+    return path.relative_to(config.REPO_ROOT).as_posix()
 
 
 def _atomic_write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
