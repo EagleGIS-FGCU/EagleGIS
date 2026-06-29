@@ -267,7 +267,12 @@ def run(
             _file_hash(config.SILVER_MEETING_ACTIONS),
             _file_hash(config.SILVER_REJECTS),
             _file_hash(config.GOLD_MEETINGS_PUBLIC),
+            _file_hash(config.GOLD_MEETINGS_JSON),
+            _file_hash(config.GOLD_SITE_MANIFEST),
             _file_hash(config.GOLD_MEETING_ACTIONS_PUBLIC),
+            _file_hash(config.GOLD_ARCGIS_PUBLIC),
+            _file_hash(config.GOLD_AI_PUBLIC),
+            _file_hash(config.GOLD_AI_JSONL),
             _file_hash(config.MINUTES_INDEX),
         ],
     }

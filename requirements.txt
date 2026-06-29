@@ -6,3 +6,6 @@ supabase>=2.0.0
 PyYAML>=6.0
 pytest>=8.0
 pypdf
+PyMuPDF>=1.24.0
+pillow>=10.0.0
+pytesseract>=0.3.13
