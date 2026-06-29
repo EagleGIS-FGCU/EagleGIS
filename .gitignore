@@ -16,6 +16,3 @@ app/data/runs/
 
 # Local geocoder response cache (regeneratable; not canonical data).
 app/data/reference/geocode_cache.json
-
-# Local test bootstrap scratch file.
-tests/_bootstrap_in_progress.py

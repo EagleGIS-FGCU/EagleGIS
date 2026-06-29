@@ -14,6 +14,12 @@ Never edits bronze.
 from __future__ import annotations
 
 import sys
+from pathlib import Path
+
+# Allow `python scripts/scrape_meetings.py` from repo root (CI + local).
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
 from app.pipeline.extract.in_progress import collect_in_progress_meetings
 from app.pipeline.extract.meetings import collect_candidate_meetings
