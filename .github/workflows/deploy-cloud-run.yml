@@ -42,8 +42,7 @@ jobs:
     if: >-
       ${{
         github.event_name != 'pull_request' &&
-        secrets.GCP_WIF_PROVIDER != '' &&
-        secrets.GCP_DEPLOY_SA != ''
+        secrets.GCP_WIF_PROVIDER != ''
       }}
     steps:
       - uses: actions/checkout@v5
@@ -53,8 +52,9 @@ jobs:
         uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_DEPLOY_SA }}
-          project_id: ${{ env.PROJECT_ID }}
+          # Hardcoded — docs placeholders like *@YOUR_PROJECT.iam... break gcloud.
+          service_account: github-deploy@esterogis.iam.gserviceaccount.com
+          project_id: esterogis
 
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v3
