@@ -6,7 +6,6 @@ from __future__ import annotations
 import csv
 import io
 import re
-import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
@@ -29,9 +28,9 @@ def _read_csv(path: Path) -> list[dict]:
 
 
 def _default_pdf_fetcher(url: str) -> bytes:
-    req = urllib.request.Request(url, headers={"User-Agent": "EagleGIS-location-validator/1.0"})
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return resp.read()
+    from app.pipeline.httputil import fetch_bytes
+
+    return fetch_bytes(url, headers={"User-Agent": "EagleGIS-location-validator/1.0"})
 
 
 def extract_text_from_pdf_bytes(payload: bytes) -> str:

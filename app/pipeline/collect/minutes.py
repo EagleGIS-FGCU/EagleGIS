@@ -9,7 +9,6 @@ from __future__ import annotations
 import json
 import re
 import urllib.parse
-import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -51,9 +50,9 @@ USER_AGENT = (
 
 
 def fetch(url: str) -> str:
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return resp.read().decode("utf-8", errors="replace")
+    from app.pipeline.httputil import fetch_text
+
+    return fetch_text(url, headers={"User-Agent": USER_AGENT})
 
 
 def _safe_date(year: int, month: int, day: int) -> str | None:

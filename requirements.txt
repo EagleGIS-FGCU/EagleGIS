@@ -9,3 +9,4 @@ pypdf
 PyMuPDF>=1.24.0
 pillow>=10.0.0
 pytesseract>=0.3.13
+certifi>=2024.0.0
