@@ -29,6 +29,7 @@ permissions:
 
 env:
   REGION: ${{ vars.GCP_REGION || 'us-central1' }}
+  PROJECT_ID: esterogis
   REPO: eaglegis
   SERVICE: eaglegis-rag
 
@@ -42,8 +43,7 @@ jobs:
       ${{
         github.event_name != 'pull_request' &&
         secrets.GCP_WIF_PROVIDER != '' &&
-        secrets.GCP_DEPLOY_SA != '' &&
-        secrets.GCP_PROJECT_ID != ''
+        secrets.GCP_DEPLOY_SA != ''
       }}
     steps:
       - uses: actions/checkout@v5
@@ -54,6 +54,7 @@ jobs:
         with:
           workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
           service_account: ${{ secrets.GCP_DEPLOY_SA }}
+          project_id: ${{ env.PROJECT_ID }}
 
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v3
@@ -63,7 +64,7 @@ jobs:
 
       - name: Build and push image
         run: |
-          IMAGE="${REGION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${REPO}/${SERVICE}:${GITHUB_SHA::7}"
+          IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${SERVICE}:${GITHUB_SHA::7}"
           docker build -t "$IMAGE" rag_service
           docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
